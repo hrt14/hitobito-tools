@@ -29,6 +29,15 @@ const tools = [
     icon: "☝",
   },
   {
+    href: "/voice-recorder",
+    tag: "MOBILE / RECORDING",
+    title: "Voice Recorder",
+    text: "スマホのマイクで音声を録音して、そのまま自分のGoogle Driveへ保存できるシンプルなレコーダー。",
+    accent: "orange",
+    status: "テスト版",
+    icon: "🎙",
+  },
+  {
     href: "/chrome-recorder",
     tag: "CHROME / RECORDING",
     title: "Chrome Recorder",
