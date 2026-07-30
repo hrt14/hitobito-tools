@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "hitobito Chrome Recorder",
+  "version": "0.1.0",
+  "description": "Chromeタブの音声を録音して、自分のGoogle Driveに保存します。",
+  "permissions": ["tabCapture", "offscreen", "identity", "storage", "activeTab"],
+  "host_permissions": ["https://www.googleapis.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "このタブを録音"
+  },
+  "oauth2": {
+    "client_id": "YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/drive.file"]
+  }
+}
