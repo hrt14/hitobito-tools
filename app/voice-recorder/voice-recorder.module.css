@@ -1,0 +1,273 @@
+.page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 82% 12%, rgba(216, 243, 106, 0.42), transparent 24rem),
+    #f7f7f0;
+  color: #20241d;
+}
+
+.header {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 max(5vw, 22px);
+  border-bottom: 1px solid #dfe1d8;
+}
+
+.brand {
+  color: #20241d;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  text-decoration: none;
+}
+
+.brand span {
+  color: #9cc600;
+}
+
+.back {
+  color: #20241d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-decoration: none;
+}
+
+.shell {
+  width: min(760px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 58px 0 80px;
+}
+
+.intro {
+  margin-bottom: 28px;
+}
+
+.kicker {
+  margin: 0 0 14px;
+  color: #8b9482;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+
+.intro h1 {
+  margin: 0 0 12px;
+  font-size: clamp(42px, 9vw, 72px);
+  letter-spacing: -0.08em;
+  line-height: 0.95;
+}
+
+.intro > p:last-child {
+  max-width: 540px;
+  margin: 0;
+  color: #687064;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.recorderCard {
+  padding: 34px 24px 26px;
+  border: 1px solid #dfe1d8;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 22px 60px rgba(32, 36, 29, 0.08);
+  text-align: center;
+  backdrop-filter: blur(14px);
+}
+
+.micOrb {
+  width: 118px;
+  height: 118px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 24px;
+  border-radius: 50%;
+  background: #e7e9df;
+  transition: 180ms ease;
+}
+
+.micOrb span {
+  color: #20241d;
+  font-size: 42px;
+  line-height: 1;
+}
+
+.micOrb.recording {
+  background: #ffded7;
+  transform: scale(1.04);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.recording span {
+  color: #e84934;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 73, 52, 0); }
+  50% { box-shadow: 0 0 0 14px rgba(232, 73, 52, 0.1); }
+}
+
+.timer {
+  margin-bottom: 8px;
+  font-size: clamp(46px, 12vw, 68px);
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.status {
+  min-height: 48px;
+  max-width: 500px;
+  margin: 0 auto 24px;
+  color: #70786b;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.primaryButton,
+.stopButton,
+.driveButton,
+.secondaryButton {
+  min-height: 52px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 24px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primaryButton {
+  width: min(100%, 330px);
+  background: #20241d;
+  color: white;
+}
+
+.stopButton {
+  width: min(100%, 330px);
+  background: #e84934;
+  color: white;
+}
+
+.result {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #e4e6dd;
+  text-align: left;
+}
+
+.result label {
+  display: block;
+  margin-bottom: 8px;
+  color: #70786b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.result input {
+  width: 100%;
+  height: 48px;
+  margin-bottom: 16px;
+  border: 1px solid #d9ddd2;
+  border-radius: 14px;
+  background: #fbfbf6;
+  color: #20241d;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.audio {
+  width: 100%;
+  margin: 4px 0 20px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.secondaryButton {
+  border: 1px solid #cfd3c7;
+  background: #f5f6ef;
+  color: #20241d;
+}
+
+.driveButton {
+  background: #d8f36a;
+  color: #20241d;
+}
+
+.driveButton:disabled,
+.secondaryButton:disabled,
+.primaryButton:disabled,
+.stopButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.savedLink {
+  display: inline-block;
+  margin-top: 18px;
+  color: #617d00;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.notes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.notes > div {
+  padding: 18px;
+  border: 1px solid #dde0d6;
+  border-radius: 18px;
+  background: rgba(247, 247, 240, 0.8);
+}
+
+.notes strong,
+.notes span {
+  display: block;
+}
+
+.notes strong {
+  margin-bottom: 7px;
+  font-size: 12px;
+}
+
+.notes span {
+  color: #727a6f;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .shell {
+    width: min(100% - 24px, 760px);
+    padding-top: 38px;
+  }
+
+  .recorderCard {
+    padding: 28px 16px 22px;
+    border-radius: 24px;
+  }
+
+  .actions,
+  .notes {
+    grid-template-columns: 1fr;
+  }
+
+  .micOrb {
+    width: 104px;
+    height: 104px;
+  }
+}
