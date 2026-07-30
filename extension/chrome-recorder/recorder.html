@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>hitobito Chrome Recorder</title>
+    <link rel="stylesheet" href="recorder.css" />
+  </head>
+  <body>
+    <main class="panel">
+      <div class="brand"><span>hitobito</span> Chrome Recorder</div>
+      <div class="status-row">
+        <span id="dot" class="dot"></span>
+        <strong id="status">録音状態を確認中...</strong>
+      </div>
+      <p id="source" class="source"></p>
+      <div id="timer" class="timer">00:00:00</div>
+
+      <button id="stop" class="stop" disabled>録音を終了してDriveへ保存</button>
+
+      <section class="settings">
+        <label for="folderId">保存先フォルダID（任意）</label>
+        <input id="folderId" type="text" placeholder="空欄ならマイドライブ直下" />
+        <button id="saveFolder" class="secondary">保存先を記憶</button>
+        <p class="hint">Google DriveのフォルダURLの <code>/folders/</code> より後ろの文字列です。</p>
+      </section>
+
+      <div id="result" class="result" hidden></div>
+    </main>
+    <script src="recorder.js"></script>
+  </body>
+</html>
