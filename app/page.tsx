@@ -46,6 +46,15 @@ const tools = [
     status: "テスト版",
     icon: "●",
   },
+  {
+    href: "/coding-egg",
+    tag: "VIBE CODING / FEEDBACK",
+    title: "CODING EGG",
+    text: "つくりかけのWebアプリを遊んでもらい、レビューを集めて、AI改善データとして書き出す実験場。",
+    accent: "orange",
+    status: "MVP",
+    icon: "🥚",
+  },
 ];
 
 export default function Home() {
