@@ -47,7 +47,7 @@ const tools = [
     icon: "●",
   },
   {
-    href: "/coding-egg",
+    href: "https://coding-egg.vercel.app",
     tag: "VIBE CODING / FEEDBACK",
     title: "CODING EGG",
     text: "つくりかけのWebアプリを遊んでもらい、レビューを集めて、AI改善データとして書き出す実験場。",
