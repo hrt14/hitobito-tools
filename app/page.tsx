@@ -28,6 +28,15 @@ const tools = [
     status: "公開中",
     icon: "☝",
   },
+  {
+    href: "/chrome-recorder",
+    tag: "CHROME / RECORDING",
+    title: "Chrome Recorder",
+    text: "Chromeタブの音声を録音して、自分のGoogle Driveへ保存。会議や動画の記録をシンプルに残す拡張機能。",
+    accent: "lime",
+    status: "テスト版",
+    icon: "●",
+  },
 ];
 
 export default function Home() {
