@@ -29,6 +29,15 @@ const tools = [
     icon: "☝",
   },
   {
+    href: "/othello-puzzle",
+    tag: "PLAY / PUZZLE",
+    title: "Othello Puzzle",
+    text: "黒と白を交互に置き、挟んだ石をひっくり返す。盤面すべてを一色にする一人用パズル。",
+    accent: "lime",
+    status: "テスト版",
+    icon: "◐",
+  },
+  {
     href: "/voice-recorder",
     tag: "MOBILE / RECORDING",
     title: "Voice Recorder",
