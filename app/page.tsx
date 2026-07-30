@@ -19,6 +19,15 @@ const tools = [
     status: "公開中",
     icon: "中",
   },
+  {
+    href: "https://touch-egg.hitobito.jp",
+    tag: "PLAY / COLLECTION",
+    title: "Touch Egg",
+    text: "ただ触るだけ。卵から生まれる幻獣や古代生物を育てて、少しずつ図鑑を集めるゲーム。",
+    accent: "pink",
+    status: "公開中",
+    icon: "☝",
+  },
 ];
 
 export default function Home() {

@@ -248,7 +248,7 @@ body {
 
 .tool-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -284,6 +284,10 @@ body {
   background: #ffede1;
 }
 
+.tool-card.pink {
+  background: #f9e8e8;
+}
+
 .card-top {
   display: flex;
   justify-content: space-between;
@@ -304,6 +308,10 @@ body {
   color: #db6c32;
 }
 
+.pink .status {
+  color: #bd5f6a;
+}
+
 .mini-icon {
   margin: 30px 0 12px;
   font-size: 48px;
@@ -317,6 +325,18 @@ body {
   border-radius: 18px;
   background: #fff3e9;
   color: #db6c32;
+  font-size: 38px;
+}
+
+.pink .mini-icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  transform: rotate(-8deg);
+  border-radius: 50% 50% 44% 56%;
+  background: #fff5f3;
+  color: #bd5f6a;
   font-size: 38px;
 }
 
@@ -349,6 +369,10 @@ body {
 
 .orange .card-link b {
   color: #db6c32;
+}
+
+.pink .card-link b {
+  color: #bd5f6a;
 }
 
 .coming {
