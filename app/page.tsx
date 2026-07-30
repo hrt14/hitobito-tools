@@ -56,7 +56,7 @@ const tools = [
     icon: "●",
   },
   {
-    href: "https://swipe-earth.vercel.app",
+    href: "https://swipe-earth.hitobito.jp",
     tag: "PLAY / EXPLORATION",
     title: "SWIPE EARTH",
     text: "スワイプするだけで地球を探検。海面から深海へ潜り、生物や未知の存在に出会う探索シリーズ。",
