@@ -56,6 +56,15 @@ const tools = [
     icon: "●",
   },
   {
+    href: "https://swipe-earth.vercel.app",
+    tag: "PLAY / EXPLORATION",
+    title: "SWIPE EARTH",
+    text: "スワイプするだけで地球を探検。海面から深海へ潜り、生物や未知の存在に出会う探索シリーズ。",
+    accent: "pink",
+    status: "公開中",
+    icon: "🌍",
+  },
+  {
     href: "https://coding-egg.vercel.app",
     tag: "VIBE CODING / FEEDBACK",
     title: "CODING EGG",
