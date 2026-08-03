@@ -11,6 +11,15 @@ const tools = [
     icon: "🥚",
   },
   {
+    href: "https://working-planet.hitobito.jp",
+    tag: "PLAY / IDLE",
+    title: "working.planet はたらく惑星",
+    text: "働いて、街と星を大きくしていく放置ゲームのシリーズ。お店を育て、自動化し、新しい世界を広げていく。",
+    accent: "orange",
+    status: "公開中",
+    icon: "🪐",
+  },
+  {
     href: "https://chinese.hitobito.jp",
     tag: "LEARNING",
     title: "中国語瞬間作文",
@@ -36,15 +45,6 @@ const tools = [
     accent: "lime",
     status: "公開中",
     icon: "🌍",
-  },
-  {
-    href: "https://lastfire-idle.vercel.app/",
-    tag: "PLAY / IDLE",
-    title: "放置ラーメン",
-    text: "素材を集め、設備を強化し、ラーメン店を少しずつ自動化して育てる放置ゲーム。",
-    accent: "orange",
-    status: "公開中",
-    icon: "🍜",
   },
 ].filter((tool) => Boolean(tool.href));
 
