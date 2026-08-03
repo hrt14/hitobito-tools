@@ -13,7 +13,7 @@ const tools = [
   {
     href: "https://working-planet.hitobito.jp",
     tag: "PLAY / IDLE",
-    title: "working.planet はたらく惑星",
+    title: "working planet はたらく惑星",
     text: "働いて、街と星を大きくしていく放置ゲームのシリーズ。お店を育て、自動化し、新しい世界を広げていく。",
     accent: "orange",
     status: "公開中",
