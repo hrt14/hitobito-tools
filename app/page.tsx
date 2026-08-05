@@ -20,6 +20,15 @@ const tools = [
     icon: "🪐",
   },
   {
+    href: "https://infra-king.vercel.app",
+    tag: "PLAY / CITY BUILDING",
+    title: "インフラ王",
+    text: "道路、駅、電気、水道を整えると街が勝手に発展する、ファミコン風のシンプル都市経営ゲーム。",
+    accent: "lime",
+    status: "公開中",
+    icon: "🚉",
+  },
+  {
     href: "https://chinese.hitobito.jp",
     tag: "LEARNING",
     title: "中国語瞬間作文",
