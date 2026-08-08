@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const FUTURE_FUNDING_HOST = "2000.hitobito.jp";
+const FUTURE_FUNDING_HOST = "2100.hitobito.jp";
 
 export function proxy(request: NextRequest) {
   const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();
