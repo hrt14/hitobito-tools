@@ -11,6 +11,9 @@ type SupportButtonProps = {
   compact?: boolean;
 };
 
+type SupportUpdatedDetail = { slug: string; count: number };
+const SUPPORT_EVENT = "2100-support-updated";
+
 async function readCount(slug: string) {
   const response = await fetch(`/api/2100/support?slug=${encodeURIComponent(slug)}`, {
     cache: "no-store",
@@ -30,8 +33,16 @@ export function SupportCount({ slug, seed }: { slug: string; seed: number }) {
         if (active) setCount(value);
       })
       .catch(() => undefined);
+
+    const sync = (event: Event) => {
+      const detail = (event as CustomEvent<SupportUpdatedDetail>).detail;
+      if (detail?.slug === slug) setCount(detail.count);
+    };
+    window.addEventListener(SUPPORT_EVENT, sync);
+
     return () => {
       active = false;
+      window.removeEventListener(SUPPORT_EVENT, sync);
     };
   }, [slug]);
 
@@ -60,13 +71,24 @@ export default function SupportButton({
         if (active) setCount(value);
       })
       .catch(() => undefined);
+
+    const sync = (event: Event) => {
+      const detail = (event as CustomEvent<SupportUpdatedDetail>).detail;
+      if (detail?.slug !== slug) return;
+      setCount(detail.count);
+      setBacked(true);
+    };
+    window.addEventListener(SUPPORT_EVENT, sync);
+
     return () => {
       active = false;
+      window.removeEventListener(SUPPORT_EVENT, sync);
     };
   }, [slug, storageKey]);
 
   const support = useCallback(async () => {
-    if (backed) {
+    if (window.localStorage.getItem(storageKey) === "1") {
+      setBacked(true);
       setMessageOpen(true);
       return;
     }
@@ -81,18 +103,23 @@ export default function SupportButton({
       });
       if (!response.ok) throw new Error("failed to support");
       const data = (await response.json()) as { count: number };
-      setCount(data.count);
       window.localStorage.setItem(storageKey, "1");
+      setCount(data.count);
       setBacked(true);
+      window.dispatchEvent(
+        new CustomEvent<SupportUpdatedDetail>(SUPPORT_EVENT, {
+          detail: { slug, count: data.count },
+        }),
+      );
       setMessageOpen(true);
     } catch {
       setError("未来との通信に失敗しました。もう一度お試しください。");
     } finally {
       setLoading(false);
     }
-  }, [backed, slug, storageKey]);
+  }, [slug, storageKey]);
 
-  const progress = Math.max(1, Math.round((count / goal) * 100));
+  const progress = Math.max(0, Math.round((count / goal) * 100));
 
   return (
     <div className={compact ? styles.supportCompact : styles.supportBox}>
