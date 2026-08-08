@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default function FundingHome() {
-  const trending = [...projects].sort((a, b) => b.seedSupporters - a.seedSupporters).slice(0, 5);
+  const futureQueue = projects.filter((project) => !project.published).slice(0, 5);
 
   return (
     <main className={styles.page}>
@@ -70,7 +70,7 @@ export default function FundingHome() {
           <p className={styles.featuredTeaser}>{featuredProject.teaser}</p>
 
           <div className={styles.featuredNumbers}>
-            <div><strong><SupportCount slug={featuredProject.slug} seed={featuredProject.seedSupporters} /></strong><span>SUPPORTERS</span></div>
+            <div><strong><SupportCount slug={featuredProject.slug} seed={featuredProject.seedSupporters} /></strong><span>REAL SUPPORTERS</span></div>
             <div><strong>{featuredProject.delivery}</strong><span>FUTURE DELIVERY</span></div>
           </div>
 
@@ -103,7 +103,9 @@ export default function FundingHome() {
                   <h3>{project.title}</h3>
                   <blockquote>{project.tagline}</blockquote>
                   <div className={styles.cardFooter}>
-                    <span>{project.seedSupporters.toLocaleString("ja-JP")}+ SUPPORTERS</span>
+                    <span>
+                      {project.published ? <><SupportCount slug={project.slug} seed={project.seedSupporters} /> REAL SUPPORTERS</> : "SUPPORT COUNT STARTS ON RELEASE"}
+                    </span>
                     <b>{project.published ? "READ STORY →" : "COMING SOON"}</b>
                   </div>
                 </div>
@@ -126,16 +128,16 @@ export default function FundingHome() {
       <section className={styles.trendingSection}>
         <div className={styles.sectionTitle}>
           <div>
-            <p>FUTURE TRENDING</p>
-            <h2>いま、未来で期待されているもの</h2>
+            <p>INCOMING PROJECTS</p>
+            <h2>次に届く未来</h2>
           </div>
         </div>
         <ol className={styles.trendingList}>
-          {trending.map((project, index) => (
+          {futureQueue.map((project, index) => (
             <li key={project.slug}>
               <span>{String(index + 1).padStart(2, "0")}</span>
               <div><b>{project.title}</b><small>{project.tagline}</small></div>
-              <strong>{project.seedSupporters.toLocaleString("ja-JP")}</strong>
+              <strong>{project.deliveryShort}</strong>
             </li>
           ))}
         </ol>
@@ -166,7 +168,7 @@ export default function FundingHome() {
           </p>
           <p>
             商品・企業・研究機関・開発史はすべてフィクションです。支援に料金はかからず、
-            実際の購入契約や配送も発生しません。ただし、支援ボタンが押された数は実際に集計しています。
+            実際の購入契約や配送も発生しません。ただし、公開済みプロジェクトの支援数は実際の支援操作だけを集計します。
           </p>
         </div>
       </section>
