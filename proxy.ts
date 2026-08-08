@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 const FUTURE_FUNDING_HOST = "2100.hitobito.jp";
 
+const FUTURE_IMAGE_REWRITES: Record<string, string> = {
+  "/2100/monday-zero/monday-zero-hero.jpg": "/2100/monday-zero/hero.svg",
+  "/2100/monday-zero/monday-zero-problem.jpg": "/2100/monday-zero/problem.svg",
+};
+
 export function proxy(request: NextRequest) {
   const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();
 
@@ -10,6 +15,13 @@ export function proxy(request: NextRequest) {
   }
 
   const { pathname } = request.nextUrl;
+
+  const imageRewrite = FUTURE_IMAGE_REWRITES[pathname];
+  if (imageRewrite) {
+    const url = request.nextUrl.clone();
+    url.pathname = imageRewrite;
+    return NextResponse.rewrite(url);
+  }
 
   // Keep framework assets and APIs on their original paths.
   if (
