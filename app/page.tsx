@@ -11,6 +11,15 @@ const tools = [
     icon: "🥚",
   },
   {
+    href: "/2100",
+    tag: "PLAY / FUTURE",
+    title: "2100 FUNDING",
+    text: "2100年のクラウドファンディング。まだない未来の商品と、そこに至る長い物語を読んで無料で支援するお遊び。",
+    accent: "pink",
+    status: "NEW",
+    icon: "🚀",
+  },
+  {
     href: "https://working-planet.hitobito.jp",
     tag: "PLAY / IDLE",
     title: "working planet はたらく惑星",
