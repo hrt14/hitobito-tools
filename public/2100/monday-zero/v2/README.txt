@@ -1,0 +1,1 @@
+2100 FUNDING MONDAY ZERO BAG visual assets v2. Generated as web-ready JPGs and validated locally before deployment.
