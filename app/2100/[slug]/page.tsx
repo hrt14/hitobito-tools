@@ -32,9 +32,13 @@ export default async function ProjectPage({ params }: PageProps) {
         gravity: "/2100/monday-zero/real/problem.webp",
         solution: "/2100/monday-zero/real/hero.webp",
         sketch: "/2100/monday-zero/real/sketch.webp",
-        commute: "/2100/monday-zero/real/problem.webp",
-        after: "/2100/monday-zero/real/hero.webp",
-        developer: "/2100/monday-zero/real/hero.webp",
+        prototype: "/2100/monday-zero/real/prototype.webp",
+        lab: "/2100/monday-zero/real/lab.webp",
+        tech: "/2100/monday-zero/real/tech.webp",
+        gimmicks: "/2100/monday-zero/real/gimmicks.webp",
+        commute: "/2100/monday-zero/real/journey.webp",
+        after: "/2100/monday-zero/real/compare.webp",
+        developer: "/2100/monday-zero/real/developer.webp",
         closing: "/2100/monday-zero/real/hero.webp",
       }
     : {
@@ -44,6 +48,10 @@ export default async function ProjectPage({ params }: PageProps) {
         gravity: lp.images.gravity,
         solution: lp.images.solution,
         sketch: lp.images.lab,
+        prototype: lp.images.lab,
+        lab: lp.images.lab,
+        tech: lp.images.solution,
+        gimmicks: lp.images.solution,
         commute: lp.images.commute,
         after: lp.images.after,
         developer: lp.images.developer,
@@ -124,23 +132,23 @@ export default async function ProjectPage({ params }: PageProps) {
       <section id="story" className={`${styles.section} ${styles.storySection}`}>
         <div className={styles.sectionHeading}><p className={styles.sectionKicker}>DEVELOPMENT STORY</p><h2>一枚のスケッチから、月曜日への挑戦が始まりました。</h2><p>2097年の着想、18kgの初号機、100回を超える試作。完成形になるまで、軽さだけを追い続けました。</p></div>
         <figure className={styles.sketchFeature}><img src={image.sketch} alt="MONDAY ZERO BAGの手書き開発スケッチ" /><figcaption><span>2097 / FIRST CONCEPT</span><b>最初は、紙とペンだけでした。</b><p>肩への負荷、PC収納、月曜日だけ働く仕組み。まだ存在しない商品を、まず手で描きました。</p></figcaption></figure>
-        <div className={styles.storyGrid}>{lp.development.map((step, index) => <article className={styles.storyCard} key={step.year}><div className={styles.storyPhoto}><img src={index % 2 === 0 ? image.sketch : image.hero} alt="開発ストーリーのイメージ" /></div><span className={styles.storyYear}>{step.year}</span><small>{step.kicker}</small><h3>{step.title}</h3><p>{step.copy}</p>{index === 1 && <strong className={styles.prototypeWeight}>試作1号機 / 18kg</strong>}</article>)}</div>
+        <div className={styles.storyGrid}>{lp.development.map((step, index) => <article className={styles.storyCard} key={step.year}><div className={styles.storyPhoto}><img src={index === 0 ? image.sketch : index === 1 ? image.prototype : image.lab} alt="開発ストーリーのイメージ" /></div><span className={styles.storyYear}>{step.year}</span><small>{step.kicker}</small><h3>{step.title}</h3><p>{step.copy}</p>{index === 1 && <strong className={styles.prototypeWeight}>試作1号機 / 18kg</strong>}</article>)}</div>
       </section>
 
       <section id="tech" className={`${styles.section} ${styles.techSection}`}>
         <div className={styles.sectionHeading}><p className={styles.sectionKicker}>FUTURE TECHNOLOGY</p><h2>月曜日を軽くする、3つのコア技術。</h2><p>名前は未来的でも、目指したことはひとつ。背負った瞬間の「重い」を減らすことです。</p></div>
-        <div className={styles.techStage}><img src={image.hero} alt="MONDAY ZERO BAGの技術イメージ" /><div className={styles.techPins}><span>肩への負荷を分散</span><span>気分の重さを推定</span><span>曜日に合わせて切替</span></div></div>
+        <div className={styles.techStage}><img src={image.tech} alt="MONDAY ZERO BAGの技術イメージ" /><div className={styles.techPins}><span>肩への負荷を分散</span><span>気分の重さを推定</span><span>曜日に合わせて切替</span></div></div>
         <div className={styles.techGrid}>{lp.technologies.map((tech) => <article className={styles.techCard} key={tech.name}><div className={styles.techIcon}>{tech.icon}</div><small>{tech.name}</small><h3>{tech.title}</h3><p>{tech.copy}</p></article>)}</div>
       </section>
 
       <section id="details" className={`${styles.section} ${styles.gimmickSection}`}>
         <div className={styles.sectionHeading}><p className={styles.sectionKicker}>DETAILS / GIMMICKS</p><h2>月曜日のために、ここまで考えました。</h2><p>大きな技術だけでなく、毎朝の小さなストレスまでひとつずつ潰していきます。</p></div>
-        <div className={styles.gimmickGrid}>{lp.gimmicks.map((item, index) => <article className={styles.gimmickCard} key={item.title}><div className={styles.gimmickImage}><img src={index % 2 === 0 ? image.hero : image.problem} alt={`${item.title}の使用イメージ`} /></div><div className={styles.gimmickTop}><span>{item.icon}</span><b>{String(index + 1).padStart(2, "0")}</b></div><h3>{item.title}</h3><p>{item.copy}</p></article>)}</div>
+        <div className={styles.gimmickGrid}>{lp.gimmicks.map((item, index) => <article className={styles.gimmickCard} key={item.title}><div className={styles.gimmickImage}><img src={image.gimmicks} alt={`${item.title}の使用イメージ`} /></div><div className={styles.gimmickTop}><span>{item.icon}</span><b>{String(index + 1).padStart(2, "0")}</b></div><h3>{item.title}</h3><p>{item.copy}</p></article>)}</div>
       </section>
 
       <section className={`${styles.section} ${styles.journeySection}`}>
         <div className={styles.sectionHeading}><p className={styles.sectionKicker}>A DAY WITH MONDAY ZERO</p><h2>MONDAY ZERO BAGと過ごす、ある月曜日。</h2><p>自宅を出て、駅、電車、会社、そして帰宅まで。未来バッグの一日を追います。</p></div>
-        <div className={styles.journeyTrack}>{lp.journey.map((step, index) => <article className={styles.journeyStep} key={step.title}><div className={styles.journeyImage}><img src={index < 3 ? image.problem : image.hero} alt={`${step.title}での使用シーン`} /></div><b>{index + 1}</b><small>{step.kicker}</small><h3>{step.title}</h3><p>{step.copy}</p></article>)}</div>
+        <div className={styles.journeyTrack}>{lp.journey.map((step, index) => <article className={styles.journeyStep} key={step.title}><div className={styles.journeyImage}><img src={image.commute} alt={`${step.title}での使用シーン`} /></div><b>{index + 1}</b><small>{step.kicker}</small><h3>{step.title}</h3><p>{step.copy}</p></article>)}</div>
       </section>
 
       <section className={`${styles.section} ${styles.compareSection}`}>
