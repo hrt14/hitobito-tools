@@ -10,6 +10,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
+      url: "https://hitobito.jp/life-plus-one",
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
       url: "https://hitobito.jp/2100",
       lastModified: now,
       changeFrequency: "weekly",
