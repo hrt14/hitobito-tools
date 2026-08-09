@@ -1,0 +1,1 @@
+MONDAY ZERO BAG visual assets are binary photographic images. Do not replace them with SVG fallbacks. Validate real image decoding after deployment.
