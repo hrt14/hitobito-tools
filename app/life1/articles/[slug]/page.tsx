@@ -35,6 +35,10 @@ export default async function Life1ArticlePage({ params }: Props) {
   const article = getLife1Article(slug);
   if (!article) notFound();
 
+  const relatedSameCategory = life1Articles.filter((item) => item.slug !== article.slug && item.category === article.category);
+  const relatedOthers = life1Articles.filter((item) => item.slug !== article.slug && item.category !== article.category);
+  const related = [...relatedSameCategory, ...relatedOthers].slice(0, 3);
+
   const url = `https://life1.hitobito.jp/articles/${article.slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
@@ -67,6 +71,20 @@ export default async function Life1ArticlePage({ params }: Props) {
             {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
           </section>
         ))}
+
+        <section className={styles.related}>
+          <small>NEXT TO READ</small>
+          <h2>この見方を、もう少し。</h2>
+          <div className={styles.relatedGrid}>
+            {related.map((item) => (
+              <TrackedLink href={`/articles/${item.slug}`} eventName="article_related_click" eventParams={{ from_slug: article.slug, to_slug: item.slug }} key={item.slug}>
+                <span>{item.category}</span>
+                <strong>{item.title}</strong>
+                <b>読む →</b>
+              </TrackedLink>
+            ))}
+          </div>
+        </section>
 
         <div className={styles.articleCta}>
           <small>TRY LIFE +1</small>
