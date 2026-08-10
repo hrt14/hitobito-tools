@@ -25,7 +25,7 @@ export default function Life1Home() {
         <p className={styles.lead}>減ったものばかり見てしまう私たちへ。<br />人生には、今日も増えているものがあります。</p>
         <div className={styles.heroActions}>
           <Link href="/app" className={styles.primary}>今日の +1 を見る <span>→</span></Link>
-          <Link href="/articles/life-pl-and-bs" className={styles.secondary}>考え方を読む</Link>
+          <Link href="/diagnosis/zero" className={styles.secondary}>30秒で+0診断</Link>
         </div>
         <div className={styles.plusOne}>+1</div>
       </section>
@@ -47,7 +47,7 @@ export default function Life1Home() {
             </article>
           ))}
         </div>
-        <Link href="/app" className={styles.inlineCta}>自分の今日から +1 を探す →</Link>
+        <Link href="/diagnosis/zero" className={styles.inlineCta}>「今日は本当に+0？」を30秒で診断する →</Link>
       </section>
 
       <section className={styles.balanceSection}>
@@ -106,7 +106,7 @@ export default function Life1Home() {
 
       <footer className={styles.footer}>
         <span>LIFE +1</span>
-        <div><Link href="/articles">記事</Link><Link href="/app">アプリ</Link><a href="https://hitobito.jp">hitobito Tools</a></div>
+        <div><Link href="/diagnosis/zero">+0診断</Link><Link href="/articles">記事</Link><Link href="/app">アプリ</Link><a href="https://hitobito.jp">hitobito Tools</a></div>
       </footer>
     </main>
   );
