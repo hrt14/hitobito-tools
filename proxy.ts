@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const FUTURE_FUNDING_HOST = "2100.hitobito.jp";
+const LIFE_ONE_HOST = "life1.hitobito.jp";
 
 const FUTURE_IMAGE_REWRITES: Record<string, string> = {
   "/2100/monday-zero/monday-zero-hero.jpg": "/2100/monday-zero/hero.svg",
@@ -9,12 +10,32 @@ const FUTURE_IMAGE_REWRITES: Record<string, string> = {
 
 export function proxy(request: NextRequest) {
   const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();
+  const { pathname } = request.nextUrl;
+
+  if (host === LIFE_ONE_HOST) {
+    // Keep framework assets and APIs on their original paths.
+    if (
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/api") ||
+      pathname === "/favicon.ico" ||
+      pathname === "/favicon.svg"
+    ) {
+      return NextResponse.next();
+    }
+
+    // LIFE +1 opens directly at the dedicated subdomain root.
+    if (pathname === "/") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/life-plus-one";
+      return NextResponse.rewrite(url);
+    }
+
+    return NextResponse.next();
+  }
 
   if (host !== FUTURE_FUNDING_HOST) {
     return NextResponse.next();
   }
-
-  const { pathname } = request.nextUrl;
 
   const imageRewrite = FUTURE_IMAGE_REWRITES[pathname];
   if (imageRewrite) {
