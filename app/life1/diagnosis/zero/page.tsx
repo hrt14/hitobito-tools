@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { trackLife1Event } from "@/lib/life1-analytics";
 import styles from "./zero.module.css";
 
 type Choice = {
@@ -24,14 +25,28 @@ export default function ZeroDiagnosisPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [showResult, setShowResult] = useState(false);
   const [shared, setShared] = useState(false);
+  const [started, setStarted] = useState(false);
 
   const selectedChoices = useMemo(() => choices.filter((choice) => selected.includes(choice.id)), [selected]);
   const score = 1 + selectedChoices.length;
 
   function toggle(id: string) {
+    if (!started) {
+      setStarted(true);
+      trackLife1Event("life1_diagnosis_started", { diagnosis: "zero" });
+    }
     setSelected((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
     setShowResult(false);
     setShared(false);
+  }
+
+  function completeDiagnosis() {
+    setShowResult(true);
+    trackLife1Event("life1_diagnosis_completed", {
+      diagnosis: "zero",
+      score,
+      selected_count: selectedChoices.length,
+    });
   }
 
   async function share() {
@@ -47,9 +62,21 @@ export default function ZeroDiagnosisPage() {
     try {
       if (navigator.share) {
         await navigator.share({ title: "LIFE +1", text });
+        trackLife1Event("life1_diagnosis_shared", {
+          diagnosis: "zero",
+          score,
+          selected_count: selectedChoices.length,
+          method: "native_share",
+        });
       } else {
         await navigator.clipboard.writeText(text);
         setShared(true);
+        trackLife1Event("life1_diagnosis_shared", {
+          diagnosis: "zero",
+          score,
+          selected_count: selectedChoices.length,
+          method: "clipboard",
+        });
       }
     } catch {
       // Canceling the native share sheet is not an error for the user.
@@ -87,7 +114,7 @@ export default function ZeroDiagnosisPage() {
           );
         })}
 
-        <button type="button" className={styles.primary} onClick={() => setShowResult(true)}>今日の累計を見る <span>→</span></button>
+        <button type="button" className={styles.primary} onClick={completeDiagnosis}>今日の累計を見る <span>→</span></button>
       </section>
 
       {showResult && (
