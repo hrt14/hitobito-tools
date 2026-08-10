@@ -198,6 +198,15 @@ export default function Life1Home() {
         </div>
       </section>
 
+      <section className={styles.experimentStrip}>
+        <div>
+          <span>7 CHECK EXPERIMENT</span>
+          <h2>続けるかは、7回やってから決める。</h2>
+          <p>7日連続ではありません。忘れても途切れても失敗なし。7回だけ、自分の累計を見る実験です。</p>
+        </div>
+        <TrackedLink href="/experiment" eventName="home_experiment_click" className={styles.primary}>7回実験をはじめる <span>→</span></TrackedLink>
+      </section>
+
       <section className={styles.finalCta}>
         <p>あなたにも、今日すでに +1 があります。</p>
         <h2>今日も、人生の累計最高記録。</h2>
@@ -207,7 +216,7 @@ export default function Life1Home() {
 
       <footer className={styles.footer}>
         <span>LIFE +1</span>
-        <div><Link href="/diagnosis/zero">+0診断</Link><Link href="/articles">記事</Link><Link href="/app">アプリ</Link><a href="https://hitobito.jp">hitobito Tools</a></div>
+        <div><Link href="/diagnosis/zero">+0診断</Link><Link href="/experiment">7回実験</Link><Link href="/articles">記事</Link><Link href="/app">アプリ</Link><a href="https://hitobito.jp">hitobito Tools</a></div>
       </footer>
     </main>
   );
