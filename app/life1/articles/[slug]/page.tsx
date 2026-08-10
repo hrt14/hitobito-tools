@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import TrackedLink from "@/components/life1/tracked-link";
 import { getLife1Article, life1Articles } from "@/lib/life1-articles";
 import styles from "../articles.module.css";
 
@@ -52,7 +53,7 @@ export default async function Life1ArticlePage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <header className={styles.header}>
         <Link href="/" className={styles.brand}>LIFE <b>+1</b></Link>
-        <Link href="/app" className={styles.appLink}>アプリを使う</Link>
+        <TrackedLink href="/app" eventName="article_header_app_click" eventParams={{ slug: article.slug }} className={styles.appLink}>アプリを使う</TrackedLink>
       </header>
 
       <article className={styles.article}>
@@ -70,7 +71,11 @@ export default async function Life1ArticlePage({ params }: Props) {
         <div className={styles.articleCta}>
           <small>TRY LIFE +1</small>
           <h3>今日、あなたに増えたものは何でしたか？</h3>
-          <Link href="/app">今日の +1 を見る →</Link>
+          <p>まず30秒だけ。良かったことを探さず、事実として増えたものがあるか確認できます。</p>
+          <div className={styles.articleCtaActions}>
+            <TrackedLink href="/diagnosis/zero" eventName="article_diagnosis_click" eventParams={{ slug: article.slug }}>30秒で今日の +1 を見る →</TrackedLink>
+            <TrackedLink href="/app" eventName="article_app_click" eventParams={{ slug: article.slug }} className={styles.textAction}>アプリを直接使う</TrackedLink>
+          </div>
         </div>
         <Link href="/articles" className={styles.back}>← 記事一覧へ</Link>
       </article>
