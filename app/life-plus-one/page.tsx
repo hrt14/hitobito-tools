@@ -5,13 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import styles from "./page.module.css";
 
 type Category = "LIFE" | "WORK" | "CREATE" | "LEARN" | "PEOPLE" | "BODY";
-
-type Asset = {
-  category: Category;
-  name: string;
-  value: number;
-};
-
+type Asset = { category: Category; name: string; value: number };
 type Entry = {
   id: string;
   date: string;
@@ -21,24 +15,10 @@ type Entry = {
   subtractionDetected: boolean;
   createdAt: string;
 };
-
-type StoredState = {
-  birthDate: string;
-  entries: Entry[];
-  dark: boolean;
-};
+type StoredState = { birthDate: string; entries: Entry[]; dark: boolean };
 
 const STORAGE_KEY = "life-plus-one-v1";
 const CATEGORIES: Category[] = ["LIFE", "WORK", "CREATE", "LEARN", "PEOPLE", "BODY"];
-
-const CATEGORY_LABELS: Record<Category, string> = {
-  LIFE: "LIFE",
-  WORK: "WORK",
-  CREATE: "CREATE",
-  LEARN: "LEARN",
-  PEOPLE: "PEOPLE",
-  BODY: "BODY",
-};
 
 function localDateKey(date = new Date()) {
   const y = date.getFullYear();
@@ -47,12 +27,12 @@ function localDateKey(date = new Date()) {
   return `${y}-${m}-${d}`;
 }
 
-function lifeDaysFromBirthDate(birthDate: string) {
-  if (!birthDate) return 1;
+function daysFromBirthDate(birthDate: string) {
+  if (!birthDate) return 0;
   const birth = new Date(`${birthDate}T00:00:00`);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  if (Number.isNaN(birth.getTime()) || birth > today) return 1;
+  if (Number.isNaN(birth.getTime()) || birth > today) return 0;
   return Math.floor((today.getTime() - birth.getTime()) / 86_400_000) + 1;
 }
 
@@ -63,37 +43,28 @@ function formatNumber(value: number) {
 function buildPrompt(raw: string) {
   return `あなたは「LIFE +1」という人生累計アプリの記録変換AIです。
 
-目的：
-ユーザーの日記から、その日に事実として増えた「LIFE ASSET」を抽出してください。
-このアプリは、悪い出来事を無理に良い出来事へ言い換えるものではありません。
-損失、失敗、疲労、停滞、嫌だったことは事実としてそのまま認めます。
-そのうえで、同時に増えた経験・制作・学習・関係・判断材料などがあれば抽出します。
+役割：ユーザーの文章を言い換えるのではなく、文章の中にすでにあるのに本人が見落としやすい「累計として残るもの」を発見してください。
 
 重要ルール：
-1. ユーザーが書いていない行動や出来事を推測・捏造しない。
-2. 「食事したはず」「誰かと話したはず」のような推測は禁止。
-3. ネガティブな事実を否定しない。説教・励まし・自己啓発は禁止。
-4. 何でも無理に+1にしない。根拠があるものだけ抽出する。
-5. 同じ意味の項目を水増ししない。
-6. 「人生 +1日」はアプリ側で自動加算するため、assetsには絶対に入れない。
-7. 失敗は、実際に試行したことが読み取れる場合のみ「失敗経験」「改善材料」等として扱ってよい。
-8. 数値は基本1。文章内に明確な件数がある場合のみ、その件数を使ってよい。
-9. categoryは LIFE / WORK / CREATE / LEARN / PEOPLE / BODY のどれか。
-10. perspectiveは「事実」と「同時に増えたもの」を落ち着いて示す。ポジティブすぎる表現は禁止。
+1. ネガティブな事実、損失、疲労、停滞、失敗を消したり美化したりしない。
+2. ユーザーが書いていない行動・効果・感情を推測しない。
+3. 成果だけでなく、制作、経験、学習、試行、関係、判断材料、明示された気づきも候補にする。
+4. 気づきや判断材料は、入力内容から直接読み取れる場合だけ採用する。
+5. 同じ意味を細かく分割して水増ししない。ただし実際に別の行動・制作・学習なら分けてよい。
+6. 数値は基本1。明確な件数が書かれている場合だけその件数を使う。
+7. categoryは LIFE / WORK / CREATE / LEARN / PEOPLE / BODY のどれか。
+8. 「人生 +1日」はアプリ側で必ず加算するためassetsには入れない。
+9. assetsが0件でもよい。無理に作らない。
+10. perspectiveは、元の嫌だった事実を一度認め、その横に存在する別の累計事実を短く示す。励ましや説教は禁止。
 
-出力は必ず次のJSONだけにしてください。Markdownのコードフェンスも不要です。
+JSONだけを返してください：
 {
-  "facts": ["入力から確認できる事実"],
-  "assets": [
-    {"category":"WORK","name":"LP制作経験","value":1}
-  ],
+  "assets": [{"category":"CREATE","name":"アプリ制作","value":1}],
   "subtraction_detected": true,
-  "perspective": "事実を否定せず、見えていなかった累計も示す1〜3文"
+  "perspective": "事実を否定せず、見落としていた累計を1〜2文で示す"
 }
 
-assetsが見つからない場合は空配列で構いません。人生+1日はアプリが別途加算します。
-
-ユーザーの今日の記録：
+今日の記録：
 ${raw}`;
 }
 
@@ -110,7 +81,7 @@ function parseAiResponse(text: string) {
       const categoryRaw = String(obj.category ?? "LIFE").toUpperCase();
       const category = CATEGORIES.includes(categoryRaw as Category) ? (categoryRaw as Category) : "LIFE";
       const name = String(obj.name ?? "").trim();
-      if (!name || name === "人生" || name.includes("人生 +1")) return null;
+      if (!name || name === "人生" || name.includes("人生 +1") || name.includes("生きた日数")) return null;
       const rawValue = Number(obj.value ?? 1);
       const value = Number.isFinite(rawValue) ? Math.max(1, Math.min(99, Math.round(rawValue))) : 1;
       return { category, name, value } satisfies Asset;
@@ -146,7 +117,7 @@ export default function LifePlusOnePage() {
         setDark(Boolean(data.dark));
       }
     } catch {
-      // Broken local data should never block the app.
+      // Local data should never block the app.
     } finally {
       setReady(true);
     }
@@ -154,65 +125,61 @@ export default function LifePlusOnePage() {
 
   useEffect(() => {
     if (!ready) return;
-    const state: StoredState = { birthDate, entries, dark };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ birthDate, entries, dark } satisfies StoredState));
   }, [birthDate, entries, dark, ready]);
 
-  const lifeDays = useMemo(() => lifeDaysFromBirthDate(birthDate), [birthDate]);
+  const lifeDays = useMemo(() => {
+    const actual = daysFromBirthDate(birthDate);
+    if (actual) return actual;
+    const recordedDays = new Set(entries.map((entry) => entry.date));
+    recordedDays.add(today);
+    return recordedDays.size;
+  }, [birthDate, entries, today]);
+
   const allAssetScore = useMemo(
     () => entries.reduce((sum, entry) => sum + entry.assets.reduce((s, asset) => s + asset.value, 0), 0),
     [entries],
   );
   const totalScore = lifeDays + allAssetScore;
   const todayEntries = entries.filter((entry) => entry.date === today);
-  const todayAssetScore = todayEntries.reduce(
-    (sum, entry) => sum + entry.assets.reduce((s, asset) => s + asset.value, 0),
-    0,
-  );
-  const todayScore = 1 + todayAssetScore;
   const todayAssets = todayEntries.flatMap((entry) => entry.assets);
+  const todayAssetScore = todayAssets.reduce((sum, asset) => sum + asset.value, 0);
+  const todayScore = 1 + todayAssetScore;
 
-  const categoryTotals = useMemo(() => {
-    const totals: Record<Category, number> = { LIFE: lifeDays, WORK: 0, CREATE: 0, LEARN: 0, PEOPLE: 0, BODY: 0 };
+  const dayGroups = useMemo(() => {
+    const groups: Record<string, Entry[]> = {};
     entries.forEach((entry) => {
-      entry.assets.forEach((asset) => {
-        totals[asset.category] += asset.value;
-      });
+      groups[entry.date] = groups[entry.date] ? [...groups[entry.date], entry] : [entry];
     });
-    return totals;
-  }, [entries, lifeDays]);
-
-  const sortedEntries = useMemo(
-    () => [...entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [entries],
-  );
+    return Object.entries(groups)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([date, items]) => ({ date, items: [...items].sort((a, b) => a.createdAt.localeCompare(b.createdAt)) }));
+  }, [entries]);
 
   function generatePrompt() {
     setError("");
-    setNotice("");
     if (!journal.trim()) {
       setError("まず、今日のことを書いてください。");
       return;
     }
     setPrompt(buildPrompt(journal.trim()));
-    setNotice("AI用プロンプトを作りました。");
+    setNotice("プロンプトを作りました。AIに渡して、JSONを下に貼ってください。");
   }
 
   async function copyPrompt() {
     if (!prompt) return;
     try {
       await navigator.clipboard.writeText(prompt);
-      setNotice("プロンプトをコピーしました。ChatGPTやGeminiに貼り付けてください。");
+      setNotice("コピーしました。ChatGPTやGeminiに貼り付けてください。");
     } catch {
-      setNotice("コピーできませんでした。プロンプト欄を長押ししてコピーしてください。");
+      setNotice("コピーできませんでした。欄を長押ししてコピーしてください。");
     }
   }
 
   function registerAiResponse() {
     setError("");
-    setNotice("");
     try {
-      if (!journal.trim()) throw new Error("元の記録がありません");
+      if (!journal.trim()) throw new Error("今日の記録がありません");
       if (!aiResponse.trim()) throw new Error("AIのJSON回答を貼り付けてください");
       const result = parseAiResponse(aiResponse);
       const entry: Entry = {
@@ -228,8 +195,8 @@ export default function LifePlusOnePage() {
       setJournal("");
       setPrompt("");
       setAiResponse("");
-      const score = result.assets.reduce((sum, asset) => sum + asset.value, 0);
-      setNotice(score > 0 ? `+${score} を人生の累計に追加しました。` : "記録を保存しました。今日の人生 +1日はすでに加算されています。");
+      const added = result.assets.reduce((sum, asset) => sum + asset.value, 0);
+      setNotice(added ? `+${added} を追加しました。今日の人生 +1 と合わせて累計更新。` : "記録しました。今日も人生 +1。+0にはなりません。");
     } catch (e) {
       setError(e instanceof Error ? e.message : "JSONを読み取れませんでした");
     }
@@ -245,191 +212,69 @@ export default function LifePlusOnePage() {
     <main className={`${styles.page} ${dark ? styles.dark : ""}`}>
       <div className={styles.shell}>
         <header className={styles.header}>
-          <Link href="/" className={styles.back}>← hitobito Tools</Link>
-          <button className={styles.themeButton} onClick={() => setDark((v) => !v)} type="button">
-            {dark ? "LIGHT" : "DARK"}
-          </button>
+          <Link href="/" className={styles.brand}>LIFE <b>+1</b></Link>
+          <button type="button" onClick={() => setDark((value) => !value)}>{dark ? "LIGHT" : "DARK"}</button>
         </header>
 
         <section className={styles.hero}>
-          <div className={styles.brandLine}>
-            <span className={styles.logo}>LIFE <b>+1</b></span>
-            <span className={styles.localBadge}>LOCAL / API FREE</span>
+          <p>今日も、人生の累計最高記録。</p>
+          <div className={styles.scoreRow}>
+            <div><span>TOTAL</span><strong>{formatNumber(totalScore)}</strong></div>
+            <div className={styles.today}><span>TODAY</span><strong>+{formatNumber(todayScore)}</strong></div>
           </div>
-          <p className={styles.tagline}>今日も、人生の累計最高記録。</p>
-
-          <div className={styles.recordCard}>
-            <div className={styles.recordTop}>
-              <div>
-                <span className={styles.kicker}>TOTAL LIFE SCORE</span>
-                <strong className={styles.total}>{formatNumber(totalScore)}</strong>
-              </div>
-              <div className={styles.todayScore}>
-                <span>TODAY</span>
-                <strong>+{formatNumber(todayScore)}</strong>
-              </div>
-            </div>
-            <div className={styles.recordBottom}>
-              <span>{formatNumber(lifeDays)} DAYS</span>
-              <span className={styles.best}>● 本日も過去最高</span>
-            </div>
-          </div>
-
-          {!birthDate && (
-            <div className={styles.birthPrompt}>
-              <div>
-                <b>最初の大きな累計を表示する</b>
-                <span>生年月日を入れると、これまで生きた日数がそのままLIFE資産になります。</span>
-              </div>
-              <input
-                aria-label="生年月日"
-                type="date"
-                value={birthDate}
-                max={today}
-                onChange={(e) => setBirthDate(e.target.value)}
-              />
-            </div>
-          )}
+          <small>{formatNumber(lifeDays)} DAYS ・ 本日も過去最高</small>
         </section>
 
-        <section className={styles.todaySection}>
-          <div className={styles.sectionTitle}>
-            <span>TODAY&apos;S ASSETS</span>
-            <h2>今日増えたもの</h2>
-          </div>
-          <div className={styles.assetList}>
-            <div className={`${styles.assetPill} ${styles.systemAsset}`}>
-              <span>人生</span><b>+1日</b>
-            </div>
-            {todayAssets.map((asset, index) => (
-              <div className={styles.assetPill} key={`${asset.name}-${index}`}>
-                <span>{asset.name}</span><b>+{asset.value}</b>
-              </div>
-            ))}
-            {todayAssets.length === 0 && <p className={styles.emptyHint}>今日の記録はまだありません。でも、人生はすでに +1。</p>}
+        <section className={styles.todayAssets}>
+          <h2>今日増えたもの</h2>
+          <div className={styles.pills}>
+            <span className={styles.lifePill}>人生 <b>+1</b></span>
+            {todayAssets.map((asset, index) => <span key={`${asset.name}-${index}`}>{asset.name} <b>+{asset.value}</b></span>)}
           </div>
         </section>
 
         <section className={styles.composer}>
-          <div className={styles.sectionTitle}>
-            <span>ADD TODAY</span>
-            <h2>今日どうだった？</h2>
-            <p>成果だけでなく、疲れた・進まなかった・失敗した、でも大丈夫です。そのまま書いてください。</p>
-          </div>
-          <textarea
-            className={styles.journal}
-            value={journal}
-            onChange={(e) => setJournal(e.target.value)}
-            placeholder="例：新商品のLPを作ったけど、思ったようにうまくできなかった。"
-            rows={5}
-          />
-          <button className={styles.primaryButton} type="button" onClick={generatePrompt}>
-            +1を見つけるプロンプトを作る <span>→</span>
-          </button>
+          <h2>今日どうだった？</h2>
+          <textarea value={journal} onChange={(e) => setJournal(e.target.value)} placeholder="そのまま書いてください。良くなかったことも、そのままで大丈夫です。" rows={4} />
+          <button className={styles.primary} type="button" onClick={generatePrompt}>+1を見つける <span>→</span></button>
 
           {prompt && (
             <div className={styles.aiPanel}>
-              <div className={styles.stepHead}>
-                <span className={styles.stepNo}>01</span>
-                <div><b>AIに渡す</b><small>ChatGPT / Geminiなど</small></div>
-              </div>
-              <textarea className={styles.promptBox} value={prompt} readOnly rows={10} />
-              <button className={styles.copyButton} type="button" onClick={copyPrompt}>プロンプトをコピー</button>
-
-              <div className={styles.divider} />
-
-              <div className={styles.stepHead}>
-                <span className={styles.stepNo}>02</span>
-                <div><b>AIのJSON回答を貼る</b><small>回答から累計資産を登録します</small></div>
-              </div>
-              <textarea
-                className={styles.responseBox}
-                value={aiResponse}
-                onChange={(e) => setAiResponse(e.target.value)}
-                placeholder={'{"assets":[{"category":"CREATE","name":"LP制作経験","value":1}],"subtraction_detected":true,"perspective":"..."}'}
-                rows={8}
-              />
-              <button className={styles.primaryButton} type="button" onClick={registerAiResponse}>
-                人生の累計に追加する <span>+1</span>
-              </button>
+              <div className={styles.step}><b>1. AIに渡す</b><button type="button" onClick={copyPrompt}>コピー</button></div>
+              <textarea value={prompt} readOnly rows={7} />
+              <div className={styles.step}><b>2. JSONを貼る</b></div>
+              <textarea value={aiResponse} onChange={(e) => setAiResponse(e.target.value)} placeholder='{"assets":[...],"perspective":"..."}' rows={5} />
+              <button className={styles.primary} type="button" onClick={registerAiResponse}>累計に追加する <span>+1</span></button>
             </div>
           )}
-
-          {(notice || error) && <div className={`${styles.notice} ${error ? styles.error : ""}`}>{error || notice}</div>}
+          {(notice || error) && <p className={`${styles.notice} ${error ? styles.error : ""}`}>{error || notice}</p>}
         </section>
 
-        <section className={styles.assetsSection}>
-          <div className={styles.sectionTitle}>
-            <span>LIFE ASSETS</span>
-            <h2>人生累計</h2>
-            <p>短期の上下ではなく、減りにくいものを見ます。</p>
-          </div>
-          <div className={styles.categoryGrid}>
-            {CATEGORIES.map((category) => (
-              <div className={styles.categoryCard} key={category}>
-                <span>{CATEGORY_LABELS[category]}</span>
-                <strong>{formatNumber(categoryTotals[category])}</strong>
-                <small>{category === "LIFE" ? "生きた日数を含む" : "累計ポイント"}</small>
-              </div>
-            ))}
-          </div>
+        <section className={styles.history}>
+          <h2>記録</h2>
+          {dayGroups.length === 0 ? (
+            <div className={styles.empty}>まだ記録はありません。今日も人生は +1。</div>
+          ) : dayGroups.map(({ date, items }) => {
+            const assets = items.flatMap((item) => item.assets);
+            const score = 1 + assets.reduce((sum, asset) => sum + asset.value, 0);
+            const perspective = [...items].reverse().find((item) => item.perspective)?.perspective;
+            return (
+              <article className={styles.dayCard} key={date}>
+                <div className={styles.dayHead}><time>{date.replaceAll("-", ".")}</time><strong>+{score}</strong></div>
+                <div className={styles.pills}><span className={styles.lifePill}>人生 <b>+1</b></span>{assets.map((asset, index) => <span key={`${date}-${asset.name}-${index}`}>{asset.name} <b>+{asset.value}</b></span>)}</div>
+                <div className={styles.notes}>{items.map((item) => <div key={item.id}><p>{item.raw}</p><button type="button" onClick={() => removeEntry(item.id)}>削除</button></div>)}</div>
+                {perspective && <blockquote><small>別の見方</small><p>{perspective}</p></blockquote>}
+              </article>
+            );
+          })}
         </section>
 
-        <section className={styles.timelineSection}>
-          <div className={styles.sectionTitle}>
-            <span>TIMELINE</span>
-            <h2>積み上がった記録</h2>
-          </div>
-          {sortedEntries.length === 0 ? (
-            <div className={styles.emptyTimeline}>
-              <span>+1</span>
-              <p>最初の記録を追加すると、ここに人生の積み上げが残ります。</p>
-            </div>
-          ) : (
-            <div className={styles.timeline}>
-              {sortedEntries.map((entry) => {
-                const score = entry.assets.reduce((sum, asset) => sum + asset.value, 0);
-                return (
-                  <article className={styles.timelineItem} key={entry.id}>
-                    <div className={styles.timelineMeta}>
-                      <time>{entry.date.replaceAll("-", ".")}</time>
-                      <b>+{score}</b>
-                    </div>
-                    <p className={styles.rawText}>{entry.raw}</p>
-                    {entry.assets.length > 0 && (
-                      <div className={styles.miniAssets}>
-                        {entry.assets.map((asset, index) => (
-                          <span key={`${entry.id}-${index}`}>{asset.name} +{asset.value}</span>
-                        ))}
-                      </div>
-                    )}
-                    {entry.perspective && (
-                      <div className={styles.perspective}>
-                        <small>{entry.subtractionDetected ? "見方チェンジ" : "別の見方"}</small>
-                        <p>{entry.perspective}</p>
-                      </div>
-                    )}
-                    <button className={styles.deleteButton} type="button" onClick={() => removeEntry(entry.id)}>この記録を削除</button>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
+        <details className={styles.settings}>
+          <summary>設定</summary>
+          <div><label>生年月日 <input type="date" value={birthDate} max={today} onChange={(e) => setBirthDate(e.target.value)} /></label><p>入力すると、生きた日数をLIFEの基礎累計にします。端末内だけに保存されます。</p></div>
+        </details>
 
-        <section className={styles.settings}>
-          <div>
-            <span>YOUR BASELINE</span>
-            <h2>生年月日</h2>
-            <p>端末内だけに保存されます。サーバーには送信しません。</p>
-          </div>
-          <input type="date" value={birthDate} max={today} onChange={(e) => setBirthDate(e.target.value)} />
-        </section>
-
-        <footer className={styles.footer}>
-          <span>LIFE +1</span>
-          <p>減ったものを補給しながら、減らないものを積み上げる。</p>
-        </footer>
+        <footer><Link href="/">LIFE +1</Link><span>減るものを補給しながら、減らないものを積み上げる。</span></footer>
       </div>
     </main>
   );
