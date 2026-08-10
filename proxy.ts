@@ -13,6 +13,18 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (host === LIFE_ONE_HOST) {
+    const url = request.nextUrl.clone();
+
+    if (pathname === "/robots.txt") {
+      url.pathname = "/life1-robots.txt";
+      return NextResponse.rewrite(url);
+    }
+
+    if (pathname === "/sitemap.xml") {
+      url.pathname = "/life1-sitemap.xml";
+      return NextResponse.rewrite(url);
+    }
+
     if (
       pathname.startsWith("/_next") ||
       pathname.startsWith("/api") ||
@@ -21,8 +33,6 @@ export function proxy(request: NextRequest) {
     ) {
       return NextResponse.next();
     }
-
-    const url = request.nextUrl.clone();
 
     if (pathname === "/") {
       url.pathname = "/life1";
