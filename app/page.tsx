@@ -11,7 +11,7 @@ const tools = [
     icon: "🥚",
   },
   {
-    href: "/life-plus-one",
+    href: "https://life1.hitobito.jp",
     tag: "LIFE / LOG",
     title: "LIFE +1",
     text: "減ったものではなく、人生に増えたものを見る。今日も人生の累計最高記録を確認するライフログ。",
