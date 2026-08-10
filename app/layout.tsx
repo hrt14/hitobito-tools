@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Life1Analytics from "@/components/Life1Analytics";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -40,7 +41,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Life1Analytics />
+      </body>
     </html>
   );
 }
