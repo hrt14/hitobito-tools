@@ -9,6 +9,12 @@ const examples = [
   { text: "疲れて一日寝ていた", gains: ["人生 +1", "今の疲労への気づき +1"] },
 ];
 
+const steps = [
+  { number: "01", title: "そのまま書く", text: "良かったことを探さなくていい。今日あったことを、そのまま書きます。" },
+  { number: "02", title: "残ったものを見つける", text: "成果とは別に、経験・学び・制作・関係・判断材料などを拾います。" },
+  { number: "03", title: "累計に足す", text: "今日の人生 +1 と一緒に、減りにくいものだけを積み上げます。" },
+];
+
 export default function Life1Home() {
   return (
     <main className={styles.page}>
@@ -29,6 +35,22 @@ export default function Life1Home() {
           <TrackedLink href="/app" eventName="home_secondary_app_click" className={styles.secondary}>すぐアプリを使う</TrackedLink>
         </div>
         <div className={styles.plusOne}>+1</div>
+      </section>
+
+      <section className={styles.howSection}>
+        <div className={styles.howIntro}>
+          <span>HOW IT WORKS</span>
+          <h2>やることは、3つだけ。</h2>
+        </div>
+        <div className={styles.stepGrid}>
+          {steps.map((step) => (
+            <div className={styles.stepCard} key={step.number}>
+              <small>{step.number}</small>
+              <h3>{step.title}</h3>
+              <p>{step.text}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className={styles.zeroSection}>
