@@ -13,7 +13,6 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (host === LIFE_ONE_HOST) {
-    // Keep framework assets and APIs on their original paths.
     if (
       pathname.startsWith("/_next") ||
       pathname.startsWith("/api") ||
@@ -23,10 +22,25 @@ export function proxy(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // LIFE +1 opens directly at the dedicated subdomain root.
+    const url = request.nextUrl.clone();
+
     if (pathname === "/") {
-      const url = request.nextUrl.clone();
+      url.pathname = "/life1";
+      return NextResponse.rewrite(url);
+    }
+
+    if (pathname === "/app") {
       url.pathname = "/life-plus-one";
+      return NextResponse.rewrite(url);
+    }
+
+    if (pathname === "/articles") {
+      url.pathname = "/life1/articles";
+      return NextResponse.rewrite(url);
+    }
+
+    if (pathname.startsWith("/articles/")) {
+      url.pathname = `/life1${pathname}`;
       return NextResponse.rewrite(url);
     }
 
@@ -44,7 +58,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // Keep framework assets and APIs on their original paths.
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
@@ -54,7 +67,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // The dedicated subdomain opens 2100 FUNDING directly at its root.
   if (pathname === "/") {
     const url = request.nextUrl.clone();
     url.pathname = "/2100";
