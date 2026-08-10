@@ -54,6 +54,11 @@ export function proxy(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
+    if (pathname.startsWith("/diagnosis/")) {
+      url.pathname = `/life1${pathname}`;
+      return NextResponse.rewrite(url);
+    }
+
     return NextResponse.next();
   }
 
