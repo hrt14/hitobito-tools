@@ -59,6 +59,11 @@ export function proxy(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
+    if (pathname === "/experiment") {
+      url.pathname = "/life1/experiment";
+      return NextResponse.rewrite(url);
+    }
+
     return NextResponse.next();
   }
 
