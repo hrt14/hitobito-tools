@@ -95,6 +95,73 @@ function parseAiResponse(text: string) {
   };
 }
 
+async function createShareCard(today: string, score: number, assets: Asset[]) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1350;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("カードを作れませんでした");
+
+  ctx.fillStyle = "#f7f6f1";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#171717";
+  ctx.font = "900 72px system-ui, sans-serif";
+  ctx.fillText("LIFE", 82, 120);
+  const lifeWidth = ctx.measureText("LIFE").width;
+  ctx.fillStyle = "#79a33d";
+  ctx.fillText("+1", 82 + lifeWidth + 20, 120);
+
+  ctx.fillStyle = "#6b6b66";
+  ctx.font = "700 34px system-ui, sans-serif";
+  ctx.fillText("今日も、人生の累計最高記録。", 82, 190);
+
+  ctx.fillStyle = "#171717";
+  ctx.font = "900 30px system-ui, sans-serif";
+  ctx.fillText("TODAY", 82, 330);
+  ctx.fillStyle = "#79a33d";
+  ctx.font = "950 190px system-ui, sans-serif";
+  ctx.fillText(`+${score}`, 72, 515);
+
+  ctx.fillStyle = "#171717";
+  ctx.font = "900 30px system-ui, sans-serif";
+  ctx.fillText("TODAY'S ASSETS", 82, 635);
+
+  const rows = [{ name: "人生", value: 1 }, ...assets].slice(0, 7);
+  rows.forEach((asset, index) => {
+    const y = 710 + index * 76;
+    ctx.fillStyle = index === 0 ? "#e4edd5" : "#ffffff";
+    ctx.beginPath();
+    ctx.roundRect(82, y - 45, 916, 58, 18);
+    ctx.fill();
+    ctx.fillStyle = "#171717";
+    ctx.font = "700 28px system-ui, sans-serif";
+    ctx.fillText(asset.name.length > 24 ? `${asset.name.slice(0, 24)}…` : asset.name, 110, y - 6);
+    ctx.fillStyle = "#79a33d";
+    ctx.font = "900 28px system-ui, sans-serif";
+    const valueText = `+${asset.value}`;
+    const valueWidth = ctx.measureText(valueText).width;
+    ctx.fillText(valueText, 960 - valueWidth, y - 6);
+  });
+
+  if (assets.length > 6) {
+    ctx.fillStyle = "#777770";
+    ctx.font = "600 22px system-ui, sans-serif";
+    ctx.fillText(`ほか ${assets.length - 6} 件`, 82, 1260);
+  }
+
+  ctx.fillStyle = "#777770";
+  ctx.font = "700 22px system-ui, sans-serif";
+  ctx.fillText(today.replaceAll("-", "."), 82, 1300);
+  const url = "life1.hitobito.jp";
+  const urlWidth = ctx.measureText(url).width;
+  ctx.fillText(url, 998 - urlWidth, 1300);
+
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("カードを作れませんでした")), "image/png");
+  });
+}
+
 export default function LifePlusOnePage() {
   const [ready, setReady] = useState(false);
   const [birthDate, setBirthDate] = useState("");
@@ -176,6 +243,34 @@ export default function LifePlusOnePage() {
     }
   }
 
+  async function shareToday() {
+    setError("");
+    const text = [
+      `今日も、人生の累計最高記録。 TODAY +${todayScore}`,
+      "人生 +1",
+      ...todayAssets.slice(0, 5).map((asset) => `${asset.name} +${asset.value}`),
+    ].join("\n");
+
+    try {
+      const blob = await createShareCard(today, todayScore, todayAssets);
+      const file = new File([blob], `life-plus-one-${today}.png`, { type: "image/png" });
+      const shareData = { title: "LIFE +1", text, url: "https://life1.hitobito.jp", files: [file] };
+      if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+        await navigator.share(shareData);
+        return;
+      }
+      if (navigator.share) {
+        await navigator.share({ title: "LIFE +1", text, url: "https://life1.hitobito.jp" });
+        return;
+      }
+      await navigator.clipboard.writeText(`${text}\nhttps://life1.hitobito.jp`);
+      setNotice("共有用テキストをコピーしました。");
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
+      setError("共有できませんでした。もう一度お試しください。");
+    }
+  }
+
   function registerAiResponse() {
     setError("");
     try {
@@ -226,11 +321,12 @@ export default function LifePlusOnePage() {
         </section>
 
         <section className={styles.todayAssets}>
-          <h2>今日増えたもの</h2>
+          <div className={styles.sectionRow}><h2>今日増えたもの</h2><button type="button" className={styles.shareToday} onClick={shareToday}>共有 ↗</button></div>
           <div className={styles.pills}>
             <span className={styles.lifePill}>人生 <b>+1</b></span>
             {todayAssets.map((asset, index) => <span key={`${asset.name}-${index}`}>{asset.name} <b>+{asset.value}</b></span>)}
           </div>
+          <p className={styles.shareHint}>共有カードには日記本文を入れません。TODAYと増えたものだけを共有します。</p>
         </section>
 
         <section className={styles.composer}>
