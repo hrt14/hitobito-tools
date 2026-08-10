@@ -30,9 +30,27 @@ const situations = [
   { label: "人生が積み上がってない気がする", href: "/articles/life-pl-and-bs" },
 ];
 
+const faqs = [
+  { question: "LIFE +1はポジティブ思考のアプリですか？", answer: "いいえ。失敗、疲労、損失などの事実はそのまま残し、その横に同時に増えた経験や判断材料がないかを見るためのアプリです。" },
+  { question: "毎日記録しないといけませんか？", answer: "いいえ。連続記録やストリークを目的にしていません。記録しない日があっても、それまでの累計は消えません。" },
+  { question: "+1は何を意味しますか？", answer: "最小の+1は、その日を一日生きたことです。加えて、実際に増えた制作、学び、経験、関係、判断材料などを記録できます。" },
+  { question: "他人と点数を比べますか？", answer: "比べません。ランキングはなく、自分自身の累計だけを見ます。" },
+];
+
 export default function Life1Home() {
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  };
+
   return (
     <main className={styles.page}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <header className={styles.header}>
         <Link href="/" className={styles.brand}>LIFE <b>+1</b></Link>
         <nav>
@@ -163,6 +181,21 @@ export default function Life1Home() {
         <h2>人生は、昨日より悪い日があっても、<br />昨日より短くはならない。</h2>
         <p>今日の成績だけで人生全体を採点しない。経験、学習、作品、人との関係、思い出、挑戦。減りにくいものを一つずつ見つけて、累計として残していく。</p>
         <strong>減るものを補給しながら、減らないものを積み上げる。</strong>
+      </section>
+
+      <section className={styles.faqSection}>
+        <div className={styles.sectionHead}>
+          <span>FAQ</span>
+          <h2>よくある疑問。</h2>
+        </div>
+        <div className={styles.faqList}>
+          {faqs.map((faq) => (
+            <details key={faq.question}>
+              <summary>{faq.question}<span>＋</span></summary>
+              <p>{faq.answer}</p>
+            </details>
+          ))}
+        </div>
       </section>
 
       <section className={styles.finalCta}>
