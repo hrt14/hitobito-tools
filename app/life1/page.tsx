@@ -21,6 +21,15 @@ const promises = [
   { title: "他人と比べない", text: "ランキングも他人の点数もありません。見るのは自分の累計だけ。" },
 ];
 
+const situations = [
+  { label: "今日は何もできなかった", href: "/articles/nothing-done-is-not-zero" },
+  { label: "仕事が進まなかった", href: "/articles/work-did-not-progress" },
+  { label: "失敗を引きずっている", href: "/articles/failure-becomes-material" },
+  { label: "疲れて一日寝ていた", href: "/articles/rest-is-information" },
+  { label: "数字が昨日より悪かった", href: "/articles/sales-down-cumulative-up" },
+  { label: "人生が積み上がってない気がする", href: "/articles/life-pl-and-bs" },
+];
+
 export default function Life1Home() {
   return (
     <main className={styles.page}>
@@ -93,6 +102,20 @@ export default function Life1Home() {
           ))}
         </div>
         <TrackedLink href="/diagnosis/zero" eventName="home_examples_diagnosis_click" className={styles.inlineCta}>「今日は本当に+0？」を30秒で診断する →</TrackedLink>
+      </section>
+
+      <section className={styles.situationSection}>
+        <div className={styles.sectionHead}>
+          <span>START FROM NOW</span>
+          <h2>いまの自分に近いものから。</h2>
+        </div>
+        <div className={styles.situationGrid}>
+          {situations.map((item) => (
+            <TrackedLink key={item.href} href={item.href} eventName="home_situation_click" eventParams={{ situation: item.label }} className={styles.situationCard}>
+              <span>{item.label}</span><b>→</b>
+            </TrackedLink>
+          ))}
+        </div>
       </section>
 
       <section className={styles.balanceSection}>
