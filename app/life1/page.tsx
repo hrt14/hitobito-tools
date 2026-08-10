@@ -15,6 +15,12 @@ const steps = [
   { number: "03", title: "累計に足す", text: "今日の人生 +1 と一緒に、減りにくいものだけを積み上げます。" },
 ];
 
+const promises = [
+  { title: "悪い日は、悪い日のまま", text: "失敗や疲労を『実は良かった』に変換しません。" },
+  { title: "連続記録を競わない", text: "休んでも途切れても、人生の累計は消えません。" },
+  { title: "他人と比べない", text: "ランキングも他人の点数もありません。見るのは自分の累計だけ。" },
+];
+
 export default function Life1Home() {
   return (
     <main className={styles.page}>
@@ -48,6 +54,22 @@ export default function Life1Home() {
               <small>{step.number}</small>
               <h3>{step.title}</h3>
               <p>{step.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.promiseSection}>
+        <div className={styles.promiseLead}>
+          <span>NO FORCED POSITIVITY</span>
+          <h2>前向きになるためのアプリではありません。</h2>
+          <p>事実を減らさず、見る事実を一つ増やします。</p>
+        </div>
+        <div className={styles.promiseGrid}>
+          {promises.map((item) => (
+            <div key={item.title} className={styles.promiseItem}>
+              <span>✓</span>
+              <div><h3>{item.title}</h3><p>{item.text}</p></div>
             </div>
           ))}
         </div>
