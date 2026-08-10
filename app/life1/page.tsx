@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TrackedLink from "@/components/life1/tracked-link";
 import { life1Articles } from "@/lib/life1-articles";
 import styles from "./page.module.css";
 
@@ -15,7 +16,7 @@ export default function Life1Home() {
         <Link href="/" className={styles.brand}>LIFE <b>+1</b></Link>
         <nav>
           <Link href="/articles">読む</Link>
-          <Link href="/app" className={styles.appLink}>アプリを使う</Link>
+          <TrackedLink href="/app" eventName="home_nav_app_click" className={styles.appLink}>アプリを使う</TrackedLink>
         </nav>
       </header>
 
@@ -24,8 +25,8 @@ export default function Life1Home() {
         <h1>今日も、人生の<br /><em>累計最高記録。</em></h1>
         <p className={styles.lead}>減ったものばかり見てしまう私たちへ。<br />人生には、今日も増えているものがあります。</p>
         <div className={styles.heroActions}>
-          <Link href="/app" className={styles.primary}>今日の +1 を見る <span>→</span></Link>
-          <Link href="/diagnosis/zero" className={styles.secondary}>30秒で+0診断</Link>
+          <TrackedLink href="/diagnosis/zero" eventName="home_primary_diagnosis_click" className={styles.primary}>30秒で今日の +1 を見る <span>→</span></TrackedLink>
+          <TrackedLink href="/app" eventName="home_secondary_app_click" className={styles.secondary}>すぐアプリを使う</TrackedLink>
         </div>
         <div className={styles.plusOne}>+1</div>
       </section>
@@ -47,7 +48,7 @@ export default function Life1Home() {
             </article>
           ))}
         </div>
-        <Link href="/diagnosis/zero" className={styles.inlineCta}>「今日は本当に+0？」を30秒で診断する →</Link>
+        <TrackedLink href="/diagnosis/zero" eventName="home_examples_diagnosis_click" className={styles.inlineCta}>「今日は本当に+0？」を30秒で診断する →</TrackedLink>
       </section>
 
       <section className={styles.balanceSection}>
@@ -80,12 +81,12 @@ export default function Life1Home() {
         </div>
         <div className={styles.articleGrid}>
           {life1Articles.slice(0, 6).map((article) => (
-            <Link className={styles.articleCard} href={`/articles/${article.slug}`} key={article.slug}>
+            <TrackedLink className={styles.articleCard} href={`/articles/${article.slug}`} eventName="home_article_click" eventParams={{ slug: article.slug }} key={article.slug}>
               <div className={styles.articleMeta}><span>{article.category}</span><span>{article.readMinutes} MIN</span></div>
               <h3>{article.title}</h3>
               <p>{article.description}</p>
               <b>読む →</b>
-            </Link>
+            </TrackedLink>
           ))}
         </div>
       </section>
@@ -100,7 +101,7 @@ export default function Life1Home() {
       <section className={styles.finalCta}>
         <p>あなたにも、今日すでに +1 があります。</p>
         <h2>今日も、人生の累計最高記録。</h2>
-        <Link href="/app" className={styles.primary}>LIFE +1を使う <span>→</span></Link>
+        <TrackedLink href="/diagnosis/zero" eventName="home_final_diagnosis_click" className={styles.primary}>30秒で今日の +1 を見る <span>→</span></TrackedLink>
         <small>ログイン不要・連続記録なし・ランキングなし</small>
       </section>
 
