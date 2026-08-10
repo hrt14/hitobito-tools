@@ -6,6 +6,7 @@ export function GET() {
     { loc: base, priority: "1.0", changefreq: "weekly" },
     { loc: `${base}/app`, priority: "0.9", changefreq: "monthly" },
     { loc: `${base}/diagnosis/zero`, priority: "0.9", changefreq: "monthly" },
+    { loc: `${base}/experiment`, priority: "0.8", changefreq: "monthly" },
     { loc: `${base}/articles`, priority: "0.8", changefreq: "weekly" },
     ...life1Articles.map((article) => ({
       loc: `${base}/articles/${article.slug}`,
