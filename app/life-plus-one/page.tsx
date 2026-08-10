@@ -274,7 +274,7 @@ export default function LifePlusOnePage() {
           <div><label>生年月日 <input type="date" value={birthDate} max={today} onChange={(e) => setBirthDate(e.target.value)} /></label><p>入力すると、生きた日数をLIFEの基礎累計にします。端末内だけに保存されます。</p></div>
         </details>
 
-        <footer><Link href="/">LIFE +1</Link><span>減るものを補給しながら、減らないものを積み上げる。</span></footer>
+        <footer className={styles.footer}><Link href="/">LIFE +1</Link><span>減るものを補給しながら、減らないものを積み上げる。</span></footer>
       </div>
     </main>
   );
