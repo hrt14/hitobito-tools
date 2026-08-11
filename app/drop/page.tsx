@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import DropVisualV05 from "./DropVisualV05";
+import DropVisualV06 from "./DropVisualV06";
 
 export const metadata: Metadata = {
   title: "一滴 | DROP",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-// DROP v0.5.0 release trigger 1: visual-situation redesign. The v0.4 component remains in the repository for rollback.
+// DROP v0.6: guided first journey. Early evaporation is removed; surface and underground routes converge on river -> ocean.
 export default function DropHome() {
-  return <DropVisualV05 />;
+  return <DropVisualV06 />;
 }
