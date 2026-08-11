@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-// MVP v0.1.2: playable water-cycle vertical slice.
+// MVP v0.4: discovery-driven event-chain redesign.
 export default function DropHome() {
   return <DropGame />;
 }
