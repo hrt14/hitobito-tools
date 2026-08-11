@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import DropGame from "./DropGame";
+import DropVisualV05 from "./DropVisualV05";
 
 export const metadata: Metadata = {
   title: "一滴 | DROP",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-// MVP v0.4: discovery-driven event-chain redesign.
+// MVP v0.5: visual-situation redesign. The v0.4 component remains in the repository for rollback.
 export default function DropHome() {
-  return <DropGame />;
+  return <DropVisualV05 />;
 }
