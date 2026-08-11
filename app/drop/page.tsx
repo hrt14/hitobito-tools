@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-// DROP v0.5.0: visual-situation redesign. The v0.4 component remains in the repository for rollback.
+// DROP v0.5.0 release trigger 1: visual-situation redesign. The v0.4 component remains in the repository for rollback.
 export default function DropHome() {
   return <DropVisualV05 />;
 }
