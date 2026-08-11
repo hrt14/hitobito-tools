@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
+// MVP v0.1: playable water-cycle vertical slice.
 export default function DropHome() {
   return <DropGame />;
 }
