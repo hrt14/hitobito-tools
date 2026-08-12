@@ -1,23 +1,31 @@
 import type { Metadata } from "next";
-import DropVisualV06 from "./DropVisualV06";
+import Game from "./Game";
+
+const title = "大河の一滴";
+const description =
+  "一滴の水になり、地球を何千年も旅する分岐型シミュレーション。山へ、森へ、地下へ、人の体へ、氷河へ、海へ。ゲームオーバーはなく、どこへ行っても旅は続く。";
 
 export const metadata: Metadata = {
-  title: "一滴 | DROP",
-  description: "一滴の水になって、選択しながら地球の水循環を旅するブラウザゲーム。どこへ行っても、旅は続く。",
+  title,
+  description,
   alternates: {
     canonical: "https://drop.hitobito.jp",
   },
   openGraph: {
-    title: "一滴 | DROP",
-    description: "一滴の水になって、地球の水循環を旅する分岐型ブラウザゲーム。",
+    title,
+    description,
     url: "https://drop.hitobito.jp",
-    siteName: "一滴 | DROP",
+    siteName: title,
     locale: "ja_JP",
     type: "website",
   },
+  twitter: {
+    card: "summary",
+    title,
+    description,
+  },
 };
 
-// DROP v0.6.1 deployment retry: action explanations, visible reactions, river-first progression, ocean-before-evaporation.
 export default function DropHome() {
-  return <DropVisualV06 />;
+  return <Game />;
 }

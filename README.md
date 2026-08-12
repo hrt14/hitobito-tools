@@ -7,6 +7,7 @@
 - `hitobito.jp` — hitobito Tools ポータル
 - `habitegg.hitobito.jp` — Habit Egg
 - `chinese.hitobito.jp` — 中国語瞬間作文
+- `drop.hitobito.jp` — 大河の一滴（水循環シミュレーション）
 
 ## 開発
 
