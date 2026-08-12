@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-// DROP v0.6.0 release: action explanations, visible reactions, river-first progression, ocean-before-evaporation.
+// DROP v0.6.1 deployment retry: action explanations, visible reactions, river-first progression, ocean-before-evaporation.
 export default function DropHome() {
   return <DropVisualV06 />;
 }
