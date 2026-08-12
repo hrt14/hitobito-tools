@@ -617,6 +617,25 @@
   backdrop-filter: blur(6px);
 }
 
+/* 読み終わった人が待たされないためのタップ領域 */
+.tapLayer,
+.tapLayerTop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.tapLayer {
+  z-index: 3;
+}
+
+/* 行動の説明を見せている最中は、他に押すものがないので全面で受ける */
+.tapLayerTop {
+  z-index: 6;
+}
+
 /* 下部パネル */
 
 .panel {

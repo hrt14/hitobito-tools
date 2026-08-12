@@ -24,7 +24,7 @@ import {
   visibleChoices,
   worldChanges,
 } from "./engine";
-import { PHASE_LABEL, formatDuration } from "./format";
+import { PHASE_LABEL, formatDuration, readingMs } from "./format";
 import { earnedJourneys } from "./journeys";
 import { CODEX_TOTAL } from "./codex";
 import { JOURNEY_TOTAL } from "./journeys";
@@ -85,10 +85,28 @@ export default function Game() {
   } | null>(null);
 
   const timers = useRef<number[]>([]);
+  // 保留中の一手。タップされたら待たずにそのまま実行する。
+  const pending = useRef<{ id: number; go: () => void } | null>(null);
+
   const after = useCallback((ms: number, fn: () => void) => {
-    const id = window.setTimeout(fn, ms);
+    if (pending.current) window.clearTimeout(pending.current.id);
+    const id = window.setTimeout(() => {
+      pending.current = null;
+      fn();
+    }, ms);
+    pending.current = { id, go: fn };
     timers.current.push(id);
     return id;
+  }, []);
+
+  /** 読み終わった人を待たせない。保留中の一手があれば即座に進める。 */
+  const flush = useCallback(() => {
+    const p = pending.current;
+    if (!p) return false;
+    window.clearTimeout(p.id);
+    pending.current = null;
+    p.go();
+    return true;
   }, []);
 
   useEffect(() => {
@@ -116,7 +134,11 @@ export default function Game() {
     (to: string, detail: string | null) => {
       setBusy(true);
       if (detail) setReaction(detail);
-      after(detail ? 780 : 240, () => {
+      // 選んだ行動の説明は、読み切れる長さだけ出す。
+      const beat = detail
+        ? readingMs(detail, { base: 700, perChar: 62, min: 1300, max: 3400 })
+        : 240;
+      after(beat, () => {
         setRun((prev) => {
           if (!prev) return prev;
           const next = advance(prev, to, rand);
@@ -158,15 +180,23 @@ export default function Game() {
   const clearFlow = useCallback(() => setFlow(null), []);
 
   // 流れの旅：すべて自然にまかせる完全オートプレイ。
+  // 送りの速さは場面の文章量で決める。固定秒だと長い場面が読み切れない。
   useEffect(() => {
     if (screen !== "play" || mode !== "drift" || busy || flow || !run) return;
-    if (isEnding(run)) {
-      const id = window.setTimeout(finish, 2600);
-      return () => window.clearTimeout(id);
-    }
-    const id = window.setTimeout(goWithFlow, 2600);
+    const here = currentNode(run);
+    const wait = readingMs(here.lines.join("")) + here.lines.length * 280;
+    const id = window.setTimeout(isEnding(run) ? finish : goWithFlow, wait);
     return () => window.clearTimeout(id);
   }, [screen, mode, busy, flow, run, goWithFlow, finish]);
+
+  /** 画面タップ：読み終わっているなら、待たずに次へ。 */
+  const nudge = useCallback(() => {
+    if (flow) return;
+    if (flush()) return;
+    if (mode !== "drift" || !run || busy) return;
+    if (isEnding(run)) finish();
+    else goWithFlow();
+  }, [flow, flush, mode, run, busy, finish, goWithFlow]);
 
   // 導入：雲の内部へカメラが寄っていく。
   useEffect(() => {
@@ -299,6 +329,15 @@ export default function Game() {
         記録
       </button>
 
+      {!flow && (busy || mode === "drift") && (
+        <button
+          type="button"
+          className={busy ? styles.tapLayerTop : styles.tapLayer}
+          onClick={nudge}
+          aria-label="次へ進む"
+        />
+      )}
+
       {flow && (
         <TimeFlow hours={flow.hours} changes={flow.changes} onDone={clearFlow} />
       )}
@@ -352,7 +391,7 @@ export default function Game() {
 
         {mode === "drift" && (
           <p className={styles.driftNote}>
-            流れの旅 ―― 自然にまかせています
+            流れの旅 ―― 読み終えたら画面をタップ
             <button type="button" onClick={() => setMode("choose")}>
               自分で選ぶ
             </button>

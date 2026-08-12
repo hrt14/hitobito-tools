@@ -77,3 +77,15 @@ export const PHASE_LABEL = {
   solid: "固体",
   gas: "気体",
 } as const;
+
+/**
+ * その文章を読み終えるのに要る時間の目安（ms）。
+ * 自動で先へ進む場面は、必ずこれを使って間を決める。長さを見ずに固定秒で送ると読めない。
+ */
+export function readingMs(
+  text: string,
+  { base = 700, perChar = 95, min = 1400, max = 9000 } = {},
+): number {
+  const chars = text.replace(/\s/g, "").length;
+  return Math.min(max, Math.max(min, base + chars * perChar));
+}
