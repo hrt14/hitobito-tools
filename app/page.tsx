@@ -20,33 +20,6 @@ const tools = [
     icon: "+1",
   },
   {
-    href: "/2100",
-    tag: "PLAY / FUTURE",
-    title: "2100 FUNDING",
-    text: "2100年のクラウドファンディング。まだない未来の商品と、そこに至る長い物語を読んで無料で支援するお遊び。",
-    accent: "pink",
-    status: "NEW",
-    icon: "🚀",
-  },
-  {
-    href: "https://working-planet.hitobito.jp",
-    tag: "PLAY / IDLE",
-    title: "working planet はたらく惑星",
-    text: "働いて、街と星を大きくしていく放置ゲームのシリーズ。お店を育て、自動化し、新しい世界を広げていく。",
-    accent: "orange",
-    status: "公開中",
-    icon: "🪐",
-  },
-  {
-    href: "https://infra-king.vercel.app",
-    tag: "PLAY / CITY BUILDING",
-    title: "インフラ王",
-    text: "道路、駅、電気、水道を整えると街が勝手に発展する、ファミコン風のシンプル都市経営ゲーム。",
-    accent: "lime",
-    status: "公開中",
-    icon: "🚉",
-  },
-  {
     href: "https://chinese.hitobito.jp",
     tag: "LEARNING",
     title: "中国語瞬間作文",
@@ -54,24 +27,6 @@ const tools = [
     accent: "orange",
     status: "公開中",
     icon: "中",
-  },
-  {
-    href: "https://touch-egg.hitobito.jp",
-    tag: "PLAY / COLLECTION",
-    title: "Touch Egg",
-    text: "ただ触るだけ。卵から生まれる幻獣や古代生物を育てて、少しずつ図鑑を集めるゲーム。",
-    accent: "pink",
-    status: "公開中",
-    icon: "☝",
-  },
-  {
-    href: "https://swipe-earth.hitobito.jp",
-    tag: "PLAY / EXPLORATION",
-    title: "SWIPE EARTH",
-    text: "スワイプするだけで地球を探検。海面から深海へ潜り、生物や未知の存在に出会う探索シリーズ。",
-    accent: "lime",
-    status: "公開中",
-    icon: "🌍",
   },
 ].filter((tool) => Boolean(tool.href));
 
@@ -82,9 +37,14 @@ export default function Home() {
         <Link href="/" className="brand" aria-label="hitobito Tools トップ">
           <span>hitobito</span> <i>Tools</i>
         </Link>
-        <a className="nav-link" href="#tools">
-          TOOLS <span aria-hidden="true">↓</span>
-        </a>
+        <div className="nav-links">
+          <a className="nav-link" href="#tools">
+            TOOLS <span aria-hidden="true">↓</span>
+          </a>
+          <a className="nav-link games-link" href="https://games.hitobito.jp/">
+            GAMES <span aria-hidden="true">↗</span>
+          </a>
+        </div>
       </nav>
 
       <section className="hero">
@@ -93,11 +53,10 @@ export default function Home() {
           <h1>
             毎日を、
             <br />
-            <em>ちょっと</em>面白く。
+            <em>ちょっと</em>便利に。
           </h1>
           <p className="lead">
-            hitobito
-            Toolsは、暮らしや学びの中にある「あと少し」を助ける、小さな道具のポータルです。
+            hitobito Toolsは、暮らしや学びの中にある「あと少し」を助ける、小さな道具のポータルです。
           </p>
           <a className="primary" href="#tools">
             道具を見てみる <span aria-hidden="true">→</span>
@@ -123,7 +82,7 @@ export default function Home() {
         <div className="section-head">
           <p className="eyebrow">AVAILABLE TOOLS</p>
           <h2>今つかえる道具</h2>
-          <p>ひとつずつ、丁寧につくっています。</p>
+          <p>仕事、暮らし、学びに使うものをここにまとめています。</p>
         </div>
 
         <div className="tool-grid">
@@ -158,6 +117,17 @@ export default function Home() {
             </p>
           </div>
         </div>
+      </section>
+
+      <section className="games-portal" aria-label="hitobito Games">
+        <div>
+          <p className="eyebrow">WANT TO PLAY?</p>
+          <h2>ゲームは、hitobito Gamesへ。</h2>
+          <p>一滴、ワーキングプラネット、INFRA KING、Touch Eggなど、遊ぶものは専用ページにまとめました。</p>
+        </div>
+        <a href="https://games.hitobito.jp/">
+          hitobito Games <span aria-hidden="true">↗</span>
+        </a>
       </section>
 
       <footer>
