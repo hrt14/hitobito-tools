@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import styles from "./portal.module.css";
 
 export const metadata: Metadata = {
-  title: "hitobito",
+  title: { absolute: "hitobito" },
   description: "hitobito Tools と hitobito Games の入口。使うものと、遊ぶもの。",
   alternates: { canonical: "https://hitobito.jp/" },
 };
