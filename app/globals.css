@@ -47,6 +47,12 @@ body {
   font-weight: 400;
 }
 
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
 .nav-link {
   color: var(--ink);
   font-size: 11px;
@@ -58,6 +64,12 @@ body {
 .nav-link span {
   margin-left: 8px;
   font-size: 16px;
+}
+
+.games-link {
+  padding: 10px 14px;
+  border: 1px solid #d7dacd;
+  border-radius: 999px;
 }
 
 .hero {
@@ -275,7 +287,8 @@ body {
 .tool-card:focus-visible,
 .primary:focus-visible,
 .nav-link:focus-visible,
-.brand:focus-visible {
+.brand:focus-visible,
+.games-portal a:focus-visible {
   outline: 3px solid var(--orange);
   outline-offset: 4px;
 }
@@ -394,6 +407,52 @@ body {
   line-height: 1.8;
 }
 
+.games-portal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+  padding: 68px max(8vw, 28px);
+  background: #eef3d8;
+}
+
+.games-portal .eyebrow {
+  margin-bottom: 12px;
+}
+
+.games-portal h2 {
+  margin: 0 0 12px;
+  font-size: clamp(30px, 4vw, 52px);
+  letter-spacing: -0.07em;
+}
+
+.games-portal p:not(.eyebrow) {
+  max-width: 680px;
+  margin: 0;
+  color: #66705f;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.games-portal a {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 15px 20px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.games-portal a span {
+  color: var(--lime);
+  font-size: 18px;
+}
+
 footer {
   display: flex;
   align-items: center;
@@ -409,6 +468,18 @@ footer small {
 }
 
 @media (max-width: 700px) {
+  .nav {
+    padding-inline: 18px;
+  }
+
+  .nav-links {
+    gap: 10px;
+  }
+
+  .nav-link:first-child {
+    display: none;
+  }
+
   .hero {
     grid-template-columns: 1fr;
     padding-top: 55px;
@@ -432,6 +503,13 @@ footer small {
 
   .tools-section {
     padding-top: 60px;
+  }
+
+  .games-portal {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-top: 52px;
+    padding-bottom: 52px;
   }
 
   footer {
