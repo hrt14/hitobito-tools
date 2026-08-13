@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "hitobito Tools",
+  title: { absolute: "hitobito Tools" },
   description: "暮らしや学びの中にある「あと少し」を助ける、小さなWebツールのポータル。",
   alternates: { canonical: "https://tools.hitobito.jp/" },
 };
