@@ -30,7 +30,7 @@ export const metadata: Metadata = {
       "暮らしや学びの中にある「あと少し」を助ける、小さなWebツールのポータル。",
   },
   icons: {
-    icon: "/favicon.svg",
+    icon: "/favicon-tools.svg",
   },
 };
 
