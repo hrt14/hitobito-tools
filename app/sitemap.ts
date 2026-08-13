@@ -10,21 +10,27 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: "https://hitobito.jp/life-plus-one",
-      lastModified: now,
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: "https://hitobito.jp/2100",
+      url: "https://tools.hitobito.jp",
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
-      url: "https://hitobito.jp/2100/monday-gravity-bag",
+      url: "https://games.hitobito.jp",
       lastModified: now,
-      changeFrequency: "monthly",
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
+      url: "https://life1.hitobito.jp",
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: "https://2100.hitobito.jp",
+      lastModified: now,
+      changeFrequency: "weekly",
       priority: 0.8,
     },
   ];
