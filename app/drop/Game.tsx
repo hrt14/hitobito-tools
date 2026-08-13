@@ -24,6 +24,15 @@ import {
   visibleChoices,
   worldChanges,
 } from "./engine";
+import {
+  getAmbience,
+  getSoundServerSnapshot,
+  getSoundSnapshot,
+  startAmbience,
+  stopAmbience,
+  subscribeSound,
+  toggleSound,
+} from "./audio";
 import { PHASE_LABEL, formatDuration, readingMs } from "./format";
 import { earnedJourneys } from "./journeys";
 import { CODEX_TOTAL } from "./codex";
@@ -65,6 +74,31 @@ function dropScale(scene: SceneKey): number {
 
 const rand = () => Math.random();
 
+function SoundIcon({ muted }: { muted: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="13"
+      height="13"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    >
+      <path d="M4 9.5v5h3.6L12 18V6L7.6 9.5H4z" fill="currentColor" stroke="none" />
+      {muted ? (
+        <path d="M16 9.5l5 5M21 9.5l-5 5" />
+      ) : (
+        <>
+          <path d="M15.6 9a4.4 4.4 0 0 1 0 6" />
+          <path d="M18.6 6.6a8 8 0 0 1 0 10.8" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 export default function Game() {
   const [screen, setScreen] = useState<Screen>("title");
   const [mode, setMode] = useState<Mode>("choose");
@@ -74,6 +108,7 @@ export default function Game() {
     getProfileSnapshot,
     getProfileServerSnapshot,
   );
+  const muted = useSyncExternalStore(subscribeSound, getSoundSnapshot, getSoundServerSnapshot);
   const [busy, setBusy] = useState(false);
   const [reaction, setReaction] = useState<string | null>(null);
   const [flow, setFlow] = useState<{ hours: number; changes: string[] } | null>(null);
@@ -121,13 +156,15 @@ export default function Game() {
 
   const start = useCallback(
     (m: Mode) => {
+      // ブラウザが音を許すのは、ユーザーが触った瞬間だけ。ここで始める。
+      startAmbience(muted);
       setMode(m);
       setRun(newRun(profile.cycles + 1, rand));
       setResult(null);
       setIntroStep(0);
       setScreen("intro");
     },
-    [profile.cycles],
+    [profile.cycles, muted],
   );
 
   const step = useCallback(
@@ -188,6 +225,28 @@ export default function Game() {
     const id = window.setTimeout(isEnding(run) ? finish : goWithFlow, wait);
     return () => window.clearTimeout(id);
   }, [screen, mode, busy, flow, run, goWithFlow, finish]);
+
+  // 音は水の居場所に従う。相が変われば水の音も消える。
+  useEffect(() => {
+    if (!node) return;
+    getAmbience()?.setScene(node.biome, node.phase);
+  }, [node]);
+
+  // TIME FLOW のあいだは静寂。
+  useEffect(() => {
+    getAmbience()?.setQuiet(flow !== null);
+  }, [flow]);
+
+  // 別のタブから戻ってきたとき、止まったままにしない。
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") getAmbience()?.resume();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
+  useEffect(() => () => stopAmbience(), []);
 
   /** 画面タップ：読み終わっているなら、待たずに次へ。 */
   const nudge = useCallback(() => {
@@ -271,6 +330,11 @@ export default function Game() {
             記録を見る（水の記憶 {profile.codex.length}/{CODEX_TOTAL}・水の人生{" "}
             {profile.journeys.length}/{JOURNEY_TOTAL}・場所 {profile.places.length}/{NODE_COUNT}）
           </button>
+
+          <button type="button" className={styles.soundToggle} onClick={toggleSound}>
+            <SoundIcon muted={muted} />
+            {muted ? "音：オフ" : "音：オン"}
+          </button>
         </div>
       </div>
     );
@@ -320,14 +384,25 @@ export default function Game() {
         </div>
       </header>
 
-      <button
-        type="button"
-        className={styles.recordsLink}
-        onClick={() => setScreen("records")}
-        aria-label="記録を見る"
-      >
-        記録
-      </button>
+      <div className={styles.corner}>
+        <button
+          type="button"
+          className={styles.iconBtn}
+          onClick={toggleSound}
+          aria-label={muted ? "音を出す" : "音を消す"}
+          aria-pressed={!muted}
+        >
+          <SoundIcon muted={muted} />
+        </button>
+        <button
+          type="button"
+          className={styles.recordsLink}
+          onClick={() => setScreen("records")}
+          aria-label="記録を見る"
+        >
+          記録
+        </button>
+      </div>
 
       {!flow && (busy || mode === "drift") && (
         <button
