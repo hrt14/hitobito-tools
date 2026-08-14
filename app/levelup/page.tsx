@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: { absolute: "LEVEL UP | hitobito" },
   description:
     "遊ぶだけで、考え方の癖を鍛える。着手、分解、集中、優先順位、断る力、完璧主義からの脱却、受容と切り替えをゲームで反復する hitobito LEVEL UP。",
-  alternates: { canonical: "https://levelup.hitobito.jp/" },
+  alternates: { canonical: "https://hitobito.jp/levelup" },
 };
 
 type LevelUpGame = {
@@ -232,7 +232,7 @@ export default function LevelUpHome() {
 
       <footer className={styles.footer}>
         <strong>hitobito LEVEL UP</strong>
-        <span>levelup.hitobito.jp</span>
+        <span>hitobito.jp/levelup</span>
       </footer>
     </main>
   );
