@@ -60,7 +60,7 @@ export default function Home() {
           </div>
         </a>
 
-        <a className={`${styles.choice} ${styles.levelup}`} href="https://levelup.hitobito.jp/">
+        <a className={`${styles.choice} ${styles.levelup}`} href="/levelup">
           <div className={styles.choiceTop}>
             <span>TRAIN / REPEAT / CHANGE</span>
             <span className={styles.arrow} aria-hidden="true">↗</span>
@@ -77,7 +77,7 @@ export default function Home() {
 
       <footer className={styles.bottom}>
         <span>hitobito.jp</span>
-        <span>tools.hitobito.jp / games.hitobito.jp / levelup.hitobito.jp</span>
+        <span>tools.hitobito.jp / games.hitobito.jp / hitobito.jp/levelup</span>
       </footer>
     </main>
   );
