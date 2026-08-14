@@ -31,6 +31,18 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon-tools.svg",
+    apple: [
+      {
+        url: "/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "hitobito Tools",
+    statusBarStyle: "default",
   },
 };
 
