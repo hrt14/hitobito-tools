@@ -5,7 +5,7 @@ import styles from "./levelup.module.css";
 export const metadata: Metadata = {
   title: { absolute: "LEVEL UP | hitobito" },
   description:
-    "遊ぶだけで、考え方の癖を鍛える。着手、分解、集中、優先順位、断る力、完璧主義からの脱却をゲームで反復する hitobito LEVEL UP。",
+    "遊ぶだけで、考え方の癖を鍛える。着手、分解、集中、優先順位、断る力、完璧主義からの脱却、受容と切り替えをゲームで反復する hitobito LEVEL UP。",
   alternates: { canonical: "https://levelup.hitobito.jp/" },
 };
 
@@ -88,6 +88,18 @@ const games: LevelUpGame[] = [
     accent: "#ff91c5",
     accentSoft: "rgba(255, 145, 197, .20)",
   },
+  {
+    id: "maa-iika",
+    title: "まあ、いいか。",
+    kicker: "ACCEPT, THEN MOVE",
+    skill: "受容 / 切り替え",
+    description:
+      "予定外に抵抗している間、出来事は変わらずストレスだけ増える。「そうなったか」と受け取り、次へ進む反射を鍛える。",
+    icon: "→",
+    accent: "#b9efc7",
+    accentSoft: "rgba(185, 239, 199, .20)",
+    href: "/maa-iika",
+  },
 ];
 
 export default function LevelUpHome() {
@@ -124,6 +136,7 @@ export default function LevelUpHome() {
           <span>優先順位</span>
           <span>断る</span>
           <span>不完全許容</span>
+          <span>受容</span>
         </div>
       </section>
 
