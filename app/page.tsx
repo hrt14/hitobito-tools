@@ -3,7 +3,7 @@ import styles from "./portal.module.css";
 
 export const metadata: Metadata = {
   title: { absolute: "hitobito" },
-  description: "hitobito Tools と hitobito Games の入口。使うものと、遊ぶもの。",
+  description: "hitobito Tools、Games、LEVEL UP の入口。使う、遊ぶ、鍛える。",
   alternates: { canonical: "https://hitobito.jp/" },
 };
 
@@ -14,7 +14,7 @@ export default function Home() {
         <div className={styles.brand}>
           <span>hitobito</span> .jp
         </div>
-        <div className={styles.note}>TOOLS / GAMES</div>
+        <div className={styles.note}>TOOLS / GAMES / LEVEL UP</div>
       </header>
 
       <section className={styles.hero}>
@@ -23,9 +23,11 @@ export default function Home() {
           使う。
           <br />
           <em>遊ぶ。</em>
+          <br />
+          <span className={styles.levelText}>鍛える。</span>
         </h1>
         <p className={styles.lead}>
-          hitobitoで作っているものを、役割ごとに分けました。日々に使う小さな道具はToolsへ。触って遊ぶ小さな世界はGamesへ。
+          hitobitoで作っているものを、役割ごとに分けました。日々に使う小さな道具はToolsへ。触って遊ぶ小さな世界はGamesへ。思考の癖をゲームで鍛えるシリーズはLEVEL UPへ。
         </p>
       </section>
 
@@ -57,11 +59,25 @@ export default function Home() {
             <p>一滴、CYCLE、水抜き、ワーキングプラネットなど。スマホですぐ遊べる、小さくて変な世界。</p>
           </div>
         </a>
+
+        <a className={`${styles.choice} ${styles.levelup}`} href="https://levelup.hitobito.jp/">
+          <div className={styles.choiceTop}>
+            <span>TRAIN / REPEAT / CHANGE</span>
+            <span className={styles.arrow} aria-hidden="true">↗</span>
+          </div>
+          <div className={styles.visual} aria-hidden="true">
+            <div className={styles.levelupOrb} />
+          </div>
+          <div className={styles.choiceCopy}>
+            <h2>Level Up.</h2>
+            <p>着手、分解、集中、断る力、完璧主義からの脱却。遊びながら、考え方の癖を反射になるまで鍛えるゲーム集。</p>
+          </div>
+        </a>
       </section>
 
       <footer className={styles.bottom}>
         <span>hitobito.jp</span>
-        <span>tools.hitobito.jp / games.hitobito.jp</span>
+        <span>tools.hitobito.jp / games.hitobito.jp / levelup.hitobito.jp</span>
       </footer>
     </main>
   );

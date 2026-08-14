@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const TOOLS_HOST = "tools.hitobito.jp";
+const LEVEL_UP_HOST = "levelup.hitobito.jp";
 const FUTURE_FUNDING_HOST = "2100.hitobito.jp";
 const LIFE_ONE_HOST = "life1.hitobito.jp";
 const DROP_HOST = "drop.hitobito.jp";
 const DROP_ROOT_PATH = "/drop";
+const LEVEL_UP_ROOT_PATH = "/levelup";
 
 const FUTURE_IMAGE_REWRITES: Record<string, string> = {
   "/2100/monday-zero/monday-zero-hero.jpg": "/2100/monday-zero/hero.svg",
@@ -14,6 +16,25 @@ const FUTURE_IMAGE_REWRITES: Record<string, string> = {
 export function proxy(request: NextRequest) {
   const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();
   const { pathname } = request.nextUrl;
+
+  if (host === LEVEL_UP_HOST) {
+    if (
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/api") ||
+      pathname === "/favicon.ico" ||
+      pathname === "/favicon.svg"
+    ) {
+      return NextResponse.next();
+    }
+
+    if (pathname === "/") {
+      const url = request.nextUrl.clone();
+      url.pathname = LEVEL_UP_ROOT_PATH;
+      return NextResponse.rewrite(url);
+    }
+
+    return NextResponse.next();
+  }
 
   if (host === TOOLS_HOST) {
     if (
