@@ -4,6 +4,7 @@ const TOOLS_HOST = "tools.hitobito.jp";
 const FUTURE_FUNDING_HOST = "2100.hitobito.jp";
 const LIFE_ONE_HOST = "life1.hitobito.jp";
 const DROP_HOST = "drop.hitobito.jp";
+const LEVEL_UP_HOST = "levelup.hitobito.jp";
 const DROP_ROOT_PATH = "/drop";
 
 const FUTURE_IMAGE_REWRITES: Record<string, string> = {
@@ -47,6 +48,25 @@ export function proxy(request: NextRequest) {
     if (pathname === "/") {
       const url = request.nextUrl.clone();
       url.pathname = DROP_ROOT_PATH;
+      return NextResponse.rewrite(url);
+    }
+
+    return NextResponse.next();
+  }
+
+  if (host === LEVEL_UP_HOST) {
+    if (
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/api") ||
+      pathname === "/favicon.ico" ||
+      pathname === "/favicon.svg"
+    ) {
+      return NextResponse.next();
+    }
+
+    if (pathname === "/") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/levelup";
       return NextResponse.rewrite(url);
     }
 
