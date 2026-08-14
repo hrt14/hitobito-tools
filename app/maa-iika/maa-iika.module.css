@@ -64,6 +64,7 @@
 .choice i { font-style: normal; opacity: .38; flex: 0 0 auto; }
 .choice:hover { background: rgba(255,255,255,.095); border-color: rgba(244,241,232,.3); }
 .choice:active { transform: scale(.985); }
+.choice:disabled { cursor: default; opacity: .72; }
 .tip { display: flex; gap: 12px; align-items: baseline; margin-top: 18px; color: rgba(244,241,232,.45); font-size: 10px; line-height: 1.5; }
 .tip strong { color: var(--mint); letter-spacing: .13em; }
 .result { padding-top: 54px; text-align: center; }
