@@ -48,19 +48,28 @@
 .hero h1 {
   max-width: 920px;
   margin: 0;
-  font-size: clamp(58px, 10vw, 126px);
+  font-size: clamp(58px, 9vw, 118px);
   line-height: 0.88;
   letter-spacing: -0.085em;
   font-weight: 950;
 }
 
+.hero h1 em,
+.hero h1 strong {
+  font-style: normal;
+  font-weight: inherit;
+}
+
 .hero h1 em {
   color: #9cc600;
-  font-style: normal;
+}
+
+.hero h1 strong {
+  color: #ff6d3a;
 }
 
 .lead {
-  max-width: 650px;
+  max-width: 720px;
   margin: 28px 0 0;
   color: #697064;
   font-size: 15px;
@@ -72,15 +81,15 @@
   margin: 0 auto;
   padding: 22px 0 76px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
 }
 
 .choice {
   position: relative;
-  min-height: 430px;
-  padding: 30px;
-  border-radius: 32px;
+  min-height: 410px;
+  padding: 28px;
+  border-radius: 30px;
   overflow: hidden;
   text-decoration: none;
   display: flex;
@@ -111,6 +120,12 @@
   box-shadow: 0 22px 58px rgb(0 0 0 / 18%);
 }
 
+.levelup {
+  background: #ff6d3a;
+  color: #20150f;
+  box-shadow: 0 22px 58px rgb(114 45 20 / 17%);
+}
+
 .choiceTop {
   display: flex;
   justify-content: space-between;
@@ -136,6 +151,11 @@
   color: #d8ff5b;
 }
 
+.levelup .arrow {
+  background: #171915;
+  color: #d9ff62;
+}
+
 .visual {
   position: relative;
   flex: 1;
@@ -149,21 +169,54 @@
 }
 
 .toolsOrb {
-  width: 180px;
-  height: 180px;
-  right: 10%;
+  width: 165px;
+  height: 165px;
+  right: 5%;
   top: 15%;
   background: #f7f7c4;
-  box-shadow: -55px 58px 0 #b8d853;
+  box-shadow: -48px 54px 0 #b8d853;
 }
 
 .gamesOrb {
-  width: 220px;
-  height: 220px;
+  width: 190px;
+  height: 190px;
   right: -20px;
-  top: 2%;
+  top: 4%;
   background: radial-gradient(circle at 38% 34%, #d8ff5b 0 5%, #748c2f 6% 14%, #1c2410 35%, #090b0e 68%);
-  box-shadow: -125px 70px 0 -55px #27320f;
+  box-shadow: -105px 64px 0 -48px #27320f;
+}
+
+.levelupMark {
+  position: absolute;
+  right: 2%;
+  top: 8%;
+  width: 185px;
+  height: 180px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  transform: rotate(-7deg);
+}
+
+.levelupMark span {
+  flex: 1;
+  display: block;
+  border-radius: 12px 12px 4px 4px;
+  background: #171915;
+  box-shadow: 0 12px 0 rgb(255 255 255 / 22%);
+}
+
+.levelupMark span:nth-child(1) {
+  height: 42%;
+}
+
+.levelupMark span:nth-child(2) {
+  height: 68%;
+}
+
+.levelupMark span:nth-child(3) {
+  height: 100%;
+  background: #d9ff62;
 }
 
 .choiceCopy {
@@ -173,9 +226,13 @@
 
 .choice h2 {
   margin: 0 0 10px;
-  font-size: clamp(44px, 6vw, 76px);
+  font-size: clamp(42px, 4.7vw, 66px);
   line-height: 0.9;
   letter-spacing: -0.075em;
+}
+
+.levelup h2 {
+  font-size: clamp(38px, 4vw, 58px);
 }
 
 .choice p {
@@ -198,6 +255,16 @@
   font-size: 11px;
 }
 
+@media (max-width: 960px) {
+  .choiceGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .levelup {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 760px) {
   .top {
     padding-top: 18px;
@@ -212,11 +279,15 @@
   }
 
   .hero h1 {
-    font-size: clamp(58px, 19vw, 88px);
+    font-size: clamp(56px, 18vw, 84px);
   }
 
   .choiceGrid {
     grid-template-columns: 1fr;
+  }
+
+  .levelup {
+    grid-column: auto;
   }
 
   .choice {
@@ -233,6 +304,11 @@
   .gamesOrb {
     width: 170px;
     height: 170px;
+  }
+
+  .levelupMark {
+    width: 160px;
+    height: 150px;
   }
 
   .bottom {
