@@ -25,6 +25,17 @@ const gameUrl = (slug: string) => `https://games.hitobito.jp/apps/${slug}/`;
 
 const games: LevelUpGame[] = [
   {
+    id: "start",
+    title: "START",
+    kicker: "MBTI TO ACTION",
+    skill: "着手 / 極小化",
+    description: "MBTIを選び、自分に合う始め方で宿題を最初の一手まで小さくして、現実で動き出す。",
+    icon: "GO",
+    accent: "#d8ff5b",
+    accentSoft: "rgba(216, 255, 91, .22)",
+    href: "/start",
+  },
+  {
     id: "3sec-action",
     title: "3秒で動け",
     kicker: "THINK LESS, START SMALL",
