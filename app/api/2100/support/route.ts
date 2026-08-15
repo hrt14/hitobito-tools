@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProject } from "@/app/2100/projects";
 
 const COUNTER_ORIGIN = "https://counterapi.com/api";
+const standaloneProjects: Record<string, { seedSupporters: number }> = {
+  "work-off-light": { seedSupporters: 0 },
+};
+
+function getSupportProject(slug: string) {
+  return getProject(slug) ?? standaloneProjects[slug] ?? null;
+}
 
 function counterUrl(slug: string, readOnly: boolean) {
-  const project = getProject(slug);
+  const project = getSupportProject(slug);
   if (!project) return null;
 
   const params = new URLSearchParams({
@@ -37,7 +44,7 @@ async function callCounter(url: string) {
 
 export async function GET(request: NextRequest) {
   const slug = request.nextUrl.searchParams.get("slug") ?? "";
-  const project = getProject(slug);
+  const project = getSupportProject(slug);
   const url = counterUrl(slug, true);
 
   if (!project || !url) {
@@ -64,7 +71,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
 
-  const project = getProject(slug);
+  const project = getSupportProject(slug);
   const url = counterUrl(slug, false);
   if (!project || !url) {
     return NextResponse.json({ error: "project not found" }, { status: 404 });
