@@ -5,8 +5,8 @@ import styles from "./levelup.module.css";
 export const metadata: Metadata = {
   title: { absolute: "LEVEL UP | hitobito" },
   description:
-    "遊ぶだけで、考え方の癖を鍛える。着手、分解、集中、優先順位、断る力、完璧主義からの脱却、受容と切り替えをゲームで反復する hitobito LEVEL UP。",
-  alternates: { canonical: "https://hitobito.jp/levelup" },
+    "遊ぶだけで、考え方の癖を鍛える。着手、分解、集中、優先順位、切り替え、自己理解などをゲームで反復する hitobito LEVEL UP。",
+  alternates: { canonical: "https://levelup.hitobito.jp/" },
 };
 
 type LevelUpGame = {
@@ -18,87 +18,242 @@ type LevelUpGame = {
   icon: string;
   accent: string;
   accentSoft: string;
-  href?: string;
+  href: string;
 };
+
+const gameUrl = (slug: string) => `https://games.hitobito.jp/apps/${slug}/`;
 
 const games: LevelUpGame[] = [
   {
-    id: "move-in-3",
+    id: "3sec-action",
     title: "3秒で動け",
     kicker: "THINK LESS, START SMALL",
     skill: "即着手",
-    description:
-      "目の前に何かが現れたら、3秒以内に「やる・捨てる・任せる」。考え込む前に、小さく動く反射をつくる。",
+    description: "3秒以内に「やる・捨てる・任せる」。考え込む前に動く反射を鍛える。",
     icon: "03",
     accent: "#ff795b",
     accentSoft: "rgba(255, 121, 91, .22)",
+    href: gameUrl("3sec-action"),
   },
   {
-    id: "five-more",
+    id: "ato-5min",
     title: "あと5分",
     kicker: "BREAK IT DOWN",
     skill: "タスク分解",
-    description:
-      "巨大な仕事を、5分・1ページ・1行まで小さくする。何を見ても「最初の最小単位」を探す癖を鍛える。",
+    description: "巨大な仕事を最初の一手まで小さくし、動けるサイズへ分解する反射を鍛える。",
     icon: "05",
     accent: "#ffd45c",
     accentSoft: "rgba(255, 212, 92, .20)",
+    href: gameUrl("ato-5min"),
   },
   {
     id: "one-thing",
     title: "一個だけやれ",
     kicker: "ONE THING UNTIL DONE",
     skill: "集中 / WIP制御",
-    description:
-      "通知、宝箱、NPC、緊急イベント。気になるものが増えても、選んだ一個を終えるまで触らない。",
+    description: "通知や割り込みに触れず、選んだ一個を最後まで終える集中力を鍛える。",
     icon: "01",
     accent: "#9ee86f",
     accentSoft: "rgba(158, 232, 111, .20)",
+    href: gameUrl("one-thing"),
   },
   {
-    id: "discard",
-    title: "捨てる勇気",
-    kicker: "CHOOSE WHAT NOT TO DO",
-    skill: "優先順位 / 断る力",
-    description:
-      "毎ターン来る案件を全部は処理できない。何をやるかではなく、何を捨てるかで結果が変わる。",
-    icon: "×",
+    id: "timecraft",
+    title: "時間を使え。",
+    kicker: "USE TIME, DON'T FILL IT",
+    skill: "時間術 / 優先順位",
+    description: "時間の使い方、優先順位、余白の作り方を予定づくりで反復する。",
+    icon: "8H",
     accent: "#6fc9ff",
     accentSoft: "rgba(111, 201, 255, .20)",
+    href: gameUrl("timecraft"),
   },
   {
-    id: "fail-forward",
-    title: "失敗して進め",
-    kicker: "SHIP, LEARN, IMPROVE",
-    skill: "完璧主義からの脱却",
-    description:
-      "完璧な準備では時間切れ。60点の橋、仮の店、雑な試作品を先に出し、反応から直す。",
-    icon: "60",
+    id: "100-turns",
+    title: "死ぬまでに、あと100ターン",
+    kicker: "TIME IS FINITE",
+    skill: "有限性 / 選択",
+    description: "残り100ターンの人生で何に時間を使うかを選び、有限な時間を体で覚える。",
+    icon: "100",
     accent: "#cba7ff",
     accentSoft: "rgba(203, 167, 255, .20)",
+    href: gameUrl("100-turns"),
   },
   {
-    id: "say-no",
-    title: "断る力",
-    kicker: "SAY NO, MANY WAYS",
-    skill: "境界線 / 自己決定",
-    description:
-      "無茶な依頼、誘い、追加仕事。相手や場面に合わせて断り方を変え、必要なときに自然とNOが出る反射をつくる。",
-    icon: "NO",
+    id: "task-separation",
+    title: "課題の分離",
+    kicker: "WHOSE TASK IS THIS?",
+    skill: "境界線 / 集中",
+    description: "「これは誰の課題か？」を切り分け、自分の課題だけに集中する反射を鍛える。",
+    icon: "↔",
     accent: "#ff91c5",
     accentSoft: "rgba(255, 145, 197, .20)",
+    href: gameUrl("task-separation"),
+  },
+  {
+    id: "levelup-control",
+    title: "変えられる？",
+    kicker: "CONTROL WHAT YOU CAN",
+    skill: "コントロール / 次の一手",
+    description: "変えられることと変えられないことを素早く切り分け、次の一手へ進む。",
+    icon: "◉",
+    accent: "#8ee3c7",
+    accentSoft: "rgba(142, 227, 199, .20)",
+    href: gameUrl("levelup-control"),
+  },
+  {
+    id: "expect-nothing",
+    title: "期待しない",
+    kicker: "DROP THE SHOULD",
+    skill: "期待を手放す",
+    description: "相手や予定への「こうなるはず」を手放し、期待に振り回されない考え方を反復する。",
+    icon: "0",
+    accent: "#b9efc7",
+    accentSoft: "rgba(185, 239, 199, .20)",
+    href: gameUrl("expect-nothing"),
+  },
+  {
+    id: "dont-change-people",
+    title: "人を変えるな",
+    kicker: "CHANGE YOUR RESPONSE",
+    skill: "対人調整 / 境界線",
+    description: "相手を変えようとせず、自分の距離・頼み方・配置を変えて問題を解く。",
+    icon: "人",
+    accent: "#ffb978",
+    accentSoft: "rgba(255, 185, 120, .20)",
+    href: gameUrl("dont-change-people"),
+  },
+  {
+    id: "help-me",
+    title: "助けて",
+    kicker: "DON'T CARRY IT ALONE",
+    skill: "頼る / 委任",
+    description: "仕事を一人で抱えず、人・AI・外注・上司へ適切に頼るほど物事が進む。",
+    icon: "HELP",
+    accent: "#78c9ff",
+    accentSoft: "rgba(120, 201, 255, .20)",
+    href: gameUrl("help-me"),
+  },
+  {
+    id: "levelup-mood",
+    title: "機嫌は自分で取る",
+    kicker: "OWN YOUR STATE",
+    skill: "感情調整",
+    description: "外部の出来事に任せず、自分で自分の機嫌を整える選択肢を増やしていく。",
+    icon: "☺",
+    accent: "#ffe56f",
+    accentSoft: "rgba(255, 229, 111, .20)",
+    href: gameUrl("levelup-mood"),
+  },
+  {
+    id: "mou-owatta",
+    title: "もう終わった",
+    kicker: "END THE LOOP",
+    skill: "切り替え / 反芻停止",
+    description: "終わった出来事を反芻せず、事実と次に変えられることだけ拾って思考を終了する。",
+    icon: "END",
+    accent: "#9ab6ff",
+    accentSoft: "rgba(154, 182, 255, .20)",
+    href: gameUrl("mou-owatta"),
+  },
+  {
+    id: "name-it",
+    title: "名前をつけろ",
+    kicker: "NAME THE FEELING",
+    skill: "感情認識",
+    description: "いま感じている感情に名前をつけ、ぼんやり抱えず認識する反射を鍛える。",
+    icon: "Aa",
+    accent: "#f4a8ff",
+    accentSoft: "rgba(244, 168, 255, .20)",
+    href: gameUrl("name-it"),
+  },
+  {
+    id: "viewpoint-exam",
+    title: "物の見方検定",
+    kicker: "FIND ANOTHER VIEW",
+    skill: "視点転換",
+    description: "嫌な出来事にも別の見方を何通りも作り、視点を切り替える型を反復する。",
+    icon: "↻",
+    accent: "#7ce2b8",
+    accentSoft: "rgba(124, 226, 184, .20)",
+    href: gameUrl("viewpoint-exam"),
+  },
+  {
+    id: "jinsei-title",
+    title: "人生にタイトルをつけろ",
+    kicker: "EDIT THE STORY",
+    skill: "意味づけ / 編集",
+    description: "同じ出来事でもタイトルを変えると意味が変わる。人生の出来事を編集する力を鍛える。",
+    icon: "T",
+    accent: "#ff9f83",
+    accentSoft: "rgba(255, 159, 131, .20)",
+    href: gameUrl("jinsei-title"),
+  },
+  {
+    id: "main-character",
+    title: "主人公で行け。",
+    kicker: "LIVE YOUR STORY",
+    skill: "自己決定",
+    description: "周囲の「普通」ではなく、自分が人生の主人公ならどう動くかを選び続ける。",
+    icon: "★",
+    accent: "#ffd36b",
+    accentSoft: "rgba(255, 211, 107, .20)",
+    href: gameUrl("main-character"),
+  },
+  {
+    id: "arigatou-sagashi",
+    title: "ありがとう探し",
+    kicker: "NOTICE WHAT SUPPORTS YOU",
+    skill: "感謝 / 観察",
+    description: "何気ない日常を支えているものを次々に見つけ、感謝を観察ゲームとして鍛える。",
+    icon: "＋",
+    accent: "#8fdda7",
+    accentSoft: "rgba(143, 221, 167, .20)",
+    href: gameUrl("arigatou-sagashi"),
+  },
+  {
+    id: "levelup-smalltalk",
+    title: "雑談力アップ",
+    kicker: "KEEP THE TALK MOVING",
+    skill: "雑談 / 会話",
+    description: "雑談の返し・広げ方・質問を反復し、自然に会話を続けるパターンを身につける。",
+    icon: "…",
+    accent: "#83c9ff",
+    accentSoft: "rgba(131, 201, 255, .20)",
+    href: gameUrl("levelup-smalltalk"),
+  },
+  {
+    id: "watashi-zukan",
+    title: "わたし図鑑",
+    kicker: "KNOW YOUR CHOICES",
+    skill: "自己理解",
+    description: "ゲーム中の意思決定から、安定と挑戦・一人と仲間・お金と時間など自分の選び方を知る。",
+    icon: "私",
+    accent: "#d6a7ff",
+    accentSoft: "rgba(214, 167, 255, .20)",
+    href: gameUrl("watashi-zukan"),
   },
   {
     id: "maa-iika",
     title: "まあ、いいか。",
     kicker: "ACCEPT, THEN MOVE",
     skill: "受容 / 切り替え",
-    description:
-      "予定外に抵抗している間、出来事は変わらずストレスだけ増える。「そうなったか」と受け取り、次へ進む反射を鍛える。",
+    description: "予定外に抵抗し続けず、「そうなったか」と受け取り、次へ進む反射を鍛える。",
     icon: "→",
     accent: "#b9efc7",
     accentSoft: "rgba(185, 239, 199, .20)",
     href: "/maa-iika",
+  },
+  {
+    id: "self-management",
+    title: "自分を回せ。",
+    kicker: "SELF MANAGEMENT TRAINING",
+    skill: "自己管理 / WIP制御",
+    description: "体力、集中、ストレス、脳内WIPを見て、その瞬間に最適な一手を選ぶ。",
+    icon: "WIP",
+    accent: "#a9ff72",
+    accentSoft: "rgba(169, 255, 114, .20)",
+    href: "/self-management",
   },
 ];
 
@@ -133,10 +288,10 @@ export default function LevelUpHome() {
           <span>着手</span>
           <span>分解</span>
           <span>集中</span>
-          <span>優先順位</span>
-          <span>断る</span>
-          <span>不完全許容</span>
-          <span>受容</span>
+          <span>時間</span>
+          <span>切り替え</span>
+          <span>自己理解</span>
+          <span>対人</span>
         </div>
       </section>
 
@@ -173,11 +328,17 @@ export default function LevelUpHome() {
               "--accent-soft": game.accentSoft,
             } as CSSProperties;
 
-            const content = (
-              <>
+            return (
+              <a
+                className={styles.card}
+                href={game.href}
+                id={game.id}
+                key={game.id}
+                style={cardStyle}
+              >
                 <div className={styles.cardTop}>
-                  <span className={styles.number}>0{index + 1}</span>
-                  <span className={styles.status}>{game.href ? "PLAY" : "BUILDING"}</span>
+                  <span className={styles.number}>{String(index + 1).padStart(2, "0")}</span>
+                  <span className={styles.status}>PLAY</span>
                 </div>
                 <div className={styles.symbol} aria-hidden="true">
                   {game.icon}
@@ -188,32 +349,7 @@ export default function LevelUpHome() {
                   <p>{game.description}</p>
                   <span className={styles.skill}>鍛えるもの：{game.skill}</span>
                 </div>
-              </>
-            );
-
-            if (game.href) {
-              return (
-                <a
-                  className={styles.card}
-                  href={game.href}
-                  id={game.id}
-                  key={game.id}
-                  style={cardStyle}
-                >
-                  {content}
-                </a>
-              );
-            }
-
-            return (
-              <article
-                className={`${styles.card} ${styles.building}`}
-                id={game.id}
-                key={game.id}
-                style={cardStyle}
-              >
-                {content}
-              </article>
+              </a>
             );
           })}
         </div>
@@ -232,7 +368,7 @@ export default function LevelUpHome() {
 
       <footer className={styles.footer}>
         <strong>hitobito LEVEL UP</strong>
-        <span>hitobito.jp/levelup</span>
+        <span>levelup.hitobito.jp</span>
       </footer>
     </main>
   );
