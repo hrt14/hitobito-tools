@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: { absolute: "START — 3分だけやる。 | LEVEL UP" },
+  title: { absolute: "START — MBTIで、動き出せる。 | LEVEL UP" },
   description:
-    "宿題を終わらせるのではなく、始める力を鍛える高校生向けLEVEL UPゲーム。大きな課題を最初の一手まで小さくする。",
+    "MBTIを入口に、自分に合う始め方で宿題の最初の一歩を出す高校生向けLEVEL UPゲーム。",
   alternates: { canonical: "https://levelup.hitobito.jp/start" },
 };
 
@@ -20,8 +20,8 @@ export default function StartGamePage() {
       }}
     >
       <iframe
-        src="https://start-homework.vercel.app/"
-        title="START — 3分だけやる。"
+        src="/start-game.html"
+        title="START — MBTIで、動き出せる。"
         style={{
           width: "100%",
           height: "100%",
