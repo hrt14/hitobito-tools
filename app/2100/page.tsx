@@ -10,6 +10,19 @@ export const metadata: Metadata = {
     "2100年のクラウドファンディング。まだ存在しない未来を、物語とともに楽しみ、無料の支援投票で応援するフィクション型コンテンツ。",
 };
 
+const offlightProject = {
+  slug: "work-off-light",
+  projectNo: "0088",
+  title: "仕事を家に持ち込まない玄関灯",
+  tagline: "玄関で、仕事だけ置いて帰る。",
+  teaser: "2026年、人は会社を出ても仕事を終えられなかった。74年の『切り替え』研究の末、2100年、仕事モードを玄関で閉じる灯りが生まれた。",
+  category: "LIFE / OFF MODE",
+  delivery: "2103年10月",
+  deliveryShort: "2103.10",
+  seedSupporters: 0,
+  photo: "https://images.unsplash.com/photo-1778766017582-44ba4512f532?auto=format&fit=crop&fm=jpg&q=84&w=1400",
+};
+
 export default function FundingHome() {
   const futureQueue = projects.filter((project) => !project.published).slice(0, 5);
 
@@ -50,17 +63,11 @@ export default function FundingHome() {
       <section className={styles.featured} aria-labelledby="featured-title">
         <div className={styles.featuredVisual}>
           <div className={styles.yearStamp}>SHIP / {featuredProject.deliveryShort}</div>
-          <div className={styles.bagScene} aria-hidden="true">
-            <div className={styles.monday}>MON</div>
-            <div className={styles.bagHandle} />
-            <div className={styles.bagBody}>
-              <span>72%</span>
-              <small>MENTAL GRAVITY<br />REDUCTION</small>
-            </div>
-            <div className={styles.gravityLineOne} />
-            <div className={styles.gravityLineTwo} />
-            <div className={styles.gravityLineThree} />
-          </div>
+          <img
+            src="/2100/monday-zero/real/hero.webp"
+            alt="月曜日が軽くなるバッグの実写プロダクトイメージ"
+            style={{ width: "100%", height: "100%", minHeight: 670, objectFit: "cover", objectPosition: "center" }}
+          />
         </div>
 
         <div className={styles.featuredCopy}>
@@ -86,16 +93,49 @@ export default function FundingHome() {
             <p>NEW FROM THE FUTURE</p>
             <h2>未来から届いたプロジェクト</h2>
           </div>
-          <span>受信日：2026.08.08</span>
+          <span>受信日：2026.08.16</span>
         </div>
 
         <div className={styles.projectGrid}>
+          <Link className={styles.projectCard} href={`/2100/${offlightProject.slug}`}>
+            <div className={`${styles.projectArt} ${styles.orange}`}>
+              <img
+                src={offlightProject.photo}
+                alt="OFFLIGHT 仕事を家に持ち込まない玄関灯の実写イメージ"
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+              />
+              <span aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.42))" }} />
+              <small style={{ zIndex: 2, color: "white", textShadow: "0 1px 8px rgba(0,0,0,.55)" }}>{offlightProject.deliveryShort}</small>
+            </div>
+            <div className={styles.projectCardBody}>
+              <p>#{offlightProject.projectNo} / {offlightProject.category}</p>
+              <h3>{offlightProject.title}</h3>
+              <blockquote>{offlightProject.tagline}</blockquote>
+              <div className={styles.cardFooter}>
+                <span><SupportCount slug={offlightProject.slug} seed={offlightProject.seedSupporters} /> REAL SUPPORTERS</span>
+                <b>READ STORY →</b>
+              </div>
+            </div>
+          </Link>
+
           {projects.map((project) => {
+            const mondayPhoto = project.slug === "monday-gravity-bag" ? "/2100/monday-zero/real/hero.webp" : null;
             const card = (
               <>
                 <div className={`${styles.projectArt} ${styles[project.accent]}`}>
-                  <span className={styles.projectIcon}>{project.icon}</span>
-                  <small>{project.deliveryShort}</small>
+                  {mondayPhoto ? (
+                    <>
+                      <img
+                        src={mondayPhoto}
+                        alt={`${project.title}の実写商品写真`}
+                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                      <span aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.42))" }} />
+                    </>
+                  ) : (
+                    <span className={styles.projectIcon}>{project.icon}</span>
+                  )}
+                  <small style={mondayPhoto ? { zIndex: 2, color: "white", textShadow: "0 1px 8px rgba(0,0,0,.55)" } : undefined}>{project.deliveryShort}</small>
                   {!project.published && <i>受信中</i>}
                 </div>
                 <div className={styles.projectCardBody}>
