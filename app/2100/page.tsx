@@ -3,6 +3,7 @@ import Link from "next/link";
 import { featuredProject, projects } from "./projects";
 import { SupportCount } from "./Support";
 import styles from "./page.module.css";
+import homeStyles from "./home-cards.module.css";
 
 export const metadata: Metadata = {
   title: "2100 FUNDING | hitobito Tools",
@@ -10,8 +11,19 @@ export const metadata: Metadata = {
     "2100年のクラウドファンディング。まだ存在しない未来を、物語とともに楽しみ、無料の支援投票で応援するフィクション型コンテンツ。",
 };
 
+const projectImageBySlug: Record<string, string> = {
+  "monday-gravity-bag": "/2100/monday-zero/monday-zero-hero.jpg",
+  "seven-minute-meeting-table": "/2100/project-cards/seven-minute-meeting-table.svg",
+  "commute-sleep-bed": "/2100/project-cards/commute-sleep-bed.svg",
+  "yesterday-self-memo": "/2100/project-cards/yesterday-self-memo.svg",
+  "no-awkward-elevator": "/2100/project-cards/no-awkward-elevator.svg",
+  "unread-glasses": "/2100/project-cards/unread-glasses.svg",
+};
+
 export default function FundingHome() {
   const futureQueue = projects.filter((project) => !project.published).slice(0, 5);
+  const featuredImage =
+    projectImageBySlug[featuredProject.slug] ?? featuredProject.lp?.images.hero ?? "";
 
   return (
     <main className={styles.page}>
@@ -50,17 +62,9 @@ export default function FundingHome() {
       <section className={styles.featured} aria-labelledby="featured-title">
         <div className={styles.featuredVisual}>
           <div className={styles.yearStamp}>SHIP / {featuredProject.deliveryShort}</div>
-          <div className={styles.bagScene} aria-hidden="true">
-            <div className={styles.monday}>MON</div>
-            <div className={styles.bagHandle} />
-            <div className={styles.bagBody}>
-              <span>72%</span>
-              <small>MENTAL GRAVITY<br />REDUCTION</small>
-            </div>
-            <div className={styles.gravityLineOne} />
-            <div className={styles.gravityLineTwo} />
-            <div className={styles.gravityLineThree} />
-          </div>
+          <figure className={homeStyles.featuredPhoto}>
+            <img src={featuredImage} alt={`${featuredProject.title}の商品イメージ`} />
+          </figure>
         </div>
 
         <div className={styles.featuredCopy}>
@@ -89,35 +93,40 @@ export default function FundingHome() {
           <span>受信日：2026.08.08</span>
         </div>
 
-        <div className={styles.projectGrid}>
+        <div className={homeStyles.productGrid}>
           {projects.map((project) => {
+            const projectImage = projectImageBySlug[project.slug];
             const card = (
               <>
-                <div className={`${styles.projectArt} ${styles[project.accent]}`}>
-                  <span className={styles.projectIcon}>{project.icon}</span>
-                  <small>{project.deliveryShort}</small>
-                  {!project.published && <i>受信中</i>}
+                <div className={homeStyles.photoFrame}>
+                  <img src={projectImage} alt={`${project.title}の商品イメージ`} loading="lazy" />
+                  <span className={homeStyles.deliveryBadge}>SHIP {project.deliveryShort}</span>
+                  {!project.published && <span className={homeStyles.comingSoonBadge}>COMING SOON</span>}
                 </div>
-                <div className={styles.projectCardBody}>
-                  <p>#{project.projectNo} / {project.category}</p>
+                <div className={homeStyles.productCardBody}>
+                  <p className={homeStyles.cardMeta}>PROJECT #{project.projectNo} / {project.category}</p>
                   <h3>{project.title}</h3>
-                  <blockquote>{project.tagline}</blockquote>
-                  <div className={styles.cardFooter}>
-                    <span>
-                      {project.published ? <><SupportCount slug={project.slug} seed={project.seedSupporters} /> REAL SUPPORTERS</> : "SUPPORT COUNT STARTS ON RELEASE"}
-                    </span>
-                    <b>{project.published ? "READ STORY →" : "COMING SOON"}</b>
+                  <p className={homeStyles.tagline}>{project.tagline}</p>
+
+                  <div className={homeStyles.progressTrack} aria-hidden="true">
+                    <div className={project.published ? homeStyles.progressFill : homeStyles.progressFillMuted} />
+                  </div>
+                  <div className={homeStyles.cardStats}>
+                    <strong>
+                      {project.published ? <><SupportCount slug={project.slug} seed={project.seedSupporters} />人が支援</> : "公開準備中"}
+                    </strong>
+                    <span>{project.published ? "物語を読む →" : project.delivery}</span>
                   </div>
                 </div>
               </>
             );
 
             return project.published ? (
-              <Link className={styles.projectCard} href={`/2100/${project.slug}`} key={project.slug}>
+              <Link className={homeStyles.productCard} href={`/2100/${project.slug}`} key={project.slug}>
                 {card}
               </Link>
             ) : (
-              <article className={`${styles.projectCard} ${styles.disabledCard}`} key={project.slug}>
+              <article className={`${homeStyles.productCard} ${homeStyles.disabledCard}`} key={project.slug}>
                 {card}
               </article>
             );
