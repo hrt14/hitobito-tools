@@ -20,6 +20,18 @@ const projectImageBySlug: Record<string, string> = {
   "unread-glasses": "/2100/project-cards/unread-glasses.svg",
 };
 
+const offlightProject = {
+  slug: "work-off-light",
+  projectNo: "0088",
+  title: "仕事を家に持ち込まない玄関灯",
+  tagline: "玄関で、仕事だけ置いて帰る。",
+  category: "LIFE / OFF MODE",
+  delivery: "2103年10月",
+  deliveryShort: "2103.10",
+  seedSupporters: 0,
+  image: "https://images.unsplash.com/photo-1778766017582-44ba4512f532?auto=format&fit=crop&fm=jpg&q=84&w=1400",
+};
+
 export default function FundingHome() {
   const futureQueue = projects.filter((project) => !project.published).slice(0, 5);
   const featuredImage =
@@ -90,10 +102,29 @@ export default function FundingHome() {
             <p>NEW FROM THE FUTURE</p>
             <h2>未来から届いたプロジェクト</h2>
           </div>
-          <span>受信日：2026.08.08</span>
+          <span>受信日：2026.08.16</span>
         </div>
 
         <div className={homeStyles.productGrid}>
+          <Link className={homeStyles.productCard} href={`/2100/${offlightProject.slug}`}>
+            <div className={homeStyles.photoFrame}>
+              <img src={offlightProject.image} alt={`${offlightProject.title}の実写商品イメージ`} loading="lazy" />
+              <span className={homeStyles.deliveryBadge}>SHIP {offlightProject.deliveryShort}</span>
+            </div>
+            <div className={homeStyles.productCardBody}>
+              <p className={homeStyles.cardMeta}>PROJECT #{offlightProject.projectNo} / {offlightProject.category}</p>
+              <h3>{offlightProject.title}</h3>
+              <p className={homeStyles.tagline}>{offlightProject.tagline}</p>
+              <div className={homeStyles.progressTrack} aria-hidden="true">
+                <div className={homeStyles.progressFill} />
+              </div>
+              <div className={homeStyles.cardStats}>
+                <strong><SupportCount slug={offlightProject.slug} seed={offlightProject.seedSupporters} />人が支援</strong>
+                <span>物語を読む →</span>
+              </div>
+            </div>
+          </Link>
+
           {projects.map((project) => {
             const projectImage = projectImageBySlug[project.slug];
             const card = (
