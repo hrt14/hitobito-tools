@@ -268,6 +268,37 @@ const games: LevelUpGame[] = [
   },
 ];
 
+// Increment this count whenever a game receives a meaningful update.
+// The catalog is always sorted by update count so the most iterated games rise to the top.
+const updateCounts: Record<string, number> = {
+  start: 1,
+  "3sec-action": 1,
+  "ato-5min": 3,
+  "one-thing": 3,
+  timecraft: 1,
+  "100-turns": 1,
+  "task-separation": 2,
+  "levelup-control": 1,
+  "expect-nothing": 1,
+  "dont-change-people": 1,
+  "help-me": 1,
+  "levelup-mood": 1,
+  "mou-owatta": 1,
+  "name-it": 1,
+  "viewpoint-exam": 1,
+  "jinsei-title": 1,
+  "main-character": 1,
+  "arigatou-sagashi": 1,
+  "levelup-smalltalk": 1,
+  "watashi-zukan": 19,
+  "maa-iika": 1,
+  "self-management": 1,
+};
+
+const sortedGames = [...games].sort(
+  (a, b) => (updateCounts[b.id] ?? 1) - (updateCounts[a.id] ?? 1),
+);
+
 export default function LevelUpHome() {
   return (
     <main className={styles.page}>
@@ -329,11 +360,11 @@ export default function LevelUpHome() {
             <p>TRAINING GAMES</p>
             <h2 id="catalog-title">思考の癖を、一個ずつ。</h2>
           </div>
-          <span>{games.length} GAMES</span>
+          <span>{sortedGames.length} GAMES</span>
         </div>
 
         <div className={styles.grid}>
-          {games.map((game, index) => {
+          {sortedGames.map((game, index) => {
             const cardStyle = {
               "--accent": game.accent,
               "--accent-soft": game.accentSoft,
@@ -349,7 +380,7 @@ export default function LevelUpHome() {
               >
                 <div className={styles.cardTop}>
                   <span className={styles.number}>{String(index + 1).padStart(2, "0")}</span>
-                  <span className={styles.status}>PLAY</span>
+                  <span className={styles.status}>UPDATE ×{updateCounts[game.id] ?? 1}</span>
                 </div>
                 <div className={styles.symbol} aria-hidden="true">
                   {game.icon}
