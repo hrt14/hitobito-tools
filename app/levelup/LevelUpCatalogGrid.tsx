@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
 import styles from "./levelup.module.css";
 
@@ -22,15 +22,41 @@ type LevelUpCatalogGridProps = {
 };
 
 const FAVORITES_STORAGE_KEY = "hitobito-levelup-favorites-v1";
+const FAVORITES_CHANGE_EVENT = "hitobito-levelup-favorites-change";
+const EMPTY_FAVORITES = "[]";
+let fallbackFavorites = EMPTY_FAVORITES;
 
-function readFavorites(): Set<string> {
+function getFavoritesSnapshot() {
   try {
-    const stored = window.localStorage.getItem(FAVORITES_STORAGE_KEY);
-    if (!stored) return new Set();
+    return window.localStorage.getItem(FAVORITES_STORAGE_KEY) ?? fallbackFavorites;
+  } catch {
+    return fallbackFavorites;
+  }
+}
 
-    const parsed: unknown = JSON.parse(stored);
+function getServerFavoritesSnapshot() {
+  return EMPTY_FAVORITES;
+}
+
+function subscribeFavorites(onStoreChange: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === FAVORITES_STORAGE_KEY) onStoreChange();
+  };
+  const handleLocalChange = () => onStoreChange();
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(FAVORITES_CHANGE_EVENT, handleLocalChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(FAVORITES_CHANGE_EVENT, handleLocalChange);
+  };
+}
+
+function parseFavorites(snapshot: string): Set<string> {
+  try {
+    const parsed: unknown = JSON.parse(snapshot);
     if (!Array.isArray(parsed)) return new Set();
-
     return new Set(parsed.filter((value): value is string => typeof value === "string"));
   } catch {
     return new Set();
@@ -41,11 +67,12 @@ export default function LevelUpCatalogGrid({
   games,
   updateCounts,
 }: LevelUpCatalogGridProps) {
-  const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
-
-  useEffect(() => {
-    setFavorites(readFavorites());
-  }, []);
+  const favoritesSnapshot = useSyncExternalStore(
+    subscribeFavorites,
+    getFavoritesSnapshot,
+    getServerFavoritesSnapshot,
+  );
+  const favorites = useMemo(() => parseFavorites(favoritesSnapshot), [favoritesSnapshot]);
 
   const orderedGames = useMemo(() => {
     const originalOrder = new Map(games.map((game, index) => [game.id, index]));
@@ -62,22 +89,23 @@ export default function LevelUpCatalogGrid({
   }, [favorites, games, updateCounts]);
 
   const toggleFavorite = (gameId: string) => {
-    setFavorites((current) => {
-      const next = new Set(current);
-      if (next.has(gameId)) {
-        next.delete(gameId);
-      } else {
-        next.add(gameId);
-      }
+    const next = new Set(favorites);
+    if (next.has(gameId)) {
+      next.delete(gameId);
+    } else {
+      next.add(gameId);
+    }
 
-      try {
-        window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([...next]));
-      } catch {
-        // Browsers can block storage; the current session still keeps the selection.
-      }
+    const serialized = JSON.stringify([...next]);
+    fallbackFavorites = serialized;
 
-      return next;
-    });
+    try {
+      window.localStorage.setItem(FAVORITES_STORAGE_KEY, serialized);
+    } catch {
+      // Keep the current session working even when browser storage is unavailable.
+    }
+
+    window.dispatchEvent(new Event(FAVORITES_CHANGE_EVENT));
   };
 
   return (
