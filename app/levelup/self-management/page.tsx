@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SelfManagementGame from "./SelfManagementGame";
+import compact from "./compact.module.css";
 
 export const metadata: Metadata = {
   title: { absolute: "自分を回せ | LEVEL UP" },
@@ -9,5 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function SelfManagementPage() {
-  return <SelfManagementGame />;
+  return (
+    <div className={compact.viewport}>
+      <SelfManagementGame />
+    </div>
+  );
 }
