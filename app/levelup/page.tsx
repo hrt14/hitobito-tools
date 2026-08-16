@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
+import LevelUpCatalogGrid from "./LevelUpCatalogGrid";
 import styles from "./levelup.module.css";
 
 export const metadata: Metadata = {
@@ -363,38 +363,7 @@ export default function LevelUpHome() {
           <span>{sortedGames.length} GAMES</span>
         </div>
 
-        <div className={styles.grid}>
-          {sortedGames.map((game, index) => {
-            const cardStyle = {
-              "--accent": game.accent,
-              "--accent-soft": game.accentSoft,
-            } as CSSProperties;
-
-            return (
-              <a
-                className={styles.card}
-                href={game.href}
-                id={game.id}
-                key={game.id}
-                style={cardStyle}
-              >
-                <div className={styles.cardTop}>
-                  <span className={styles.number}>{String(index + 1).padStart(2, "0")}</span>
-                  <span className={styles.status}>UPDATE ×{updateCounts[game.id] ?? 1}</span>
-                </div>
-                <div className={styles.symbol} aria-hidden="true">
-                  {game.icon}
-                </div>
-                <div className={styles.cardCopy}>
-                  <p className={styles.kicker}>{game.kicker}</p>
-                  <h3>{game.title}</h3>
-                  <p>{game.description}</p>
-                  <span className={styles.skill}>鍛えるもの：{game.skill}</span>
-                </div>
-              </a>
-            );
-          })}
-        </div>
+        <LevelUpCatalogGrid games={sortedGames} updateCounts={updateCounts} />
       </section>
 
       <section className={styles.transfer}>
