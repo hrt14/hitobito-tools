@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import LevelUpHomeButton from "../../components/LevelUpHomeButton";
 
 export const metadata: Metadata = {
   title: { absolute: "START — MBTIで、動き出せる。 | LEVEL UP" },
@@ -30,6 +31,7 @@ export default function StartGamePage() {
           background: "#07090d",
         }}
       />
+      <LevelUpHomeButton />
     </main>
   );
 }
