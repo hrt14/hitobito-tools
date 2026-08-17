@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import LevelUpHomeButton from "../../../components/LevelUpHomeButton";
 import SelfManagementGame from "./SelfManagementGame";
 
 export const metadata: Metadata = {
@@ -9,5 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function SelfManagementPage() {
-  return <SelfManagementGame />;
+  return (
+    <>
+      <SelfManagementGame />
+      <LevelUpHomeButton />
+    </>
+  );
 }
