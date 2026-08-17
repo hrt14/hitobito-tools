@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import LevelUpHomeButton from "../../components/LevelUpHomeButton";
 import MaaIikaGame from "./game";
 
 export const metadata: Metadata = {
@@ -9,5 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function MaaIikaPage() {
-  return <MaaIikaGame />;
+  return (
+    <>
+      <MaaIikaGame />
+      <LevelUpHomeButton />
+    </>
+  );
 }
