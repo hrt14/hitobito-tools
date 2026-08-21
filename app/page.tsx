@@ -60,7 +60,7 @@ export default function Home() {
           </div>
         </a>
 
-        <a className={`${styles.choice} ${styles.levelup}`} href="https://hitobito-levelup.web.app/">
+        <a className={`${styles.choice} ${styles.levelup}`} href="https://levelup.hitobito.jp/">
           <div className={styles.choiceTop}>
             <span>TRAIN / REPEAT / CHANGE</span>
             <span className={styles.arrow} aria-hidden="true">↗</span>
@@ -75,9 +75,30 @@ export default function Home() {
         </a>
       </section>
 
+      <section className={styles.diagnosisSection} aria-labelledby="levelup-diagnosis-title">
+        <div className={styles.diagnosisCopy}>
+          <p className={styles.diagnosisEyebrow}>LEVEL UP / 30 SEC</p>
+          <h2 id="levelup-diagnosis-title">いまの自分に合う1本を、3問で。</h2>
+          <p>
+            「何を使えばいいかわからない」をなくす入口です。今の悩みと、すぐ楽になりたいか・根っこから変えたいかを選ぶと、LEVEL UPから1本を提案します。
+          </p>
+          <a href="https://levelup.hitobito.jp/?utm_source=hitobito.jp&utm_medium=internal&utm_campaign=portal_diagnosis">
+            LEVEL UPを直接見る →
+          </a>
+        </div>
+        <div className={styles.diagnosisFrameWrap}>
+          <iframe
+            className={styles.diagnosisFrame}
+            title="30秒LEVEL UP診断"
+            src="https://levelup.hitobito.jp/embed/diagnosis/?source=hitobito_portal"
+            loading="lazy"
+          />
+        </div>
+      </section>
+
       <footer className={styles.bottom}>
         <span>hitobito.jp</span>
-        <span>tools.hitobito.jp / games.hitobito.jp / hitobito-levelup.web.app</span>
+        <span>tools.hitobito.jp / games.hitobito.jp / levelup.hitobito.jp</span>
       </footer>
     </main>
   );
