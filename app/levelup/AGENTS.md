@@ -1,95 +1,48 @@
 # LEVEL UP Agent Instructions
 
-These instructions apply to every file under `app/levelup/**` and to any task whose user-visible result is a LEVEL UP app.
+Applies to `app/levelup/**` and any task whose user-visible result is a LEVEL UP app.
 
 ## Prime directive
 
-Do not optimize for "finished code". Optimize for a product that a real user can understand immediately, benefit from, enjoy interacting with, and want to use again.
+Optimize for a product a real user can understand immediately, benefit from, enjoy using, and want to use again — not for "finished code".
 
-If a task says only "実装して", the definition of done still includes product design, implementation, validation, and production verification when the task is meant for the live site.
+Before creating or materially redesigning an app, read `docs/levelup-quality-standard.md`.
 
-## Required product framing before implementation
+## Before coding
 
-Before coding a new app or major redesign, be able to state all four in concrete language:
+Be able to state, concretely:
+1. who opens it
+2. the exact moment/situation they open it
+3. what they feel or struggle with then
+4. what should observably change by the end
 
-1. Who opens it?
-2. In what exact moment or situation do they open it?
-3. What are they feeling or struggling with at that moment?
-4. What should be observably different when they finish?
+Pick one primary user benefit. Avoid abstract framing when a real use moment can be named.
 
-Avoid abstract goals such as "increase self-esteem" when a concrete use moment can be named.
+If the concept relies on psychology, behavior science, habits, communication, productivity, or another factual domain, research reliable sources when needed. Do not build from vague general knowledge or turn an article summary into a game.
 
-Then identify one primary benefit. Do not dilute it with unrelated features.
+## Core experience gates
 
-## Research rule
+- The interaction should embody the skill being trained. Do not default to generic three-choice buttons unless discriminating between choices is itself the skill.
+- First 10 seconds: without a manual, the user should understand what the app is for, why it matters to them, and what to do next.
+- Prefer `open -> interact -> learn by doing` over long onboarding.
+- Do not rescue confusing UI with extra explanatory copy; fix the UI.
+- Every important action should produce immediate, comprehensible feedback. Motion, sound, haptics, scores, gauges, etc. are allowed only when they strengthen understanding or satisfaction.
 
-If the app relies on psychology, behavior science, habits, communication, productivity, or another factual domain, do not design from vague general knowledge. Research reliable sources first when needed to understand mechanisms, common failure modes, useful interventions, and realistic scenarios. Do not turn a summary article into a game and call that product design.
-
-## Interaction must teach the skill
-
-A LEVEL UP app needs a mechanic that matches the mental or behavioral skill being trained.
-
-Good examples:
-
-- letting go -> physically swipe/release something
-- separating responsibilities -> sort items into self/other domains
-- acting quickly -> make a small real action under light time pressure
-- reframing -> transform or replace a thought in a visible way
-
-Do not default to three generic answer buttons. Choices are acceptable only when discrimination between choices is itself the skill being trained.
-
-## First 10 seconds
-
-On first open, without reading a manual, the user should understand:
-
-- what this app is for
-- why it is relevant to them
-- what to do next
-
-Prefer `open -> interact -> learn by doing` over long onboarding.
-
-If explanatory copy is required to rescue a confusing UI, improve the UI first.
-
-## Content quality
+## Content gates
 
 Do not ship thin, repetitive, AI-sounding content.
 
-For scenario-based apps, use concrete situations across relevant domains such as work, family, friends, relationships, SNS, money, future anxiety, mistakes, comparison, evaluation, and ordinary daily friction. Progress from obvious cases to ambiguous realistic cases.
+Use concrete realistic situations and progress from obvious cases to ambiguous ones where appropriate. Avoid repeated sentence templates, generic praise, filler, fake specificity, and a polished first few items followed by near-duplicates.
 
-Avoid:
+After user input, return a short transferable rule or insight, not merely correct/incorrect.
 
-- repeated sentence templates
-- generic encouragement such as "素晴らしい選択です"
-- filler copy
-- fake specificity
-- a polished first few questions followed by near-duplicates
+## Progression and completion
 
-When the user answers, return a short transferable rule or insight, not merely correct/incorrect.
+If repeat use makes sense, provide a real reason to return: new content, rising difficulty, weak-point practice, previous-session comparison, daily challenge, or visible skill growth.
 
-## Feedback and feel
+Points, streaks, badges, levels, or gacha are not substitutes for an improving core experience.
 
-Every important action should produce an immediate, comprehensible response. Use motion, sound, haptics, visual state, score changes, gauges, or other feedback only when they strengthen understanding or satisfaction.
-
-Do not add effects for decoration alone.
-
-## Real progression
-
-If the app is repeatable, give the user a real reason to return, such as:
-
-- increasing difficulty
-- different scenarios
-- weakness-aware practice
-- comparison with previous performance
-- a daily challenge
-- visible skill growth
-
-Do not use points, streaks, gacha, badges, or levels as a substitute for an improving core experience.
-
-## Completion experience
-
-Do not end with only "お疲れさまでした".
-
-Show what changed, what the user learned, what they handled well, or what to try next. Where appropriate, persist the result so the next session can build on it.
+Do not end with only "お疲れさまでした". Show what changed, what the user learned, what they handled well, or what to try next. Persist results when that improves the next session.
 
 ## Distinctiveness gate
 
@@ -97,99 +50,60 @@ Before shipping, answer:
 
 > Why can this app not simply be deleted and replaced by another existing LEVEL UP app?
 
-If there is no strong answer, redesign or merge the concept. A new color palette, new title, or new set of three-choice questions is not sufficient differentiation.
+If the answer is weak, redesign or merge it. A new title, color palette, or new set of three-choice questions is not enough.
 
 ## Title gate
 
-Re-evaluate the title after the experience is designed. The final title should:
-
-- communicate a user benefit
-- feel specific rather than generic
-- create useful curiosity without clickbait
-- feel quick/easy only when the app actually is
-- be direct and understandable
-- make the intended user or use moment clearer where useful
-- avoid meaningless wordplay or style-first naming
-- match the actual app behavior
-- be made more concrete whenever possible
-
-Check for obvious naming conflicts before finalizing public-facing titles when appropriate.
+Re-evaluate the title after the experience exists. It should be specific, direct, benefit-led, truthful, understandable, and consistent with the actual app. Make the intended user or use moment clearer when useful. Avoid meaningless wordplay and style-first naming. Check obvious public naming conflicts when appropriate.
 
 ## Mobile UX gate
 
-Review every screen as a first-time mobile user. Check:
-
+Review every screen as a first-time mobile user. Confirm:
 - obvious next action
-- readable text size and line length
-- comfortable tap targets
+- readable text and comfortable tap targets
 - one primary purpose per screen
-- clear hierarchy
-- no redundant explanatory text
+- clear visual hierarchy
+- no redundant explanation
 - safe back/home/exit behavior
-- no accidental dead ends
-- no important action hidden below unnecessary content
+- no dead ends or hidden critical actions
 
 ## Anti-template gate
 
-Treat these as warning signs requiring review:
-
-- generic gradient cards
-- emoji used as the main design idea
-- interchangeable motivational copy
-- repeated three-choice loops
-- long explanatory walls of text
-- abstract questions disconnected from a real moment
-- theme-independent gacha or reward systems
-- number-goes-up progression with no skill growth
-- a reskin of an existing app
+Treat these as warning signs: generic gradient cards, emoji as the main idea, interchangeable encouragement, repeated three-choice loops, long text walls, abstract questions, theme-independent rewards, number-goes-up progression without skill growth, or a reskin of an existing app.
 
 ## Required self-play
 
-Before calling a LEVEL UP app complete, exercise the real user flow, including as applicable:
+Before calling an app complete, exercise the real user flow as applicable: first visit, start, correct path, incorrect path, back navigation, reload, completion, revisit, and mobile viewport.
 
-- first visit
-- start
-- correct interaction
-- incorrect interaction
-- back navigation
-- reload
-- completion
-- repeat visit
-- mobile viewport
-
-Actively look for moments that feel confusing, tedious, repetitive, weak, or unrewarding. Fix them instead of merely documenting them.
+Actively look for moments that feel confusing, tedious, repetitive, weak, or unrewarding. Fix them instead of documenting them.
 
 ## Quality score gate
 
-Score the finished experience from 0-10 on all five dimensions:
+Score 0-10 on all five dimensions:
+1. Clarity
+2. Usefulness
+3. Interaction feel
+4. Distinctiveness
+5. Replay value (when repeat use makes sense)
 
-1. Clarity — understandable without explanation
-2. Usefulness — produces a meaningful real-world benefit
-3. Interaction feel — satisfying and responsive to use
-4. Distinctiveness — has a reason to exist separately
-5. Replay value — has a reason to use again when the concept is repeatable
+Every dimension must be at least 7/10. An average above 7 is not enough. If any score is below 7, improve the product before declaring completion.
 
-Every dimension must be at least 7/10. An average above 7 is not enough. If any dimension is below 7, improve the product before declaring completion.
-
-## Engineering and verification gate
+## Engineering and production gate
 
 For implementation work:
+1. preserve or improve behavior outside the requested scope
+2. run relevant tests/checks
+3. run `npm run lint`
+4. run `npm run build` when feasible
+5. fix task-related failures instead of stopping at the first error
+6. when the requested result is for the live site, verify the actual production page after deployment
 
-1. Preserve or improve existing behavior outside the requested scope.
-2. Run relevant tests/checks.
-3. Run `npm run lint`.
-4. Run `npm run build` when feasible.
-5. Fix task-related failures rather than stopping at the first error.
-6. If the requested result is meant for production, verify the actual production page after deployment.
+A PR, merge to `main`, deployment trigger, or successful build alone is not proof of user-facing completion.
 
-A PR, merge to `main`, deployment trigger, or successful build alone is not proof that the user-facing task is complete.
-
-## Final internal question
+## Final question
 
 Before declaring completion, ask:
 
 > If I genuinely had this problem, would I choose to open this app again?
 
-If the answer is not a confident yes, the app is not finished.
-
-For the expanded rationale and design checklist, read `docs/levelup-quality-standard.md`.
+If not, it is not finished.
