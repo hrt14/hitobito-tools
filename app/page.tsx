@@ -46,7 +46,7 @@ export default function Home() {
           </div>
         </a>
 
-        <a className={`${styles.choice} ${styles.games}`} href="https://games.hitobito.jp/">
+        <a className={`${styles.choice} ${styles.games}`} href="https://play.hitobito.jp/">
           <div className={styles.choiceTop}>
             <span>PLAY / EXPLORE / GROW</span>
             <span className={styles.arrow} aria-hidden="true">↗</span>
@@ -98,7 +98,7 @@ export default function Home() {
 
       <footer className={styles.bottom}>
         <span>hitobito.jp</span>
-        <span>tools.hitobito.jp / games.hitobito.jp / levelup.hitobito.jp</span>
+        <span>tools.hitobito.jp / play.hitobito.jp / levelup.hitobito.jp</span>
       </footer>
     </main>
   );
