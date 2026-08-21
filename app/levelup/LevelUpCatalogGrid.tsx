@@ -128,10 +128,27 @@ export default function LevelUpCatalogGrid({
                 {game.icon}
               </div>
               <div className={styles.cardCopy}>
-                <p className={styles.kicker}>{game.kicker}</p>
-                <h3>{game.title}</h3>
-                <p>{game.description}</p>
-                <span className={styles.skill}>鍛えるもの：{game.skill}</span>
+                <h3
+                  style={{
+                    marginBottom: 0,
+                    fontSize: "clamp(25px, 2.6vw, 36px)",
+                    lineHeight: 1.08,
+                    letterSpacing: "-0.045em",
+                  }}
+                >
+                  {game.title}
+                </h3>
+                <p
+                  style={{
+                    margin: "16px 0 0",
+                    color: game.accent,
+                    fontSize: "13px",
+                    lineHeight: 1.65,
+                    fontWeight: 850,
+                  }}
+                >
+                  {game.description}
+                </p>
               </div>
             </a>
             <button
