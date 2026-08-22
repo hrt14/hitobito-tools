@@ -126,6 +126,7 @@
   font: inherit;
   font-weight: 950;
   cursor: pointer;
+  touch-action: manipulation;
   transition: transform .14s ease, opacity .14s ease;
 }
 
@@ -196,6 +197,7 @@
   font-size: 13px;
   font-weight: 850;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -235,6 +237,7 @@
   padding: 7px 11px;
   font-weight: 900;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .scriptCard pre,
@@ -287,6 +290,7 @@
   color: var(--ink);
   padding: 20px;
   cursor: pointer;
+  touch-action: manipulation;
 }
 .domainGrid button:last-child { border-color: #5b6640; }
 .domainGrid button span { display: block; color: var(--muted); font-size: 12px; font-weight: 850; margin-bottom: 24px; }
@@ -319,6 +323,7 @@
   font: inherit;
   line-height: 1.55;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .requestPreview,
