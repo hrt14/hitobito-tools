@@ -25,6 +25,17 @@ const gameUrl = (slug: string) => `https://games.hitobito.jp/apps/${slug}/`;
 
 const games: LevelUpGame[] = [
   {
+    id: "hard-request",
+    title: "揉めそうでも必要なお願いをする 言い方と断られても揺れない練習",
+    kicker: "ASK WITHOUT LOSING YOUR AXIS",
+    skill: "お願い / アサーティブ / 自己軸",
+    description: "攻撃せず、逃げずに頼む。NOや不機嫌まで背負わない。",
+    icon: "ASK",
+    accent: "#d8ff5b",
+    accentSoft: "rgba(216, 255, 91, .22)",
+    href: "/hard-request",
+  },
+  {
     id: "start",
     title: "宿題に手がつかない人の MBTI別「最初の一手」",
     kicker: "MBTI TO ACTION",
@@ -271,6 +282,7 @@ const games: LevelUpGame[] = [
 // Increment this count whenever a game receives a meaningful update.
 // The catalog is always sorted by update count so the most iterated games rise to the top.
 const updateCounts: Record<string, number> = {
+  "hard-request": 1,
   start: 1,
   "3sec-action": 1,
   "ato-5min": 3,
