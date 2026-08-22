@@ -36,6 +36,17 @@ const games: LevelUpGame[] = [
     href: "/hard-request",
   },
   {
+    id: "ryoma-big-picture",
+    title: "目先に振り回されない 坂本龍馬に学ぶ「大きく考える」練習",
+    kicker: "EXPAND THE BOARD",
+    skill: "大局観 / 視野 / 選択",
+    description: "目的・時間・人・手段を広げてから、一手を選ぶ。",
+    icon: "龍",
+    accent: "#f4b860",
+    accentSoft: "rgba(244, 184, 96, .20)",
+    href: "/ryoma-big-picture",
+  },
+  {
     id: "start",
     title: "宿題に手がつかない人の MBTI別「最初の一手」",
     kicker: "MBTI TO ACTION",
@@ -283,6 +294,7 @@ const games: LevelUpGame[] = [
 // The catalog is always sorted by update count so the most iterated games rise to the top.
 const updateCounts: Record<string, number> = {
   "hard-request": 1,
+  "ryoma-big-picture": 1,
   start: 1,
   "3sec-action": 1,
   "ato-5min": 3,
