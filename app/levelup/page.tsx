@@ -25,6 +25,17 @@ const gameUrl = (slug: string) => `https://games.hitobito.jp/apps/${slug}/`;
 
 const games: LevelUpGame[] = [
   {
+    id: "unfair-blame",
+    title: "悪くないのに責められ、行動まで制限されたとき 自分を守って動く練習",
+    kicker: "KEEP YOUR AGENCY",
+    skill: "濡れ衣 / 境界線 / 選択権",
+    description: "事実・断定・制限を分けて、相手に奪われていない選択権を取り戻す。",
+    icon: "CASE",
+    accent: "#ff765f",
+    accentSoft: "rgba(255, 118, 95, .20)",
+    href: "/unfair-blame",
+  },
+  {
     id: "hard-request",
     title: "揉めそうでも必要なお願いをする 言い方と断られても揺れない練習",
     kicker: "ASK WITHOUT LOSING YOUR AXIS",
@@ -293,6 +304,7 @@ const games: LevelUpGame[] = [
 // Increment this count whenever a game receives a meaningful update.
 // The catalog is always sorted by update count so the most iterated games rise to the top.
 const updateCounts: Record<string, number> = {
+  "unfair-blame": 1,
   "hard-request": 1,
   "ryoma-big-picture": 1,
   start: 1,
