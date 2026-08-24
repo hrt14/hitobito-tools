@@ -27,13 +27,9 @@ export function proxy(request: NextRequest) {
       return NextResponse.next();
     }
 
-    if (pathname === "/") {
-      const url = request.nextUrl.clone();
-      url.pathname = LEVEL_UP_ROOT_PATH;
-      return NextResponse.rewrite(url);
-    }
-
-    return NextResponse.next();
+    const url = request.nextUrl.clone();
+    url.pathname = pathname === "/" ? LEVEL_UP_ROOT_PATH : `${LEVEL_UP_ROOT_PATH}${pathname}`;
+    return NextResponse.rewrite(url);
   }
 
   if (host === TOOLS_HOST) {
