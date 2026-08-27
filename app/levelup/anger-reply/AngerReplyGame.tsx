@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import LevelUpHomeButton from "../../../components/LevelUpHomeButton";
 import styles from "./angerReply.module.css";
 
@@ -55,55 +55,44 @@ export default function AngerReplyGame() {
   const [timer, setTimer] = useState(0);
   const [timerTotal, setTimerTotal] = useState(0);
   const [plannedMinutes, setPlannedMinutes] = useState(0);
+  const [returnAt, setReturnAt] = useState(0);
   const [techniques, setTechniques] = useState<string[]>([]);
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
-  const [finishedSaved, setFinishedSaved] = useState(false);
 
   useEffect(() => {
-    setStats(loadStats());
+    const id = window.setTimeout(() => setStats(loadStats()), 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   useEffect(() => {
     if (scene !== "timer" || timer <= 0) return;
-    const id = window.setTimeout(() => setTimer((value) => Math.max(0, value - 1)), 1000);
-    return () => window.clearTimeout(id);
-  }, [scene, timer]);
 
-  useEffect(() => {
-    if (scene === "timer" && timer === 0 && timerTotal > 0) {
-      setPauseSeconds((value) => value + timerTotal);
-      setPressure((value) => Math.max(38, value - 24));
-      addTechnique("フット・イン・ザ・ドア");
-      buzz([20, 40, 20]);
-      setScene("purpose");
-    }
+    const id = window.setTimeout(() => {
+      if (timer <= 1) {
+        setTimer(0);
+        setPauseSeconds((value) => value + timerTotal);
+        setPressure((value) => Math.max(38, value - 24));
+        setTechniques((current) =>
+          current.includes("フット・イン・ザ・ドア")
+            ? current
+            : [...current, "フット・イン・ザ・ドア"],
+        );
+        buzz([20, 40, 20]);
+        setScene("purpose");
+        return;
+      }
+      setTimer((value) => Math.max(0, value - 1));
+    }, 1000);
+
+    return () => window.clearTimeout(id);
   }, [scene, timer, timerTotal]);
 
-  useEffect(() => {
-    if (finishedSaved || (scene !== "finish" && scene !== "send-anyway")) return;
-    const previous = loadStats();
-    const next: Stats = {
-      sessions: previous.sessions + 1,
-      pauses: previous.pauses + (pauseSeconds > 0 || plannedMinutes > 0 ? 1 : 0),
-      avoidedNowSend: previous.avoidedNowSend + (scene === "finish" ? 1 : 0),
-    };
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // The app remains usable when storage is blocked.
-    }
-    setStats(next);
-    setFinishedSaved(true);
-  }, [finishedSaved, pauseSeconds, plannedMinutes, scene]);
-
-  const returnTime = useMemo(() => {
-    if (!plannedMinutes) return "";
-    const date = new Date(Date.now() + plannedMinutes * 60_000);
-    return new Intl.DateTimeFormat("ja-JP", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
-  }, [plannedMinutes]);
+  const returnTime = returnAt
+    ? new Intl.DateTimeFormat("ja-JP", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(returnAt))
+    : "";
 
   function addTechnique(name: string) {
     setTechniques((current) => (current.includes(name) ? current : [...current, name]));
@@ -115,6 +104,21 @@ export default function AngerReplyGame() {
     buzz();
   }
 
+  function saveSession(avoidedNowSend: boolean, didPause: boolean) {
+    const previous = loadStats();
+    const next: Stats = {
+      sessions: previous.sessions + 1,
+      pauses: previous.pauses + (didPause ? 1 : 0),
+      avoidedNowSend: previous.avoidedNowSend + (avoidedNowSend ? 1 : 0),
+    };
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // Persistence is optional; the negotiation itself still works.
+    }
+    setStats(next);
+  }
+
   function startTimer(seconds: number) {
     setTimerTotal(seconds);
     setTimer(seconds);
@@ -124,8 +128,16 @@ export default function AngerReplyGame() {
 
   function finish(minutes: number) {
     setPlannedMinutes(minutes);
+    setReturnAt(Date.now() + minutes * 60_000);
     soften(minutes >= 20 ? 32 : 20, "コミットメント");
+    saveSession(true, true);
     setScene("finish");
+  }
+
+  function sendAnyway() {
+    addTechnique("最終選択の明確化");
+    saveSession(false, pauseSeconds > 0);
+    setScene("send-anyway");
   }
 
   function reset() {
@@ -135,8 +147,8 @@ export default function AngerReplyGame() {
     setTimer(0);
     setTimerTotal(0);
     setPlannedMinutes(0);
+    setReturnAt(0);
     setTechniques([]);
-    setFinishedSaved(false);
   }
 
   const progressLabel = `${100 - pressure}%`;
@@ -171,8 +183,16 @@ export default function AngerReplyGame() {
             negotiator="その返信、20分だけ送らないで。"
             sub="消せとは言わない。直せとも言わない。送信だけ20分保留。"
             choices={[
-              { label: "20分は無理。今返す", tone: "resist", onClick: () => { soften(4); addTechnique("ドア・イン・ザ・フェイス"); setScene("shrink"); } },
-              { label: "1分なら待てる", tone: "middle", onClick: () => startTimer(20) },
+              {
+                label: "20分は無理。今返す",
+                tone: "resist",
+                onClick: () => {
+                  soften(4);
+                  addTechnique("ドア・イン・ザ・フェイス");
+                  setScene("shrink");
+                },
+              },
+              { label: "20秒なら待てる", tone: "middle", onClick: () => startTimer(20) },
               { label: "今日は送らない", tone: "accept", onClick: () => finish(720) },
             ]}
           />
@@ -186,7 +206,14 @@ export default function AngerReplyGame() {
             choices={[
               { label: "20秒なら", tone: "accept", onClick: () => startTimer(20) },
               { label: "5秒なら", tone: "middle", onClick: () => startTimer(5) },
-              { label: "それすら無理", tone: "resist", onClick: () => { soften(3); setScene("tiny"); } },
+              {
+                label: "それすら無理",
+                tone: "resist",
+                onClick: () => {
+                  soften(3);
+                  setScene("tiny");
+                },
+              },
             ]}
           />
         )}
@@ -198,7 +225,14 @@ export default function AngerReplyGame() {
             choices={[
               { label: "5秒だけ", tone: "accept", onClick: () => startTimer(5) },
               { label: "わかった、20秒", tone: "middle", onClick: () => startTimer(20) },
-              { label: "それでも今返す", tone: "resist", onClick: () => { addTechnique("選択の自由を残す"); setScene("last"); } },
+              {
+                label: "それでも今返す",
+                tone: "resist",
+                onClick: () => {
+                  addTechnique("選択の自由を残す");
+                  setScene("last");
+                },
+              },
             ]}
           />
         )}
@@ -207,7 +241,11 @@ export default function AngerReplyGame() {
           <div className={styles.timerCard}>
             <p className={styles.timerEyebrow}>SEND NOTHING</p>
             <div className={styles.timerNumber}>{timer}</div>
-            <p>文章を考え直さなくていい。<br />ただ、送らない。</p>
+            <p>
+              文章を考え直さなくていい。
+              <br />
+              ただ、送らない。
+            </p>
             <div className={styles.breathLine} aria-hidden="true" />
           </div>
         )}
@@ -218,9 +256,30 @@ export default function AngerReplyGame() {
             sub="ここからは怒りを否定しない。あなたが返信したい一番の目的は？"
             note={`いま作れた間：${pauseSeconds}秒`}
             choices={[
-              { label: "誤解・間違いを訂正したい", tone: "middle", onClick: () => { soften(14, "目的の再定義"); setScene("correction"); } },
-              { label: "舐められたくない", tone: "resist", onClick: () => { soften(10, "ラベリング"); setScene("respect"); } },
-              { label: "とにかく言い返したい", tone: "resist", onClick: () => { soften(8, "感情の言語化"); setScene("discharge"); } },
+              {
+                label: "誤解・間違いを訂正したい",
+                tone: "middle",
+                onClick: () => {
+                  soften(14, "目的の再定義");
+                  setScene("correction");
+                },
+              },
+              {
+                label: "舐められたくない",
+                tone: "resist",
+                onClick: () => {
+                  soften(10, "ラベリング");
+                  setScene("respect");
+                },
+              },
+              {
+                label: "とにかく言い返したい",
+                tone: "resist",
+                onClick: () => {
+                  soften(8, "感情の言語化");
+                  setScene("discharge");
+                },
+              },
             ]}
           />
         )}
@@ -276,7 +335,7 @@ export default function AngerReplyGame() {
             choices={[
               { label: "20分保留する", tone: "accept", onClick: () => finish(20) },
               { label: "5分だけ保留する", tone: "middle", onClick: () => finish(5) },
-              { label: "それでも今送る", tone: "resist", onClick: () => { addTechnique("最終選択の明確化"); setScene("send-anyway"); } },
+              { label: "それでも今送る", tone: "resist", onClick: sendAnyway },
             ]}
           />
         )}
@@ -391,9 +450,18 @@ function ResultCard({
             怒りが消えた必要はありません。送信と怒りの間に、あなたが決めた時間を置けました。
           </p>
           <div className={styles.resultGrid}>
-            <div><span>送信圧</span><strong>100 → {pressure}</strong></div>
-            <div><span>実際に待った</span><strong>{pauseSeconds}秒</strong></div>
-            <div><span>次に見る</span><strong>{plannedMinutes >= 720 ? "明日" : returnTime || "あとで"}</strong></div>
+            <div>
+              <span>送信圧</span>
+              <strong>100 → {pressure}</strong>
+            </div>
+            <div>
+              <span>実際に待った</span>
+              <strong>{pauseSeconds}秒</strong>
+            </div>
+            <div>
+              <span>次に見る</span>
+              <strong>{plannedMinutes >= 720 ? "明日" : returnTime || "あとで"}</strong>
+            </div>
           </div>
           <div className={styles.ruleCard}>
             <span>NEXT RULE</span>
@@ -406,9 +474,18 @@ function ResultCard({
             このアプリは送信を禁止しません。今送るなら、攻撃を増やす部分だけ切ってから送る。
           </p>
           <ol className={styles.checks}>
-            <li><b>目的を1つ</b><span>訂正・依頼・断る、のどれかにする。</span></li>
-            <li><b>侮辱語を消す</b><span>人格ではなく、起きたことを書く。</span></li>
-            <li><b>要求を1文</b><span>相手に何をしてほしいかだけ残す。</span></li>
+            <li>
+              <b>目的を1つ</b>
+              <span>訂正・依頼・断る、のどれかにする。</span>
+            </li>
+            <li>
+              <b>侮辱語を消す</b>
+              <span>人格ではなく、起きたことを書く。</span>
+            </li>
+            <li>
+              <b>要求を1文</b>
+              <span>相手に何をしてほしいかだけ残す。</span>
+            </li>
           </ol>
         </>
       )}
@@ -420,7 +497,9 @@ function ResultCard({
         これまで {stats.sessions} 回交渉 / 「今すぐ送る」を外した {stats.avoidedNowSend} 回
       </p>
       <div className={styles.resultActions}>
-        <button type="button" onClick={onReset}>もう一度交渉する</button>
+        <button type="button" onClick={onReset}>
+          もう一度交渉する
+        </button>
         <a href="https://levelup.hitobito.jp/">LEVEL UPへ戻る</a>
       </div>
     </div>
