@@ -1,0 +1,590 @@
+.page {
+  min-height: 100svh;
+  background: #090b0d;
+  color: #f5f6f0;
+  padding: 22px 16px 108px;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.intro,
+.gameShell {
+  width: min(100%, 720px);
+  margin: 0 auto;
+}
+
+.intro {
+  min-height: calc(100svh - 130px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.brandRow,
+.gameHeader,
+.meterLabels,
+.tacticRow,
+.tally {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.series {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid #d8ff52;
+  color: #d8ff52;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.caseNo {
+  color: #747b80;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.kicker {
+  margin: 38px 0 14px;
+  color: #7f878d;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .2em;
+}
+
+.intro h1 {
+  margin: 0;
+  font-size: clamp(58px, 17vw, 116px);
+  line-height: .88;
+  letter-spacing: -.075em;
+  font-weight: 950;
+}
+
+.intro h1 strong {
+  color: #ff563d;
+}
+
+.lead {
+  margin: 30px 0 0;
+  color: #cfd4d0;
+  font-size: 16px;
+  line-height: 1.8;
+  font-weight: 650;
+}
+
+.rules {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 32px 0 24px;
+  border-top: 1px solid #30363a;
+  border-bottom: 1px solid #30363a;
+}
+
+.rules div {
+  min-width: 0;
+  padding: 14px 8px 14px 0;
+  border-right: 1px solid #30363a;
+}
+
+.rules div:last-child {
+  border-right: 0;
+  padding-left: 12px;
+}
+
+.rules div:nth-child(2) {
+  padding-left: 12px;
+}
+
+.rules b,
+.rules span {
+  display: block;
+}
+
+.rules b {
+  color: #d8ff52;
+  font-size: 11px;
+  letter-spacing: .12em;
+}
+
+.rules span {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #afb5b1;
+  font-weight: 800;
+}
+
+.startButton {
+  width: 100%;
+  min-height: 64px;
+  border: 0;
+  border-radius: 0;
+  background: #d8ff52;
+  color: #0c0e0f;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 7px 7px 0 #303b16;
+}
+
+.startButton:active {
+  transform: translate(3px, 3px);
+  box-shadow: 4px 4px 0 #303b16;
+}
+
+.note {
+  margin: 15px 0 0;
+  text-align: center;
+  color: #747b80;
+  font-size: 11px;
+}
+
+.returning {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  color: #8f979c;
+  font-size: 12px;
+}
+
+.returning small {
+  grid-column: 1 / -1;
+  color: #c8cec9;
+}
+
+.gameShell {
+  padding-top: 4px;
+}
+
+.gameHeader {
+  min-height: 52px;
+  border-bottom: 1px solid #2b3034;
+  padding-bottom: 13px;
+}
+
+.gameHeader > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gameHeader strong {
+  font-size: 13px;
+  color: #b6bcb8;
+}
+
+.restart {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #343a3f;
+  border-radius: 50%;
+  color: #c6cbc8;
+  background: transparent;
+  font-size: 19px;
+  cursor: pointer;
+}
+
+.meterBlock {
+  padding: 18px 0 16px;
+}
+
+.meterLabels {
+  color: #8a9196;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.meterLabels b {
+  color: #d8ff52;
+  font-size: 14px;
+}
+
+.meterTrack,
+.countdownTrack {
+  height: 8px;
+  margin-top: 8px;
+  background: #202428;
+  overflow: hidden;
+}
+
+.meterFill,
+.countdownFill {
+  height: 100%;
+  background: #d8ff52;
+  transition: width .38s ease;
+}
+
+.tally {
+  margin-top: 8px;
+  color: #656c71;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .08em;
+}
+
+.round {
+  padding-top: 8px;
+}
+
+.tacticRow {
+  margin-bottom: 12px;
+  gap: 14px;
+  color: #7a8287;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.tacticRow b {
+  color: #ff775f;
+  white-space: nowrap;
+}
+
+.negotiatorBubble {
+  border-left: 5px solid #d8ff52;
+  background: #121619;
+  padding: 22px 19px 20px;
+}
+
+.speaker {
+  display: block;
+  margin-bottom: 10px;
+  color: #d8ff52;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .16em;
+}
+
+.negotiatorBubble h2 {
+  margin: 0;
+  font-size: clamp(25px, 7vw, 38px);
+  line-height: 1.26;
+  letter-spacing: -.035em;
+}
+
+.negotiatorBubble p {
+  margin: 14px 0 0;
+  color: #92999e;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.choices {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.choice {
+  min-height: 62px;
+  border: 1px solid #353b40;
+  background: #0e1113;
+  color: #f1f3ef;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .12s ease, border-color .12s ease, background .12s ease;
+}
+
+.choice:active:not(:disabled) {
+  transform: scale(.985);
+}
+
+.choice:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.choice span {
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.choice i {
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: .1em;
+  color: #70777c;
+}
+
+.deal {
+  border-color: #728629;
+}
+
+.deal i {
+  color: #d8ff52;
+}
+
+.resist {
+  border-color: #49312e;
+}
+
+.resist i {
+  color: #ff715d;
+}
+
+.neutral i {
+  color: #aab0b4;
+}
+
+.reply {
+  margin-top: 14px;
+  border: 1px solid #d8ff52;
+  color: #d8ff52;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 800;
+  animation: rise .18s ease both;
+}
+
+.countdownScreen,
+.planScreen,
+.resultScreen {
+  min-height: 64svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.countdownScreen > p,
+.planEyebrow,
+.resultStamp,
+.drawStamp {
+  margin: 0 0 8px;
+  color: #d8ff52;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .16em;
+}
+
+.countdownScreen h2 {
+  margin: 0;
+  color: #d8ff52;
+  font-size: clamp(120px, 39vw, 230px);
+  line-height: .9;
+  letter-spacing: -.08em;
+}
+
+.countdownScreen strong {
+  margin-top: 20px;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.countdownScreen .countdownTrack {
+  margin-top: 26px;
+  height: 10px;
+}
+
+.skip {
+  align-self: flex-end;
+  margin-top: 18px;
+  border: 0;
+  background: transparent;
+  color: #8c9499;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.planScreen h2,
+.resultScreen h2 {
+  margin: 0;
+  font-size: clamp(31px, 8vw, 48px);
+  line-height: 1.2;
+  letter-spacing: -.045em;
+}
+
+.planScreen > p:not(.planEyebrow),
+.resultLead {
+  margin: 16px 0 0;
+  color: #a4aba7;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.planChoices {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.planChoices button {
+  min-height: 70px;
+  border: 1px solid #596522;
+  background: #11150d;
+  color: #eff6d4;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.planChoices span {
+  font-weight: 850;
+}
+
+.planChoices i {
+  color: #d8ff52;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.resultStamp {
+  width: fit-content;
+  padding: 6px 9px;
+  background: #d8ff52;
+  color: #0c0f0c;
+}
+
+.drawStamp {
+  width: fit-content;
+  padding: 6px 9px;
+  background: #ff5d47;
+  color: #100907;
+}
+
+.resultLead strong {
+  color: #f0f3ef;
+}
+
+.resultCard {
+  margin-top: 24px;
+  border: 1px solid #d8ff52;
+  padding: 17px;
+}
+
+.resultCard span,
+.handbook > p {
+  display: block;
+  color: #80878c;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.resultCard strong {
+  display: block;
+  margin-top: 7px;
+  color: #d8ff52;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.handbook {
+  margin-top: 20px;
+}
+
+.handbook > p {
+  margin: 0 0 9px;
+}
+
+.handbook > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.handbook span {
+  border: 1px solid #30363a;
+  padding: 6px 8px;
+  color: #979ea3;
+  font-size: 10px;
+}
+
+.resultStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 22px 0;
+  border-top: 1px solid #30363a;
+  border-bottom: 1px solid #30363a;
+}
+
+.resultStats span {
+  padding: 13px 8px;
+  color: #858c91;
+  font-size: 10px;
+  text-align: center;
+  border-right: 1px solid #30363a;
+}
+
+.resultStats span:last-child {
+  border-right: 0;
+}
+
+.resultStats b {
+  display: block;
+  margin-top: 4px;
+  color: #f2f4ef;
+  font-size: 17px;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding-top: 14px;
+  }
+
+  .intro {
+    justify-content: flex-start;
+    padding-top: 58px;
+  }
+
+  .lead br {
+    display: none;
+  }
+
+  .rules span {
+    font-size: 11px;
+  }
+
+  .gameHeader > div {
+    gap: 7px;
+  }
+
+  .gameHeader strong {
+    font-size: 12px;
+  }
+
+  .resultStats span {
+    padding-inline: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meterFill,
+  .countdownFill,
+  .choice,
+  .reply {
+    transition: none;
+    animation: none;
+  }
+}
