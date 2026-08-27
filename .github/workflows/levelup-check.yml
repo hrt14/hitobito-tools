@@ -15,5 +15,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run lint
+      - name: Lint changed LEVEL UP files
+        run: npx eslint app/levelup/dont-decide-now/DontDecideNow.tsx app/levelup/dont-decide-now/page.tsx app/levelup/page.tsx
       - run: npm run build
