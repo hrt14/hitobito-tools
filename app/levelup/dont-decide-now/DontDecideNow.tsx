@@ -266,9 +266,10 @@ export default function DontDecideNow() {
     selectedSignals.includes("isolated");
 
   const remainingMs = pauseEndAt && now ? pauseEndAt - now : 0;
-  const elapsedMinutes = pauseStartedAt
-    ? Math.max(0, Math.round(((pauseEndAt || Date.now()) - pauseStartedAt) / 60_000))
-    : 0;
+  const elapsedMinutes =
+    pauseStartedAt && pauseEndAt
+      ? Math.max(0, Math.round((pauseEndAt - pauseStartedAt) / 60_000))
+      : 0;
 
   function selectKind(id: string) {
     setKindId(id);
