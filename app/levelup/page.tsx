@@ -25,6 +25,17 @@ const gameUrl = (slug: string) => `https://games.hitobito.jp/apps/${slug}/`;
 
 const games: LevelUpGame[] = [
   {
+    id: "dont-decide-now",
+    title: "怒り・焦り・勢いで大事なことを決めそうなときの『今は決めるな』",
+    kicker: "PAUSE BEFORE ACTION",
+    skill: "判断保留 / 衝動対策 / 第三者確認",
+    description: "赤信号を確認し、3秒止まって、10分・1時間・明日へ判断を送る。",
+    icon: "STOP",
+    accent: "#e64b2f",
+    accentSoft: "rgba(230, 75, 47, .20)",
+    href: "/dont-decide-now",
+  },
+  {
     id: "unfair-blame",
     title: "悪くないのに責められ、行動まで制限されたとき 自分を守って動く練習",
     kicker: "KEEP YOUR AGENCY",
@@ -304,6 +315,7 @@ const games: LevelUpGame[] = [
 // Increment this count whenever a game receives a meaningful update.
 // The catalog is always sorted by update count so the most iterated games rise to the top.
 const updateCounts: Record<string, number> = {
+  "dont-decide-now": 1,
   "unfair-blame": 1,
   "hard-request": 1,
   "ryoma-big-picture": 1,
