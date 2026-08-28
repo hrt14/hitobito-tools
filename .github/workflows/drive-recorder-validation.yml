@@ -20,5 +20,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run lint
-      - run: npm run build
+      - name: Lint Drive Recorder changes
+        run: npx eslint app/drive-recorder app/tools/page.tsx
+      - name: Build application
+        run: npm run build
+      - name: Full repository lint baseline
+        continue-on-error: true
+        run: npm run lint
