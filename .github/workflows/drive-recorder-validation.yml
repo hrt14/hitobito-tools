@@ -1,0 +1,24 @@
+name: Drive Recorder validation
+
+on:
+  pull_request:
+    paths:
+      - "app/drive-recorder/**"
+      - "app/tools/page.tsx"
+      - "docs/drive-recorder-google-setup.md"
+      - "package.json"
+      - "package-lock.json"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
