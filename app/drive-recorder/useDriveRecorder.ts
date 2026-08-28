@@ -92,14 +92,19 @@ export function useDriveRecorder() {
   }, []);
 
   useEffect(() => {
-    const raw = localStorage.getItem(FOLDER_STORAGE_KEY);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw) as DriveFolder;
-        if (parsed.id && parsed.name) setFolder(parsed);
-      } catch { localStorage.removeItem(FOLDER_STORAGE_KEY); }
-    }
-    void refreshPending();
+    const timer = window.setTimeout(() => {
+      const raw = localStorage.getItem(FOLDER_STORAGE_KEY);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as DriveFolder;
+          if (parsed.id && parsed.name) setFolder(parsed);
+        } catch {
+          localStorage.removeItem(FOLDER_STORAGE_KEY);
+        }
+      }
+      void refreshPending();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [refreshPending]);
 
   useEffect(() => {
@@ -309,6 +314,6 @@ export function useDriveRecorder() {
     stage, folder, title, setTitle, connected, connecting, elapsedMs, uploadProgress, pending,
     activeRecordingId, confirmStop, setConfirmStop, message, backgroundWarning, savedFile,
     savedFolderName, errorHeading, googleConfigured, tokenIsValid, connectGoogle, chooseFolder, startRecording,
-    finishAndUpload, retryUpload, nextRecording, backToReady, activeFolderName: metaRef.current?.folderName ?? folder?.name ?? "",
+    finishAndUpload, retryUpload, nextRecording, backToReady, activeFolderName: folder?.name ?? "",
   };
 }
