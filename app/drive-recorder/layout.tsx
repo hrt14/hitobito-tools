@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: "Drive Recorder",
   },
   icons: {
-    apple: "/drive-recorder/icon-192.png",
+    apple: "/apple-touch-icon.png",
   },
 };
 
