@@ -13,14 +13,14 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#0d100e",
     icons: [
       {
-        src: "/drive-recorder/icon-192.png",
-        sizes: "192x192",
-        type: "image/png",
+        src: "/drive-recorder/icon.svg",
+        sizes: "any",
+        type: "image/svg+xml",
         purpose: "any",
       },
       {
-        src: "/drive-recorder/icon-512.png",
-        sizes: "512x512",
+        src: "/apple-touch-icon.png",
+        sizes: "180x180",
         type: "image/png",
         purpose: "any",
       },
