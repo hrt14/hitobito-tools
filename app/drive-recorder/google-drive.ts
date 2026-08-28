@@ -90,11 +90,13 @@ type GapiGlobal = {
   load: (name: string, callback: () => void) => void;
 };
 
-declare global {
-  interface Window {
-    google?: GoogleGlobal;
-    gapi?: GapiGlobal;
-  }
+type GoogleWindow = Window & {
+  google?: GoogleGlobal;
+  gapi?: GapiGlobal;
+};
+
+function getGoogleWindow() {
+  return window as unknown as GoogleWindow;
 }
 
 const scriptPromises = new Map<string, Promise<void>>();
@@ -135,11 +137,12 @@ export async function loadGoogleLibraries() {
 
   if (!pickerPromise) {
     pickerPromise = new Promise<void>((resolve, reject) => {
-      if (!window.gapi) {
+      const googleWindow = getGoogleWindow();
+      if (!googleWindow.gapi) {
         reject(new Error("Google Pickerを初期化できませんでした。"));
         return;
       }
-      window.gapi.load("picker", resolve);
+      googleWindow.gapi.load("picker", resolve);
     });
   }
 
@@ -148,12 +151,13 @@ export async function loadGoogleLibraries() {
 
 export async function requestGoogleAccessToken(clientId: string, prompt: "consent" | "") {
   await loadGoogleLibraries();
-  if (!window.google?.accounts) {
+  const googleWindow = getGoogleWindow();
+  if (!googleWindow.google?.accounts) {
     throw new Error("Google OAuthを初期化できませんでした。");
   }
 
   return new Promise<GoogleAccessToken>((resolve, reject) => {
-    const client = window.google?.accounts?.oauth2.initTokenClient({
+    const client = googleWindow.google?.accounts?.oauth2.initTokenClient({
       client_id: clientId,
       scope: DRIVE_SCOPE,
       callback: (response) => {
@@ -181,7 +185,7 @@ export async function pickDriveFolder(options: {
   appId?: string;
 }) {
   await loadGoogleLibraries();
-  const pickerApi = window.google?.picker;
+  const pickerApi = getGoogleWindow().google?.picker;
   if (!pickerApi) throw new Error("Google Pickerを読み込めませんでした。");
 
   return new Promise<DriveFolder | null>((resolve, reject) => {
