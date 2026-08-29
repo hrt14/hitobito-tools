@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   description:
     "暮らしや学びの中にある「あと少し」を助ける、小さなWebツールのポータル。",
   applicationName: "hitobito Tools",
+  verification: {
+    google: "sPBsbYpwHySgc4VntENvvGC4M--IgVcITX__dUozokA",
+  },
   alternates: {
     canonical: "/",
   },
