@@ -20,6 +20,15 @@ Habit Egg と中国語瞬間作文は現在それぞれ独立リポジトリで�
 
 ## デプロイ運用
 
+### LEVEL UP
+
+**LEVEL UP (`levelup.hitobito.jp`) の公開・デプロイに Vercel は使用しません。Vercel は LEVEL UP と無関係です。**
+
+LEVEL UP の実装・公開作業では、Vercel のプロジェクト、デプロイ、ドメイン設定、DNS を変更しないでください。
+公開経路は LEVEL UP 専用の既存運用に従って確認します。
+
+### その他の hitobito Tools
+
 2026-08-26、Vercel の Git Integration は停止しました。
 
 **GitHub の `main` へ push しても Vercel へ自動デプロイされません。**
