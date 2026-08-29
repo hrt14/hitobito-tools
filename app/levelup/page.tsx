@@ -25,6 +25,17 @@ const gameUrl = (slug: string) => `https://games.hitobito.jp/apps/${slug}/`;
 
 const games: LevelUpGame[] = [
   {
+    id: "boundary-map",
+    title: "頼まれると断れず疲れる人の 境界線マップ",
+    kicker: "MAP YOUR LIMITS",
+    skill: "境界線 / 自己認識",
+    description: "20個の頼まれごとに答えて、時間・お金・感情・価値観のすり減りやすさを可視化。結果はカードでシェアできる。",
+    icon: "境",
+    accent: "#ffb454",
+    accentSoft: "rgba(255, 180, 84, .20)",
+    href: "/boundary-map",
+  },
+  {
     id: "dont-decide-now",
     title: "怒り・焦り・勢いで大事なことを決めそうなときの『今は決めるな』",
     kicker: "PAUSE BEFORE ACTION",
@@ -315,6 +326,7 @@ const games: LevelUpGame[] = [
 // Increment this count whenever a game receives a meaningful update.
 // The catalog is always sorted by update count so the most iterated games rise to the top.
 const updateCounts: Record<string, number> = {
+  "boundary-map": 1,
   "dont-decide-now": 1,
   "unfair-blame": 1,
   "hard-request": 1,

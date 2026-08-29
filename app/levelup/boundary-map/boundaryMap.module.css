@@ -1,0 +1,599 @@
+.page {
+  min-height: 100vh;
+  background: #0d0f12;
+  color: #f4f0e6;
+  font-family: Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  padding: 0 22px 80px;
+}
+
+.header {
+  width: min(880px, 100%);
+  margin: 0 auto;
+  min-height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid #2a2e35;
+}
+
+.brand {
+  color: #f4f0e6;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.headerMeta {
+  display: flex;
+  gap: 14px;
+  color: #8f98a6;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.intro,
+.swipe,
+.result {
+  width: min(680px, 100%);
+  margin: 0 auto;
+  padding-top: 50px;
+}
+
+.kicker {
+  margin: 24px 0 10px;
+  color: #ffb454;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+
+.intro h1 {
+  margin: 0;
+  color: #f4f0e6;
+  font-size: clamp(36px, 7.4vw, 60px);
+  line-height: 1.06;
+  letter-spacing: -.045em;
+  font-weight: 950;
+}
+
+.lead {
+  max-width: 620px;
+  margin: 24px 0 0;
+  color: #b9c0ca;
+  font-size: 16px;
+  line-height: 1.85;
+}
+
+.lead strong {
+  color: #f4f0e6;
+}
+
+.axisLegend {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.axisLegendItem {
+  border: 1px solid #323741;
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.axisLegendItem span {
+  display: block;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .1em;
+  color: #8f98a6;
+}
+
+.axisLegendItem strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.selfRateBlock {
+  margin-top: 30px;
+  border: 1px solid #323741;
+  padding: 22px;
+  background: #14171b;
+}
+
+.selfRateHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #c6ccd5;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 800;
+}
+
+.selfRateHead strong {
+  color: #ffb454;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.range {
+  width: 100%;
+  margin: 20px 0 8px;
+  accent-color: #ffb454;
+}
+
+.rangeLabels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #7f8996;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.primaryButton {
+  width: 100%;
+  min-height: 62px;
+  margin-top: 24px;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffb454;
+  color: #14100a;
+  padding: 0 22px;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 950;
+  letter-spacing: -.01em;
+}
+
+.primaryButton span {
+  font-size: 24px;
+}
+
+.secondaryButton {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 12px;
+  border: 1px solid #3c424d;
+  background: transparent;
+  color: #dfe3e8;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.swipeHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.progressLabel {
+  color: #ffb454;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.progressCount {
+  color: #818b98;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.progressBar {
+  height: 4px;
+  background: #232830;
+  margin-bottom: 26px;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: #ffb454;
+  transition: width .25s ease;
+}
+
+.deck {
+  position: relative;
+}
+
+.card {
+  min-height: 230px;
+  background: #f2ecde;
+  color: #17191c;
+  border: 1px solid #d1c9b9;
+  padding: 26px;
+  box-shadow: 8px 8px 0 #252930;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  will-change: transform;
+}
+
+.card:active {
+  cursor: grabbing;
+}
+
+.cardAxis {
+  color: #7b7469;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .14em;
+}
+
+.cardScene {
+  margin: 18px 0 0;
+  font-size: clamp(16px, 3.6vw, 19px);
+  line-height: 1.7;
+  font-weight: 750;
+}
+
+.cardAsk {
+  margin: 20px 0 0;
+  padding: 16px 18px;
+  background: #181a1d;
+  color: #fff4ec;
+  border-left: 5px solid #ffb454;
+  font-size: clamp(17px, 3.6vw, 21px);
+  line-height: 1.5;
+  font-weight: 900;
+}
+
+.cardHint {
+  position: absolute;
+  top: 22px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .08em;
+  border: 2px solid currentColor;
+  transform: rotate(-8deg);
+  opacity: 0;
+  transition: opacity .1s linear;
+}
+
+.cardHintAccept {
+  right: 22px;
+  color: #2f8f5b;
+}
+
+.cardHintDecline {
+  left: 22px;
+  color: #c54d3b;
+}
+
+.choiceRow {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.choiceButton {
+  min-height: 60px;
+  border: 1px solid #353b45;
+  background: #15181d;
+  color: #dfe3e8;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.choiceDecline {
+  border-color: #5a2b27;
+  color: #ff9d8f;
+}
+
+.choiceAccept {
+  border-color: #2b4a34;
+  color: #a9e6bf;
+}
+
+.choiceButton:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+.insight {
+  margin-top: 18px;
+  padding: 16px 18px;
+  border-left: 4px solid #5fd8ff;
+  background: #151b20;
+  color: #cbd3dc;
+  font-size: 14px;
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.nextButton {
+  width: 100%;
+  min-height: 58px;
+  margin-top: 16px;
+  border: 0;
+  background: #f2ecde;
+  color: #14171b;
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.result .kicker {
+  margin-top: 26px;
+}
+
+.result h2 {
+  margin: 0;
+  font-size: clamp(30px, 6vw, 46px);
+  line-height: 1.08;
+  letter-spacing: -.04em;
+  font-weight: 950;
+}
+
+.typeCard {
+  margin-top: 26px;
+  padding: 26px;
+  background: #f2ecde;
+  color: #17191c;
+  box-shadow: 8px 8px 0 #252930;
+}
+
+.typeCard span {
+  color: #7b7469;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .14em;
+}
+
+.typeCard h3 {
+  margin: 12px 0 0;
+  font-size: clamp(24px, 5vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -.02em;
+  font-weight: 950;
+}
+
+.typeCard p {
+  margin: 14px 0 0;
+  font-size: 15px;
+  line-height: 1.8;
+  font-weight: 700;
+}
+
+.axisBars {
+  margin-top: 24px;
+  display: grid;
+  gap: 14px;
+}
+
+.axisBarRow {
+  display: grid;
+  grid-template-columns: 66px 1fr 46px;
+  align-items: center;
+  gap: 12px;
+}
+
+.axisBarLabel {
+  color: #c6ccd5;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.axisBarTrack {
+  height: 14px;
+  background: #1c2027;
+  border: 1px solid #323741;
+  overflow: hidden;
+}
+
+.axisBarFill {
+  height: 100%;
+}
+
+.axisBarValue {
+  text-align: right;
+  color: #8f98a6;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.axisNote {
+  margin-top: 14px;
+  color: #98a2af;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.ruleBox {
+  margin-top: 22px;
+  padding: 22px;
+  background: #14171b;
+  border: 1px solid #323741;
+}
+
+.ruleBox span {
+  color: #ffb454;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .14em;
+}
+
+.ruleBox p {
+  margin: 12px 0 0;
+  font-size: 15px;
+  line-height: 1.8;
+  font-weight: 720;
+  color: #e6e9ed;
+}
+
+.gapBox {
+  margin-top: 16px;
+  padding: 18px 20px;
+  border: 1px solid #323741;
+  color: #b9c0ca;
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+.gapBox strong {
+  color: #f4f0e6;
+}
+
+.compareBox {
+  margin-top: 16px;
+  padding: 18px 20px;
+  border: 1px solid #2b4a34;
+  background: #101a14;
+  color: #cfe9d8;
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+.shareButton {
+  width: 100%;
+  min-height: 64px;
+  margin-top: 26px;
+  border: 0;
+  cursor: pointer;
+  background: #ffb454;
+  color: #14100a;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.shareButton:disabled {
+  opacity: .55;
+  cursor: default;
+}
+
+.shareFeedback {
+  margin-top: 12px;
+  color: #8f98a6;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.sharePreview {
+  width: 100%;
+  margin-top: 16px;
+  display: block;
+  border: 1px solid #323741;
+}
+
+.weakBlock {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px dashed #3c424d;
+}
+
+.weakBlock p {
+  margin: 0 0 14px;
+  color: #b9c0ca;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+.resultActions {
+  margin-top: 26px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.resultActions button,
+.resultActions a {
+  min-height: 52px;
+  display: grid;
+  place-items: center;
+  background: #15181d;
+  color: #cfd5dc;
+  border: 1px solid #353b45;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 850;
+}
+
+.miniResult {
+  margin-top: 18px;
+  padding: 18px 20px;
+  border: 1px solid #323741;
+  background: #14171b;
+}
+
+.miniResult span {
+  color: #5fd8ff;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .14em;
+}
+
+.miniResult p {
+  margin: 10px 0 0;
+  color: #dfe3e8;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 0 14px 60px;
+  }
+
+  .header {
+    min-height: 64px;
+  }
+
+  .intro,
+  .swipe,
+  .result {
+    padding-top: 34px;
+  }
+
+  .axisLegend {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .card,
+  .typeCard {
+    padding: 20px;
+    box-shadow: 5px 5px 0 #252930;
+  }
+
+  .choiceRow {
+    grid-template-columns: 1fr;
+  }
+
+  .axisBarRow {
+    grid-template-columns: 56px 1fr 40px;
+  }
+
+  .resultActions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none !important;
+  }
+
+  .progressBarFill {
+    transition: none;
+  }
+}
