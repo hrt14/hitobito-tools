@@ -29,11 +29,11 @@ const tools = [
   {
     href: "https://chinese.hitobito.jp",
     tag: "LEARNING",
-    title: "中国語瞬間作文",
-    text: "日本語を見て、すぐ中国語にする。スキマ時間で反射的な中国語を鍛える学習アプリ。",
+    title: "瞬間作文",
+    text: "日本語を見て、すぐ中国語・英語にする。文型からアドバンス語彙まで、スキマ時間で反射的な語学力を鍛える学習アプリ。",
     accent: "orange",
     status: "公開中",
-    icon: "中",
+    icon: "語",
   },
 ].filter((tool) => Boolean(tool.href));
 
