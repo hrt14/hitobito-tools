@@ -42,7 +42,7 @@ export default function Home() {
           </div>
           <div className={styles.choiceCopy}>
             <h2>Tools.</h2>
-            <p>Habit Egg、LIFE +1、中国語瞬間作文など。仕事、暮らし、学びに使う小さな道具。</p>
+            <p>Habit Egg、LIFE +1、瞬間作文など。仕事、暮らし、学びに使う小さな道具。</p>
           </div>
         </a>
 
