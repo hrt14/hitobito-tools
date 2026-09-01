@@ -1,7 +1,13 @@
-export default function LevelUpHomeButton() {
+type LevelUpHomeButtonProps = {
+  href?: string;
+};
+
+export default function LevelUpHomeButton({
+  href = "https://levelup.hitobito.jp/",
+}: LevelUpHomeButtonProps) {
   return (
     <a
-      href="https://levelup.hitobito.jp/"
+      href={href}
       aria-label="LEVEL UPトップへ戻る"
       title="LEVEL UPトップへ戻る"
       style={{
