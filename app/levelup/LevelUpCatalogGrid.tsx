@@ -24,6 +24,17 @@ type LevelUpCatalogGridProps = {
 const FAVORITES_STORAGE_KEY = "hitobito-levelup-favorites-v1";
 const FAVORITES_CHANGE_EVENT = "hitobito-levelup-favorites-change";
 const EMPTY_FAVORITES = "[]";
+const YESTERDAY_SELF_GAME: LevelUpGame = {
+  id: "yesterday-self",
+  title: "人と比べてしまったときの 昨日の自分に1勝",
+  kicker: "BEAT YESTERDAY, NOT PEOPLE",
+  skill: "比較リセット / 自己成長",
+  description: "他人を対戦表から外して、今日ひとつだけ昨日の自分を超える。",
+  icon: "1-0",
+  accent: "#d7ff57",
+  accentSoft: "rgba(215, 255, 87, .22)",
+  href: "/yesterday-self",
+};
 let fallbackFavorites = EMPTY_FAVORITES;
 
 function getFavoritesSnapshot() {
@@ -73,11 +84,15 @@ export default function LevelUpCatalogGrid({
     getServerFavoritesSnapshot,
   );
   const favorites = useMemo(() => parseFavorites(favoritesSnapshot), [favoritesSnapshot]);
+  const catalogGames = useMemo(
+    () => (games.some((game) => game.id === YESTERDAY_SELF_GAME.id) ? games : [YESTERDAY_SELF_GAME, ...games]),
+    [games],
+  );
 
   const orderedGames = useMemo(() => {
-    const originalOrder = new Map(games.map((game, index) => [game.id, index]));
+    const originalOrder = new Map(catalogGames.map((game, index) => [game.id, index]));
 
-    return [...games].sort((a, b) => {
+    return [...catalogGames].sort((a, b) => {
       const favoriteDifference = Number(favorites.has(b.id)) - Number(favorites.has(a.id));
       if (favoriteDifference !== 0) return favoriteDifference;
 
@@ -86,7 +101,7 @@ export default function LevelUpCatalogGrid({
 
       return (originalOrder.get(a.id) ?? 0) - (originalOrder.get(b.id) ?? 0);
     });
-  }, [favorites, games, updateCounts]);
+  }, [catalogGames, favorites, updateCounts]);
 
   const toggleFavorite = (gameId: string) => {
     const next = new Set(favorites);
