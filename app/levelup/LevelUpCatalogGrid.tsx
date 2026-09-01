@@ -24,13 +24,12 @@ type LevelUpCatalogGridProps = {
 const FAVORITES_STORAGE_KEY = "hitobito-levelup-favorites-v1";
 const FAVORITES_CHANGE_EVENT = "hitobito-levelup-favorites-change";
 const EMPTY_FAVORITES = "[]";
-let fallbackFavorites = EMPTY_FAVORITES;
 
 function getFavoritesSnapshot() {
   try {
-    return window.localStorage.getItem(FAVORITES_STORAGE_KEY) ?? fallbackFavorites;
+    return window.localStorage.getItem(FAVORITES_STORAGE_KEY) ?? EMPTY_FAVORITES;
   } catch {
-    return fallbackFavorites;
+    return EMPTY_FAVORITES;
   }
 }
 
@@ -88,8 +87,6 @@ export default function LevelUpCatalogGrid({ games, updateCounts }: LevelUpCatal
     else next.add(gameId);
 
     const serialized = JSON.stringify([...next]);
-    fallbackFavorites = serialized;
-
     try {
       window.localStorage.setItem(FAVORITES_STORAGE_KEY, serialized);
     } catch {
