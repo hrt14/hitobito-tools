@@ -25,6 +25,39 @@ const gameUrl = (slug: string) => `https://games.hitobito.jp/apps/${slug}/`;
 
 const games: LevelUpGame[] = [
   {
+    id: "breakthrough-90",
+    title: "八方塞がりで動けないときの 90秒で次の一手を取り戻す",
+    kicker: "ZOOM OUT. MOVE ONE STEP.",
+    skill: "俯瞰 / 他人比較を外す / 次の一手",
+    description: "10年視点まで引き、戦う相手を昨日の自分に戻し、次の15分だけ決める。",
+    icon: "90",
+    accent: "#d9ff57",
+    accentSoft: "rgba(217, 255, 87, .20)",
+    href: "/breakthrough-90",
+  },
+  {
+    id: "confidence-before-results",
+    title: "結果が出る前に自信をつくる",
+    kicker: "CONFIDENCE BEFORE RESULTS",
+    skill: "自己効力感 / 行動 / 継続",
+    description: "成功の証拠を待たずに、次の一手を出せる自信を先に入れる60秒スイッチ。",
+    icon: "GO",
+    accent: "#d8ff5b",
+    accentSoft: "rgba(216, 255, 91, .22)",
+    href: "/confidence-before-results",
+  },
+  {
+    id: "yesterday-self",
+    title: "人と比べてしまったときの 昨日の自分に1勝",
+    kicker: "BEAT YESTERDAY, NOT PEOPLE",
+    skill: "比較リセット / 自己成長",
+    description: "他人を対戦表から外して、今日ひとつだけ昨日の自分を超える。",
+    icon: "1-0",
+    accent: "#d7ff57",
+    accentSoft: "rgba(215, 255, 87, .22)",
+    href: "/yesterday-self",
+  },
+  {
     id: "boundary-map",
     title: "頼まれると断れず疲れる人の 境界線マップ",
     kicker: "MAP YOUR LIMITS",
@@ -326,6 +359,9 @@ const games: LevelUpGame[] = [
 // Increment this count whenever a game receives a meaningful update.
 // The catalog is always sorted by update count so the most iterated games rise to the top.
 const updateCounts: Record<string, number> = {
+  "breakthrough-90": 1,
+  "confidence-before-results": 1,
+  "yesterday-self": 1,
   "boundary-map": 1,
   "dont-decide-now": 1,
   "unfair-blame": 1,
