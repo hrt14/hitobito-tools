@@ -103,6 +103,10 @@ export default function LevelUpCatalogGrid({ games, updateCounts }: LevelUpCatal
     <div className={styles.grid}>
       {orderedGames.map((game, index) => {
         const isFavorite = favorites.has(game.id);
+        const cardHref =
+          game.id === "confidence-before-results"
+            ? "https://hitobito.jp/levelup/confidence-before-results"
+            : game.href;
         const cardStyle = {
           "--accent": game.accent,
           "--accent-soft": game.accentSoft,
@@ -110,7 +114,7 @@ export default function LevelUpCatalogGrid({ games, updateCounts }: LevelUpCatal
 
         return (
           <article className={styles.cardShell} id={game.id} key={game.id} style={cardStyle}>
-            <a className={styles.card} href={game.href} aria-label={`${game.title}を遊ぶ`}>
+            <a className={styles.card} href={cardHref} aria-label={`${game.title}を遊ぶ`}>
               <div className={styles.cardTop}>
                 <span className={styles.number}>{String(index + 1).padStart(2, "0")}</span>
                 <span className={styles.status}>UPDATE ×{updateCounts[game.id] ?? 1}</span>
