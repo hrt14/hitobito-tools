@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
 import styles from "./levelup.module.css";
 
@@ -24,40 +24,6 @@ type LevelUpCatalogGridProps = {
 const FAVORITES_STORAGE_KEY = "hitobito-levelup-favorites-v1";
 const FAVORITES_CHANGE_EVENT = "hitobito-levelup-favorites-change";
 const EMPTY_FAVORITES = "[]";
-const BREAKTHROUGH_90_GAME: LevelUpGame = {
-  id: "breakthrough-90",
-  title: "八方塞がりで動けないときの 90秒で次の一手を取り戻す",
-  kicker: "ZOOM OUT. MOVE ONE STEP.",
-  skill: "俯瞰 / 他人比較を外す / 次の一手",
-  description: "10年視点まで引き、戦う相手を昨日の自分に戻し、次の15分だけ決める。",
-  icon: "90",
-  accent: "#d9ff57",
-  accentSoft: "rgba(217, 255, 87, .20)",
-  href: "/breakthrough-90",
-};
-const CONFIDENCE_BEFORE_RESULTS_GAME: LevelUpGame = {
-  id: "confidence-before-results",
-  title: "結果が出る前に自信をつくる",
-  kicker: "CONFIDENCE BEFORE RESULTS",
-  skill: "自己効力感 / 行動 / 継続",
-  description: "成功の証拠を待たずに、次の一手を出せる自信を先に入れる60秒スイッチ。",
-  icon: "GO",
-  accent: "#d8ff5b",
-  accentSoft: "rgba(216, 255, 91, .22)",
-  href: "/confidence-before-results",
-};
-const YESTERDAY_SELF_GAME: LevelUpGame = {
-  id: "yesterday-self",
-  title: "人と比べてしまったときの 昨日の自分に1勝",
-  kicker: "BEAT YESTERDAY, NOT PEOPLE",
-  skill: "比較リセット / 自己成長",
-  description: "他人を対戦表から外して、今日ひとつだけ昨日の自分を超える。",
-  icon: "1-0",
-  accent: "#d7ff57",
-  accentSoft: "rgba(215, 255, 87, .22)",
-  href: "/yesterday-self",
-};
-const FEATURED_GAMES = [BREAKTHROUGH_90_GAME, CONFIDENCE_BEFORE_RESULTS_GAME, YESTERDAY_SELF_GAME];
 let fallbackFavorites = EMPTY_FAVORITES;
 
 function getFavoritesSnapshot() {
@@ -98,42 +64,38 @@ function parseFavorites(snapshot: string): Set<string> {
 }
 
 export default function LevelUpCatalogGrid({ games, updateCounts }: LevelUpCatalogGridProps) {
-  const favoritesSnapshot = useSyncExternalStore(subscribeFavorites, getFavoritesSnapshot, getServerFavoritesSnapshot);
+  const favoritesSnapshot = useSyncExternalStore(
+    subscribeFavorites,
+    getFavoritesSnapshot,
+    getServerFavoritesSnapshot,
+  );
   const favorites = useMemo(() => parseFavorites(favoritesSnapshot), [favoritesSnapshot]);
-  const catalogGames = useMemo(() => {
-    const existingIds = new Set(games.map((game) => game.id));
-    const missingFeatured = FEATURED_GAMES.filter((game) => !existingIds.has(game.id));
-    return [...missingFeatured, ...games];
-  }, [games]);
-
-  useEffect(() => {
-    const title = document.getElementById("catalog-title");
-    const count = title?.parentElement?.nextElementSibling;
-    if (count instanceof HTMLElement) count.textContent = `${catalogGames.length} GAMES`;
-  }, [catalogGames.length]);
 
   const orderedGames = useMemo(() => {
-    const originalOrder = new Map(catalogGames.map((game, index) => [game.id, index]));
-    return [...catalogGames].sort((a, b) => {
+    const originalOrder = new Map(games.map((game, index) => [game.id, index]));
+    return [...games].sort((a, b) => {
       const favoriteDifference = Number(favorites.has(b.id)) - Number(favorites.has(a.id));
       if (favoriteDifference !== 0) return favoriteDifference;
       const updateDifference = (updateCounts[b.id] ?? 1) - (updateCounts[a.id] ?? 1);
       if (updateDifference !== 0) return updateDifference;
       return (originalOrder.get(a.id) ?? 0) - (originalOrder.get(b.id) ?? 0);
     });
-  }, [catalogGames, favorites, updateCounts]);
+  }, [games, favorites, updateCounts]);
 
   const toggleFavorite = (gameId: string) => {
     const next = new Set(favorites);
     if (next.has(gameId)) next.delete(gameId);
     else next.add(gameId);
+
     const serialized = JSON.stringify([...next]);
     fallbackFavorites = serialized;
+
     try {
       window.localStorage.setItem(FAVORITES_STORAGE_KEY, serialized);
     } catch {
       // Keep the current session working even when browser storage is unavailable.
     }
+
     window.dispatchEvent(new Event(FAVORITES_CHANGE_EVENT));
   };
 
@@ -141,7 +103,11 @@ export default function LevelUpCatalogGrid({ games, updateCounts }: LevelUpCatal
     <div className={styles.grid}>
       {orderedGames.map((game, index) => {
         const isFavorite = favorites.has(game.id);
-        const cardStyle = { "--accent": game.accent, "--accent-soft": game.accentSoft } as CSSProperties;
+        const cardStyle = {
+          "--accent": game.accent,
+          "--accent-soft": game.accentSoft,
+        } as CSSProperties;
+
         return (
           <article className={styles.cardShell} id={game.id} key={game.id} style={cardStyle}>
             <a className={styles.card} href={game.href} aria-label={`${game.title}を遊ぶ`}>
@@ -149,10 +115,31 @@ export default function LevelUpCatalogGrid({ games, updateCounts }: LevelUpCatal
                 <span className={styles.number}>{String(index + 1).padStart(2, "0")}</span>
                 <span className={styles.status}>UPDATE ×{updateCounts[game.id] ?? 1}</span>
               </div>
-              <div className={styles.symbol} aria-hidden="true">{game.icon}</div>
+              <div className={styles.symbol} aria-hidden="true">
+                {game.icon}
+              </div>
               <div className={styles.cardCopy}>
-                <h3 style={{ marginBottom: 0, fontSize: "clamp(25px, 2.6vw, 36px)", lineHeight: 1.08, letterSpacing: "-0.045em" }}>{game.title}</h3>
-                <p style={{ margin: "16px 0 0", color: game.accent, fontSize: "13px", lineHeight: 1.65, fontWeight: 850 }}>{game.description}</p>
+                <h3
+                  style={{
+                    marginBottom: 0,
+                    fontSize: "clamp(25px, 2.6vw, 36px)",
+                    lineHeight: 1.08,
+                    letterSpacing: "-0.045em",
+                  }}
+                >
+                  {game.title}
+                </h3>
+                <p
+                  style={{
+                    margin: "16px 0 0",
+                    color: game.accent,
+                    fontSize: "13px",
+                    lineHeight: 1.65,
+                    fontWeight: 850,
+                  }}
+                >
+                  {game.description}
+                </p>
               </div>
             </a>
             <button
