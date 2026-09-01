@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./breakthrough90.module.css";
 
@@ -48,14 +49,18 @@ export default function Breakthrough90() {
   const holdTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as SavedSession;
-      if (parsed && typeof parsed.nextAction === "string") setLastSession(parsed);
-    } catch {
-      // Storage is optional. The core experience still works without it.
-    }
+    const timer = window.setTimeout(() => {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw) as SavedSession;
+        if (parsed && typeof parsed.nextAction === "string") setLastSession(parsed);
+      } catch {
+        // Storage is optional. The core experience still works without it.
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -176,9 +181,9 @@ export default function Breakthrough90() {
   const renderTopBar = () => (
     <header className={styles.topBar}>
       {stage === "intro" ? (
-        <a className={styles.homeLink} href="/" aria-label="LEVEL UPトップへ戻る">
+        <Link className={styles.homeLink} href="/" aria-label="LEVEL UPトップへ戻る">
           <span aria-hidden="true">←</span><span>LEVEL UP</span>
-        </a>
+        </Link>
       ) : (
         <button
           className={styles.homeLink}
@@ -337,7 +342,7 @@ export default function Breakthrough90() {
           <div className={styles.doneActions}>
             <button className={styles.primaryButton} type="button" onClick={() => { setActionStarted(true); buzz(); }}>15分だけ、やってくる</button>
             <button className={styles.secondaryButton} type="button" onClick={reset}>もう一度整理する</button>
-            <a className={styles.textLink} href="/">LEVEL UPに戻る</a>
+            <Link className={styles.textLink} href="/">LEVEL UPに戻る</Link>
           </div>
         </section>
       )}
