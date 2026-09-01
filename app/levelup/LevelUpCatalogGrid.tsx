@@ -21,6 +21,18 @@ type LevelUpCatalogGridProps = {
   updateCounts: Record<string, number>;
 };
 
+const BREAKTHROUGH_90_GAME: LevelUpGame = {
+  id: "breakthrough-90",
+  title: "八方塞がりで動けないときの 90秒で次の一手を取り戻す",
+  kicker: "ZOOM OUT. MOVE ONE STEP.",
+  skill: "俯瞰 / 他人比較を外す / 次の一手",
+  description: "10年視点まで引き、戦う相手を昨日の自分に戻し、次の15分だけ決める。",
+  icon: "90",
+  accent: "#d9ff57",
+  accentSoft: "rgba(217, 255, 87, .20)",
+  href: "/breakthrough-90",
+};
+
 const FAVORITES_STORAGE_KEY = "hitobito-levelup-favorites-v1";
 const FAVORITES_CHANGE_EVENT = "hitobito-levelup-favorites-change";
 const EMPTY_FAVORITES = "[]";
@@ -74,10 +86,18 @@ export default function LevelUpCatalogGrid({
   );
   const favorites = useMemo(() => parseFavorites(favoritesSnapshot), [favoritesSnapshot]);
 
-  const orderedGames = useMemo(() => {
-    const originalOrder = new Map(games.map((game, index) => [game.id, index]));
+  const catalogGames = useMemo(
+    () =>
+      games.some((game) => game.id === BREAKTHROUGH_90_GAME.id)
+        ? games
+        : [BREAKTHROUGH_90_GAME, ...games],
+    [games],
+  );
 
-    return [...games].sort((a, b) => {
+  const orderedGames = useMemo(() => {
+    const originalOrder = new Map(catalogGames.map((game, index) => [game.id, index]));
+
+    return [...catalogGames].sort((a, b) => {
       const favoriteDifference = Number(favorites.has(b.id)) - Number(favorites.has(a.id));
       if (favoriteDifference !== 0) return favoriteDifference;
 
@@ -86,7 +106,7 @@ export default function LevelUpCatalogGrid({
 
       return (originalOrder.get(a.id) ?? 0) - (originalOrder.get(b.id) ?? 0);
     });
-  }, [favorites, games, updateCounts]);
+  }, [catalogGames, favorites, updateCounts]);
 
   const toggleFavorite = (gameId: string) => {
     const next = new Set(favorites);
