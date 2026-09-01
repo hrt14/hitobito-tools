@@ -24,6 +24,17 @@ type LevelUpCatalogGridProps = {
 const FAVORITES_STORAGE_KEY = "hitobito-levelup-favorites-v1";
 const FAVORITES_CHANGE_EVENT = "hitobito-levelup-favorites-change";
 const EMPTY_FAVORITES = "[]";
+const CONFIDENCE_BEFORE_RESULTS_GAME: LevelUpGame = {
+  id: "confidence-before-results",
+  title: "結果が出る前に自信をつくる",
+  kicker: "CONFIDENCE BEFORE RESULTS",
+  skill: "自己効力感 / 行動 / 継続",
+  description: "成功の証拠を待たずに、次の一手を出せる自信を先に入れる60秒スイッチ。",
+  icon: "GO",
+  accent: "#d8ff5b",
+  accentSoft: "rgba(216, 255, 91, .22)",
+  href: "/confidence-before-results",
+};
 const YESTERDAY_SELF_GAME: LevelUpGame = {
   id: "yesterday-self",
   title: "人と比べてしまったときの 昨日の自分に1勝",
@@ -35,6 +46,7 @@ const YESTERDAY_SELF_GAME: LevelUpGame = {
   accentSoft: "rgba(215, 255, 87, .22)",
   href: "/yesterday-self",
 };
+const FEATURED_GAMES = [CONFIDENCE_BEFORE_RESULTS_GAME, YESTERDAY_SELF_GAME];
 let fallbackFavorites = EMPTY_FAVORITES;
 
 function getFavoritesSnapshot() {
@@ -84,10 +96,11 @@ export default function LevelUpCatalogGrid({
     getServerFavoritesSnapshot,
   );
   const favorites = useMemo(() => parseFavorites(favoritesSnapshot), [favoritesSnapshot]);
-  const catalogGames = useMemo(
-    () => (games.some((game) => game.id === YESTERDAY_SELF_GAME.id) ? games : [YESTERDAY_SELF_GAME, ...games]),
-    [games],
-  );
+  const catalogGames = useMemo(() => {
+    const existingIds = new Set(games.map((game) => game.id));
+    const missingFeatured = FEATURED_GAMES.filter((game) => !existingIds.has(game.id));
+    return [...missingFeatured, ...games];
+  }, [games]);
 
   const orderedGames = useMemo(() => {
     const originalOrder = new Map(catalogGames.map((game, index) => [game.id, index]));
