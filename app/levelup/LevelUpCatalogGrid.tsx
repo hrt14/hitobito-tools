@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
 import styles from "./levelup.module.css";
 
@@ -103,6 +103,12 @@ export default function LevelUpCatalogGrid({
     return [...missingGames, ...games];
   }, [games]);
 
+  useEffect(() => {
+    const title = document.getElementById("catalog-title");
+    const count = title?.parentElement?.nextElementSibling;
+    if (count instanceof HTMLElement) count.textContent = `${catalogGames.length} GAMES`;
+  }, [catalogGames.length]);
+
   const orderedGames = useMemo(() => {
     const originalOrder = new Map(catalogGames.map((game, index) => [game.id, index]));
 
@@ -119,11 +125,8 @@ export default function LevelUpCatalogGrid({
 
   const toggleFavorite = (gameId: string) => {
     const next = new Set(favorites);
-    if (next.has(gameId)) {
-      next.delete(gameId);
-    } else {
-      next.add(gameId);
-    }
+    if (next.has(gameId)) next.delete(gameId);
+    else next.add(gameId);
 
     const serialized = JSON.stringify([...next]);
     fallbackFavorites = serialized;
@@ -153,31 +156,10 @@ export default function LevelUpCatalogGrid({
                 <span className={styles.number}>{String(index + 1).padStart(2, "0")}</span>
                 <span className={styles.status}>UPDATE ×{updateCounts[game.id] ?? 1}</span>
               </div>
-              <div className={styles.symbol} aria-hidden="true">
-                {game.icon}
-              </div>
+              <div className={styles.symbol} aria-hidden="true">{game.icon}</div>
               <div className={styles.cardCopy}>
-                <h3
-                  style={{
-                    marginBottom: 0,
-                    fontSize: "clamp(25px, 2.6vw, 36px)",
-                    lineHeight: 1.08,
-                    letterSpacing: "-0.045em",
-                  }}
-                >
-                  {game.title}
-                </h3>
-                <p
-                  style={{
-                    margin: "16px 0 0",
-                    color: game.accent,
-                    fontSize: "13px",
-                    lineHeight: 1.65,
-                    fontWeight: 850,
-                  }}
-                >
-                  {game.description}
-                </p>
+                <h3 style={{ marginBottom: 0, fontSize: "clamp(25px, 2.6vw, 36px)", lineHeight: 1.08, letterSpacing: "-0.045em" }}>{game.title}</h3>
+                <p style={{ margin: "16px 0 0", color: game.accent, fontSize: "13px", lineHeight: 1.65, fontWeight: 850 }}>{game.description}</p>
               </div>
             </a>
             <button
