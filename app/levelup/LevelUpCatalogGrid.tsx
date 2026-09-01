@@ -35,6 +35,17 @@ const BREAKTHROUGH_90_GAME: LevelUpGame = {
   accentSoft: "rgba(217, 255, 87, .20)",
   href: "/breakthrough-90",
 };
+const CONFIDENCE_BEFORE_RESULTS_GAME: LevelUpGame = {
+  id: "confidence-before-results",
+  title: "結果が出る前に自信をつくる",
+  kicker: "CONFIDENCE BEFORE RESULTS",
+  skill: "自己効力感 / 行動 / 継続",
+  description: "成功の証拠を待たずに、次の一手を出せる自信を先に入れる60秒スイッチ。",
+  icon: "GO",
+  accent: "#d8ff5b",
+  accentSoft: "rgba(216, 255, 91, .22)",
+  href: "/confidence-before-results",
+};
 const YESTERDAY_SELF_GAME: LevelUpGame = {
   id: "yesterday-self",
   title: "人と比べてしまったときの 昨日の自分に1勝",
@@ -46,7 +57,7 @@ const YESTERDAY_SELF_GAME: LevelUpGame = {
   accentSoft: "rgba(215, 255, 87, .22)",
   href: "/yesterday-self",
 };
-const BUILTIN_GAMES = [BREAKTHROUGH_90_GAME, YESTERDAY_SELF_GAME];
+const FEATURED_GAMES = [BREAKTHROUGH_90_GAME, CONFIDENCE_BEFORE_RESULTS_GAME, YESTERDAY_SELF_GAME];
 let fallbackFavorites = EMPTY_FAVORITES;
 
 function getFavoritesSnapshot() {
@@ -86,21 +97,13 @@ function parseFavorites(snapshot: string): Set<string> {
   }
 }
 
-export default function LevelUpCatalogGrid({
-  games,
-  updateCounts,
-}: LevelUpCatalogGridProps) {
-  const favoritesSnapshot = useSyncExternalStore(
-    subscribeFavorites,
-    getFavoritesSnapshot,
-    getServerFavoritesSnapshot,
-  );
+export default function LevelUpCatalogGrid({ games, updateCounts }: LevelUpCatalogGridProps) {
+  const favoritesSnapshot = useSyncExternalStore(subscribeFavorites, getFavoritesSnapshot, getServerFavoritesSnapshot);
   const favorites = useMemo(() => parseFavorites(favoritesSnapshot), [favoritesSnapshot]);
   const catalogGames = useMemo(() => {
-    const missingGames = BUILTIN_GAMES.filter(
-      (builtin) => !games.some((game) => game.id === builtin.id),
-    );
-    return [...missingGames, ...games];
+    const existingIds = new Set(games.map((game) => game.id));
+    const missingFeatured = FEATURED_GAMES.filter((game) => !existingIds.has(game.id));
+    return [...missingFeatured, ...games];
   }, [games]);
 
   useEffect(() => {
@@ -111,14 +114,11 @@ export default function LevelUpCatalogGrid({
 
   const orderedGames = useMemo(() => {
     const originalOrder = new Map(catalogGames.map((game, index) => [game.id, index]));
-
     return [...catalogGames].sort((a, b) => {
       const favoriteDifference = Number(favorites.has(b.id)) - Number(favorites.has(a.id));
       if (favoriteDifference !== 0) return favoriteDifference;
-
       const updateDifference = (updateCounts[b.id] ?? 1) - (updateCounts[a.id] ?? 1);
       if (updateDifference !== 0) return updateDifference;
-
       return (originalOrder.get(a.id) ?? 0) - (originalOrder.get(b.id) ?? 0);
     });
   }, [catalogGames, favorites, updateCounts]);
@@ -127,16 +127,13 @@ export default function LevelUpCatalogGrid({
     const next = new Set(favorites);
     if (next.has(gameId)) next.delete(gameId);
     else next.add(gameId);
-
     const serialized = JSON.stringify([...next]);
     fallbackFavorites = serialized;
-
     try {
       window.localStorage.setItem(FAVORITES_STORAGE_KEY, serialized);
     } catch {
       // Keep the current session working even when browser storage is unavailable.
     }
-
     window.dispatchEvent(new Event(FAVORITES_CHANGE_EVENT));
   };
 
@@ -144,11 +141,7 @@ export default function LevelUpCatalogGrid({
     <div className={styles.grid}>
       {orderedGames.map((game, index) => {
         const isFavorite = favorites.has(game.id);
-        const cardStyle = {
-          "--accent": game.accent,
-          "--accent-soft": game.accentSoft,
-        } as CSSProperties;
-
+        const cardStyle = { "--accent": game.accent, "--accent-soft": game.accentSoft } as CSSProperties;
         return (
           <article className={styles.cardShell} id={game.id} key={game.id} style={cardStyle}>
             <a className={styles.card} href={game.href} aria-label={`${game.title}を遊ぶ`}>
