@@ -1,7 +1,8 @@
 /**
  * DIGIL CLOUD の対応アプリから、利用者自身の Google ドライブへ保存する。
  *
- * Drive 権限は drive.file だけ。このアプリが作ったファイルしか見えない。
+ * Drive 権限は drive.file だけ。このアプリが作ったファイルと、Google Picker で
+ * 利用者が明示的に選んだフォルダだけを扱う。
  * Googleログイン表示のため openid/email/profile も同時に要求する。
  */
 
@@ -30,6 +31,11 @@ export type GoogleProfile = {
   picture?: string;
 };
 
+export type DriveFolderSelection = {
+  id: string;
+  name: string;
+};
+
 type GoogleIdentity = {
   accounts: {
     oauth2: {
@@ -43,7 +49,52 @@ type GoogleIdentity = {
   };
 };
 
+type PickerDocument = {
+  id?: string;
+  name?: string;
+};
+
+type PickerData = {
+  action?: string;
+  docs?: PickerDocument[];
+};
+
+type DocsViewLike = {
+  setIncludeFolders: (included: boolean) => DocsViewLike;
+  setSelectFolderEnabled: (enabled: boolean) => DocsViewLike;
+  setMimeTypes: (mimeTypes: string) => DocsViewLike;
+  setMode: (mode: string) => DocsViewLike;
+  setParent: (parentId: string) => DocsViewLike;
+};
+
+type PickerBuilderLike = {
+  addView: (view: DocsViewLike) => PickerBuilderLike;
+  setOAuthToken: (token: string) => PickerBuilderLike;
+  setDeveloperKey: (key: string) => PickerBuilderLike;
+  setAppId: (appId: string) => PickerBuilderLike;
+  setOrigin: (origin: string) => PickerBuilderLike;
+  setTitle: (title: string) => PickerBuilderLike;
+  setCallback: (callback: (data: PickerData) => void) => PickerBuilderLike;
+  build: () => { setVisible: (visible: boolean) => void };
+};
+
+type GooglePicker = {
+  picker: {
+    Action: { PICKED: string };
+    ViewId: { DOCS: string };
+    DocsViewMode: { LIST: string };
+    DocsView: new (viewId: string) => DocsViewLike;
+    PickerBuilder: new () => PickerBuilderLike;
+  };
+};
+
+type GapiLike = {
+  load: (name: string, options: { callback: () => void; onerror?: () => void }) => void;
+};
+
 export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? DEFAULT_GOOGLE_CLIENT_ID;
+export const GOOGLE_PICKER_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PICKER_API_KEY ?? "";
+export const GOOGLE_APP_ID = GOOGLE_CLIENT_ID.split("-")[0] || "995292381518";
 
 function readSessionToken() {
   try {
@@ -60,6 +111,11 @@ function writeSessionToken(token: string) {
   } catch {
     // sessionStorage が使えなくても通常のOAuthフローへフォールバックする。
   }
+}
+
+export function getGoogleSessionToken() {
+  if (typeof window === "undefined") return "";
+  return readSessionToken();
 }
 
 export function initTokenClient(callback: (response: TokenResponse) => void) {
@@ -90,6 +146,58 @@ export function initTokenClient(callback: (response: TokenResponse) => void) {
       client.requestAccessToken(options);
     },
   } satisfies TokenClient;
+}
+
+export async function loadDrivePickerApi() {
+  if (typeof window === "undefined") return false;
+  const existing = (window as unknown as { google?: GooglePicker }).google?.picker;
+  if (existing) return true;
+  const gapi = (window as unknown as { gapi?: GapiLike }).gapi;
+  if (!gapi) return false;
+
+  return new Promise<boolean>((resolve) => {
+    gapi.load("picker", {
+      callback: () => resolve(Boolean((window as unknown as { google?: GooglePicker }).google?.picker)),
+      onerror: () => resolve(false),
+    });
+  });
+}
+
+export async function openDriveFolderPicker(
+  token: string,
+  onPicked: (folder: DriveFolderSelection) => void,
+) {
+  if (!GOOGLE_PICKER_API_KEY || typeof window === "undefined") return false;
+  const loaded = await loadDrivePickerApi();
+  if (!loaded) return false;
+
+  const google = (window as unknown as { google?: GooglePicker }).google;
+  if (!google?.picker) return false;
+
+  const view = new google.picker.DocsView(google.picker.ViewId.DOCS)
+    .setIncludeFolders(true)
+    .setSelectFolderEnabled(true)
+    .setMimeTypes(FOLDER_MIME)
+    .setMode(google.picker.DocsViewMode.LIST)
+    .setParent("root");
+
+  const picker = new google.picker.PickerBuilder()
+    .addView(view)
+    .setOAuthToken(token)
+    .setDeveloperKey(GOOGLE_PICKER_API_KEY)
+    .setAppId(GOOGLE_APP_ID)
+    .setOrigin(window.location.origin)
+    .setTitle("保存先フォルダを選ぶ")
+    .setCallback((data) => {
+      if (data.action !== google.picker.Action.PICKED) return;
+      const selected = data.docs?.[0];
+      if (!selected?.id) return;
+      onPicked({ id: selected.id, name: selected.name || "選択したフォルダ" });
+    })
+    .build();
+
+  picker.setVisible(true);
+  return true;
 }
 
 export async function fetchGoogleProfile(token: string): Promise<GoogleProfile | null> {
@@ -182,7 +290,11 @@ export function forgetFolder(folderName: string) {
 
 async function upload(token: string, folderId: string, name: string, content: string) {
   const boundary = `earhub${Date.now()}${Math.random().toString(36).slice(2)}`;
-  const metadata = { name, parents: [folderId], mimeType: "text/markdown" };
+  const metadata = {
+    name,
+    ...(folderId && folderId !== "root" ? { parents: [folderId] } : {}),
+    mimeType: "text/markdown",
+  };
   const body = [
     `--${boundary}\r\n`,
     "Content-Type: application/json; charset=UTF-8\r\n\r\n",
@@ -208,6 +320,29 @@ export type UploadResult =
   | { status: "needs-token" }
   | { status: "failed"; message: string };
 
+/** Pickerで選択したフォルダID、または root に直接保存する。 */
+export async function saveToDriveFolder(
+  token: string,
+  folderId: string,
+  fileName: string,
+  content: string,
+): Promise<UploadResult> {
+  try {
+    const response = await upload(token, folderId || "root", fileName, content);
+    if (response.status === 401 || response.status === 403) {
+      writeSessionToken("");
+      return { status: "needs-token" };
+    }
+    if (!response.ok) return { status: "failed", message: `ドライブへの保存に失敗しました (${response.status})。` };
+
+    const data = (await response.json()) as { id: string; webViewLink?: string };
+    return { status: "saved", link: data.webViewLink || `https://drive.google.com/open?id=${data.id}` };
+  } catch {
+    return { status: "failed", message: "ドライブへの保存に失敗しました。" };
+  }
+}
+
+/** 旧フォルダ名方式。既存コードとの互換用に残す。 */
 export async function saveToDrive(
   token: string,
   folderName: string,
