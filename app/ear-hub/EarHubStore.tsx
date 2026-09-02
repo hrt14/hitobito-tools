@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MODULES } from "./modules";
+import StoreDriveSettings from "./StoreDriveSettings";
 import styles from "./ear-hub-store.module.css";
 
 const ICON_CLASS = {
@@ -72,6 +73,8 @@ export default function EarHubStore() {
             </p>
           </div>
         </section>
+
+        <StoreDriveSettings />
       </div>
     </main>
   );
