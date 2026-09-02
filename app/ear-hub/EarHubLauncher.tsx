@@ -32,7 +32,7 @@ export default function EarHubLauncher({ moduleId }: Props) {
     <div className={styles.appFrame}>
       <header className={styles.appBar}>
         <Link href="/ear-hub" className={styles.appBack}>
-          ‹ アプリ一覧
+          ‹ DIGIL CLOUD
         </Link>
         <div className={styles.appBarTitle}>
           <span className={styles.appBarIcon} aria-hidden="true">{activeModule.icon}</span>
