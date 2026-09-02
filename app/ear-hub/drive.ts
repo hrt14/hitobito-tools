@@ -7,6 +7,7 @@
 
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 const ACCOUNT_SCOPE = `openid email profile ${DRIVE_SCOPE}`;
+const SESSION_TOKEN_KEY = "digil.googleAccessToken.v1";
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 const FOLDER_ID_PREFIX = "earhub.driveFolderId.";
 
@@ -42,15 +43,51 @@ type GoogleIdentity = {
 
 export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
+function readSessionToken() {
+  try {
+    return window.sessionStorage.getItem(SESSION_TOKEN_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function writeSessionToken(token: string) {
+  try {
+    if (token) window.sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+    else window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
+  } catch {
+    // sessionStorage が使えなくても通常のOAuthフローへフォールバックする。
+  }
+}
+
 export function initTokenClient(callback: (response: TokenResponse) => void) {
   if (!GOOGLE_CLIENT_ID || typeof window === "undefined") return null;
   const google = (window as unknown as { google?: GoogleIdentity }).google;
   if (!google) return null;
-  return google.accounts.oauth2.initTokenClient({
+
+  const client = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
     scope: ACCOUNT_SCOPE,
-    callback,
+    callback: (response) => {
+      if (response.access_token) writeSessionToken(response.access_token);
+      callback(response);
+    },
   });
+
+  return {
+    requestAccessToken: (options?: { prompt?: string }) => {
+      // 初回接続扱いの呼び出しでは、同じタブで取得済みの短命トークンを再利用する。
+      // 401/403後は prompt="" で呼ばれるためキャッシュを使わずGoogleから取り直す。
+      if (options?.prompt === "consent") {
+        const cached = readSessionToken();
+        if (cached) {
+          callback({ access_token: cached });
+          return;
+        }
+      }
+      client.requestAccessToken(options);
+    },
+  } satisfies TokenClient;
 }
 
 export async function fetchGoogleProfile(token: string): Promise<GoogleProfile | null> {
@@ -73,9 +110,12 @@ export async function fetchGoogleProfile(token: string): Promise<GoogleProfile |
 }
 
 export function revokeGoogleToken(token: string) {
-  if (!token || typeof window === "undefined") return;
+  if (typeof window === "undefined") return;
+  const actualToken = token || readSessionToken();
+  writeSessionToken("");
+  if (!actualToken) return;
   const google = (window as unknown as { google?: GoogleIdentity }).google;
-  google?.accounts.oauth2.revoke?.(token);
+  google?.accounts.oauth2.revoke?.(actualToken);
 }
 
 function cacheKey(folderName: string) {
@@ -99,7 +139,6 @@ function cacheFolderId(folderName: string, id: string) {
   }
 }
 
-/** ドライブ検索のクエリ文字列に名前を埋め込む。 */
 function quote(value: string) {
   return `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
 }
@@ -183,7 +222,10 @@ export async function saveToDrive(
       response = await upload(token, folderId, fileName, content);
     }
 
-    if (response.status === 401 || response.status === 403) return { status: "needs-token" };
+    if (response.status === 401 || response.status === 403) {
+      writeSessionToken("");
+      return { status: "needs-token" };
+    }
     if (!response.ok) return { status: "failed", message: `ドライブへの保存に失敗しました (${response.status})。` };
 
     const data = (await response.json()) as { id: string; webViewLink?: string };
