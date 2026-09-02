@@ -1,0 +1,369 @@
+.storePage {
+  min-height: 100vh;
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+
+.storeHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 68px;
+  padding: 10px max(5vw, 22px);
+  background: rgba(250, 250, 252, 0.88);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.headerEyebrow,
+.headerTitle,
+.sectionLabel {
+  margin: 0;
+}
+
+.headerEyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #86868b;
+}
+
+.headerTitle {
+  margin-top: 2px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.toolsLink {
+  color: #0066cc;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.storeShell {
+  width: min(760px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 80px;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 30px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(148, 108, 255, 0.32), transparent 42%),
+    linear-gradient(145deg, #111114, #27272c);
+  color: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.14);
+}
+
+.heroBadge {
+  display: inline-flex;
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+
+.hero h1 {
+  max-width: 500px;
+  margin: 22px 0 12px;
+  font-size: clamp(34px, 8vw, 58px);
+  line-height: 1.02;
+  letter-spacing: -0.06em;
+}
+
+.hero p {
+  max-width: 570px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.85;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.catalog {
+  margin-top: 38px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.sectionLabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #86868b;
+}
+
+.sectionHeading h2 {
+  margin: 3px 0 0;
+  font-size: 25px;
+  letter-spacing: -0.04em;
+}
+
+.appCount {
+  padding-bottom: 2px;
+  font-size: 12px;
+  color: #86868b;
+}
+
+.appList {
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 22px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.05);
+}
+
+.appCard {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.appCard + .appCard {
+  border-top: 1px solid #e8e8ed;
+}
+
+.appCard:hover {
+  background: #fafafa;
+}
+
+.appIcon {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  font-size: 32px;
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.iconTranslate {
+  background: linear-gradient(145deg, #5b8cff, #8158e8);
+}
+
+.iconMinutes {
+  background: linear-gradient(145deg, #ffb453, #ff6b58);
+}
+
+.iconWatchword {
+  background: linear-gradient(145deg, #5ad8a6, #2e9f78);
+}
+
+.appInfo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.appMeta {
+  margin-bottom: 2px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #86868b;
+}
+
+.appName {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.appTagline {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #515154;
+}
+
+.appPrivacy {
+  margin-top: 6px;
+  font-size: 10px;
+  color: #9a9a9f;
+}
+
+.openButton {
+  min-width: 58px;
+  padding: 8px 14px;
+  text-align: center;
+  color: #0066cc;
+  font-size: 12px;
+  font-weight: 800;
+  background: #f0f1f4;
+  border-radius: 999px;
+}
+
+.promise {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 28px;
+  padding: 22px;
+  background: #ffffff;
+  border-radius: 22px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.promiseIcon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 900;
+  background: #f2f2f7;
+  border-radius: 14px;
+}
+
+.promise h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  letter-spacing: -0.03em;
+}
+
+.promise p:not(.promiseIcon) {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #6e6e73;
+}
+
+.appFrame {
+  min-height: 100vh;
+  background: #f5f5f7;
+}
+
+.appBar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 90px;
+  align-items: center;
+  min-height: 64px;
+  padding: 8px max(4vw, 16px);
+  background: rgba(250, 250, 252, 0.92);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.appBack {
+  color: #0066cc;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.appBarTitle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.appBarIcon {
+  font-size: 20px;
+}
+
+.appBarSpacer {
+  display: block;
+}
+
+.embedded {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.embeddedReady {
+  opacity: 1;
+}
+
+.embedded :global(main > header) {
+  display: none;
+}
+
+.embedded :global(main > div > section:first-of-type) {
+  display: none;
+}
+
+.embedded :global(section[aria-label="モジュールを選ぶ"]) {
+  display: none;
+}
+
+.embedded :global(main) {
+  min-height: calc(100vh - 64px);
+}
+
+.embedded :global(main > div) {
+  padding-top: 24px;
+}
+
+@media (max-width: 560px) {
+  .storeShell {
+    width: min(100% - 24px, 760px);
+    padding-top: 18px;
+  }
+
+  .hero {
+    padding: 24px 20px;
+    border-radius: 24px;
+  }
+
+  .appCard {
+    grid-template-columns: 60px minmax(0, 1fr) auto;
+    gap: 11px;
+    padding: 14px 12px;
+  }
+
+  .appIcon {
+    width: 60px;
+    height: 60px;
+    font-size: 27px;
+    border-radius: 15px;
+  }
+
+  .appTagline {
+    font-size: 11px;
+  }
+
+  .appPrivacy {
+    display: none;
+  }
+
+  .openButton {
+    min-width: 50px;
+    padding: 7px 11px;
+  }
+
+  .appBar {
+    grid-template-columns: 76px minmax(0, 1fr) 76px;
+  }
+}
