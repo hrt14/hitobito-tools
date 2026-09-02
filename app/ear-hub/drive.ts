@@ -192,7 +192,10 @@ export async function openDriveFolderPicker(
       if (data.action !== google.picker.Action.PICKED) return;
       const selected = data.docs?.[0];
       if (!selected?.id) return;
-      onPicked({ id: selected.id, name: selected.name || "選択したフォルダ" });
+      const folder = { id: selected.id, name: selected.name || "選択したフォルダ" };
+      // 既存の議事録画面は保存先名を渡してくるため、名前→IDをキャッシュして橋渡しする。
+      cacheFolderId(folder.name, folder.id);
+      onPicked(folder);
     })
     .build();
 
@@ -342,7 +345,7 @@ export async function saveToDriveFolder(
   }
 }
 
-/** 旧フォルダ名方式。既存コードとの互換用に残す。 */
+/** 旧フォルダ名方式。Pickerで選んだ名前はキャッシュされたIDへ、既定名はrootへ送る。 */
 export async function saveToDrive(
   token: string,
   folderName: string,
@@ -350,10 +353,10 @@ export async function saveToDrive(
   content: string,
 ): Promise<UploadResult> {
   try {
-    let folderId = await ensureFolder(token, folderName);
+    let folderId = folderName === "マイドライブ" ? "root" : await ensureFolder(token, folderName);
     let response = await upload(token, folderId, fileName, content);
 
-    if (response.status === 404) {
+    if (response.status === 404 && folderId !== "root") {
       forgetFolder(folderName);
       folderId = await ensureFolder(token, folderName);
       response = await upload(token, folderId, fileName, content);
