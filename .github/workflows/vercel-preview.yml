@@ -1,18 +1,13 @@
 name: Vercel preview deploy
 
-# Vercel の Git Integration とは別経路。こちらがOFFのままでも Preview Deployment を作れる。
+# Vercel の Git Integration を止めたまま Preview Deployment を作るための予備経路。
+# GitHub のランナーから Vercel を叩くので、エージェント側のネットワーク制限を受けない。
 #
-# workflow_dispatch は default branch にファイルが無いと起動できないため、
-# main を触らずに動かせるよう push トリガーにしてある。
-# 無料枠を使うので、対象ブランチと対象パスを絞って、関係ない変更では動かさない。
+# 常用は Vercel MCP 側に任せているので、ここでは自動起動しない。
+# 使うときは、このファイルを default branch に置いたうえで手動起動する
+# (workflow_dispatch は default branch にファイルが無いと dispatch できない)。
+# 必要な Actions secrets: VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID
 on:
-  push:
-    branches:
-      - claude/earphone-extension-app-concept-184mbe
-    paths:
-      - "app/ear-hub/**"
-      - "app/api/ear-hub/**"
-      - ".github/workflows/vercel-preview.yml"
   workflow_dispatch:
 
 jobs:
