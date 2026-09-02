@@ -1,9 +1,10 @@
 import { isLanguageCode } from "./languages";
-import { DEFAULT_SETTINGS, type EarHubSettings } from "./modules";
+import { DEFAULT_DRIVE_FOLDER, DEFAULT_SETTINGS, type EarHubSettings } from "./modules";
 
 /**
  * 議事録と設定は端末の中だけに置く。サーバーに会話を残さないので、
  * この段階ではアカウントもログインも要らない。
+ * 端末の外に出したいときだけ、利用者自身の Google ドライブへ書き出す(drive.ts)。
  */
 
 const SETTINGS_KEY = "earhub.settings.v1";
@@ -17,6 +18,8 @@ export type SavedMinutes = {
   createdAt: number;
   transcript: string;
   summary: string;
+  /** ドライブへ保存済みなら、そのファイルへのリンク */
+  driveLink?: string;
 };
 
 function read<T>(key: string): T | null {
@@ -47,6 +50,11 @@ export function loadSettings(): EarHubSettings {
     direction: stored.direction === "toPartner" ? "toPartner" : "toMe",
     speakToPartner: stored.speakToPartner === true,
     watchwords: typeof stored.watchwords === "string" ? stored.watchwords : DEFAULT_SETTINGS.watchwords,
+    driveEnabled: stored.driveEnabled === true,
+    driveFolder:
+      typeof stored.driveFolder === "string" && stored.driveFolder.trim()
+        ? stored.driveFolder.trim()
+        : DEFAULT_DRIVE_FOLDER,
   };
 }
 

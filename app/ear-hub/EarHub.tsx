@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Script from "next/script";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./ear-hub.module.css";
 import { LANGUAGE_CODES, LANGUAGES, bcp47, labelOf, type LanguageCode } from "./languages";
 import {
+  DEFAULT_DRIVE_FOLDER,
   DEFAULT_SETTINGS,
   MODULES,
   moduleById,
@@ -13,6 +15,14 @@ import {
   type ModuleId,
   type SessionResult,
 } from "./modules";
+import {
+  GOOGLE_CLIENT_ID,
+  buildDocument,
+  fileNameFor,
+  initTokenClient,
+  saveToDrive,
+  type TokenClient,
+} from "./drive";
 import {
   Listener,
   cancelSpeech,
@@ -110,6 +120,9 @@ export default function EarHub() {
   const [accessCode, setAccessCode] = useState("");
   const [needsCode, setNeedsCode] = useState(false);
   const [copied, setCopied] = useState("");
+  const [googleReady, setGoogleReady] = useState(false);
+  const [driveConnected, setDriveConnected] = useState(false);
+  const [driveStatus, setDriveStatus] = useState("");
 
   const listenerRef = useRef<Listener | null>(null);
   const queueRef = useRef<Promise<void>>(Promise.resolve());
@@ -117,6 +130,10 @@ export default function EarHub() {
   const moduleIdRef = useRef(moduleId);
   const entriesRef = useRef<Entry[]>([]);
   const accessCodeRef = useRef("");
+  const tokenClientRef = useRef<TokenClient | null>(null);
+  const driveTokenRef = useRef("");
+  const pendingUploadRef = useRef<SavedMinutes | null>(null);
+  const uploadRecordRef = useRef<((record: SavedMinutes, token?: string) => Promise<void>) | null>(null);
 
   const activeModule = useMemo(() => moduleById(moduleId), [moduleId]);
 
@@ -252,6 +269,71 @@ export default function EarHub() {
     });
   }, []);
 
+  const requestDriveToken = useCallback((prompt: string) => {
+    if (!tokenClientRef.current) {
+      setDriveStatus("Googleの読み込み中です。数秒おいてもう一度押してください。");
+      return;
+    }
+    tokenClientRef.current.requestAccessToken({ prompt });
+  }, []);
+
+  const uploadRecord = useCallback(
+    async (record: SavedMinutes, tokenOverride?: string) => {
+      const token = tokenOverride || driveTokenRef.current;
+      // トークンが無い/切れているときは、認可が返ってきてから同じ記録を上げ直す。
+      if (!token) {
+        pendingUploadRef.current = record;
+        requestDriveToken("consent");
+        return;
+      }
+
+      const folder = settingsRef.current.driveFolder.trim() || DEFAULT_DRIVE_FOLDER;
+      setDriveStatus("Googleドライブへ保存しています…");
+      const result = await saveToDrive(
+        token,
+        folder,
+        fileNameFor(record.createdAt),
+        buildDocument(record.title, record.summary, record.transcript),
+      );
+
+      if (result.status === "needs-token") {
+        driveTokenRef.current = "";
+        setDriveConnected(false);
+        pendingUploadRef.current = record;
+        requestDriveToken("");
+        return;
+      }
+      if (result.status === "failed") {
+        setDriveStatus(result.message);
+        return;
+      }
+      setSaved(saveMinutes({ ...record, driveLink: result.link }));
+      setDriveStatus(`「${folder}」に保存しました。`);
+    },
+    [requestDriveToken],
+  );
+
+  useEffect(() => {
+    uploadRecordRef.current = uploadRecord;
+  }, [uploadRecord]);
+
+  useEffect(() => {
+    if (!googleReady || !GOOGLE_CLIENT_ID) return;
+    tokenClientRef.current = initTokenClient((response) => {
+      if (response.error || !response.access_token) {
+        pendingUploadRef.current = null;
+        setDriveStatus(response.error_description || "Googleドライブへの接続をキャンセルしました。");
+        return;
+      }
+      driveTokenRef.current = response.access_token;
+      setDriveConnected(true);
+      const pending = pendingUploadRef.current;
+      pendingUploadRef.current = null;
+      if (pending) void uploadRecordRef.current?.(pending, response.access_token);
+      else setDriveStatus("Googleドライブに接続しました。");
+    });
+  }, [googleReady]);
+
   const beginSession = useCallback(() => {
     setError("");
     setSummary(null);
@@ -302,15 +384,18 @@ export default function EarHub() {
     }
 
     // 要約に失敗しても、文字起こしそのものは残す。
-    setSaved(
-      saveMinutes({
-        id: newId(),
-        title: `${earModule.name} ${dateOf(createdAt)}`,
-        createdAt,
-        transcript: lines.join("\n"),
-        summary: summaryBody,
-      }),
-    );
+    const record: SavedMinutes = {
+      id: newId(),
+      title: `${earModule.name} ${dateOf(createdAt)}`,
+      createdAt,
+      transcript: lines.join("\n"),
+      summary: summaryBody,
+    };
+    setSaved(saveMinutes(record));
+
+    if (settingsRef.current.driveEnabled && GOOGLE_CLIENT_ID) {
+      await uploadRecordRef.current?.(record);
+    }
   }, [context]);
 
   const handleSelectModule = useCallback(
@@ -349,6 +434,14 @@ export default function EarHub() {
 
   return (
     <main className={styles.page}>
+      {GOOGLE_CLIENT_ID ? (
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+          onLoad={() => setGoogleReady(true)}
+        />
+      ) : null}
+
       <header className={styles.header}>
         <Link href="https://tools.hitobito.jp/" className={styles.brand}>
           <span>hitobito</span> Tools
@@ -497,6 +590,7 @@ export default function EarHub() {
         ) : null}
 
         {summarizing ? <p className={styles.notice}>会話をまとめています。少しお待ちください。</p> : null}
+        {!summarizing && driveStatus ? <p className={styles.notice}>{driveStatus}</p> : null}
 
         {summary ? (
           <section className={styles.summary}>
@@ -592,6 +686,54 @@ export default function EarHub() {
                   placeholder="予算, 締め切り"
                 />
               </label>
+
+              <div className={styles.driveBlock}>
+                <p className={styles.driveTitle}>議事録の保存先</p>
+                <p className={styles.driveNote}>
+                  既定ではこの端末の中だけに残ります。下をONにすると、止めた直後に自分のGoogleドライブへもMarkdownで書き出します。
+                </p>
+
+                <label className={styles.checkboxField}>
+                  <input
+                    type="checkbox"
+                    checked={settings.driveEnabled}
+                    disabled={!GOOGLE_CLIENT_ID}
+                    onChange={(event) => updateSettings({ driveEnabled: event.target.checked })}
+                  />
+                  <span>
+                    Googleドライブにも保存する
+                    {GOOGLE_CLIENT_ID ? null : <em>この環境ではGoogle連携が設定されていません。</em>}
+                  </span>
+                </label>
+
+                <label className={styles.field}>
+                  <span>保存先フォルダ名</span>
+                  <input
+                    className={styles.input}
+                    type="text"
+                    value={settings.driveFolder}
+                    onChange={(event) => updateSettings({ driveFolder: event.target.value })}
+                    placeholder={DEFAULT_DRIVE_FOLDER}
+                  />
+                </label>
+
+                <div className={styles.driveRow}>
+                  <button
+                    type="button"
+                    className={styles.ghostButton}
+                    disabled={!GOOGLE_CLIENT_ID}
+                    onClick={() => requestDriveToken(driveConnected ? "" : "consent")}
+                  >
+                    {driveConnected ? "Googleを接続し直す" : "Googleに接続"}
+                  </button>
+                  {driveStatus ? <span className={styles.driveStatus}>{driveStatus}</span> : null}
+                </div>
+
+                <p className={styles.driveNote}>
+                  求める権限は drive.file
+                  だけです。このアプリが作ったファイル以外は読み書きできません。作られたフォルダはドライブ側で移動・改名しても、そのまま保存先として使われます。
+                </p>
+              </div>
             </div>
           ) : null}
         </section>
@@ -612,6 +754,24 @@ export default function EarHub() {
                       >
                         {copied === item.id ? "コピーしました" : "コピー"}
                       </button>
+                      {item.driveLink ? (
+                        <a
+                          className={styles.ghostButton}
+                          href={item.driveLink}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          ドライブで開く
+                        </a>
+                      ) : GOOGLE_CLIENT_ID ? (
+                        <button
+                          type="button"
+                          className={styles.ghostButton}
+                          onClick={() => void uploadRecord(item)}
+                        >
+                          ドライブに保存
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         className={styles.ghostButton}
@@ -633,7 +793,9 @@ export default function EarHub() {
             音声認識と読み上げは端末のブラウザ機能を使うので、通信量以外の費用はかかりません。Claude
             APIを呼ぶのは、翻訳の1発話ごとと、議事録をまとめる1回だけです。
           </p>
-          <p>会話も議事録もこの端末の中だけに保存され、サーバーには残りません。</p>
+          <p>
+            会話も議事録もこの端末の中(localStorage)に保存され、こちらのサーバーには残りません。端末の外に出すのは、設定でGoogleドライブ保存をONにしたときだけです。
+          </p>
         </footer>
       </div>
     </main>

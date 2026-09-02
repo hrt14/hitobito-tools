@@ -337,16 +337,24 @@
   cursor: pointer;
 }
 
+/* ボタンと、ドライブへのリンク(a要素)の両方で使う。 */
 .ghostButton {
+  display: inline-block;
   padding: 8px 14px;
   font: inherit;
   font-size: 12px;
   font-weight: 700;
   color: #4a5142;
+  text-decoration: none;
   background: transparent;
   border: 1px solid #dfe1d8;
   border-radius: 999px;
   cursor: pointer;
+}
+
+.ghostButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .input {
@@ -518,6 +526,42 @@
   font-size: 11px;
   font-style: normal;
   color: #8a9280;
+}
+
+.driveBlock {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: #f7f7f0;
+  border-radius: 12px;
+}
+
+.driveTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #4a5142;
+}
+
+.driveNote {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.8;
+  color: #8a9280;
+}
+
+.driveRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.driveStatus {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #4a5142;
 }
 
 .saved {
