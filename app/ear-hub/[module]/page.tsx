@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import ConceptAppPage from "../ConceptAppPage";
 import EarHubLauncher from "../EarHubLauncher";
-import { moduleById, type ModuleId } from "../modules";
-
-const MODULE_IDS: ModuleId[] = ["translate", "minutes", "watchword"];
+import { catalogById } from "../catalog";
 
 type Props = {
   params: Promise<{ module: string }>;
@@ -11,17 +10,22 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { module } = await params;
-  if (!MODULE_IDS.includes(module as ModuleId)) return {};
-  const item = moduleById(module as ModuleId);
+  const app = catalogById(module);
+  if (!app) return {};
   return {
-    title: `${item.name} | Ear Hub`,
-    description: item.tagline,
+    title: `${app.name} | DIGIL CLOUD`,
+    description: app.tagline,
   };
 }
 
-export default async function EarHubModulePage({ params }: Props) {
+export default async function DigilCloudAppPage({ params }: Props) {
   const { module } = await params;
-  if (!MODULE_IDS.includes(module as ModuleId)) notFound();
+  const app = catalogById(module);
+  if (!app) notFound();
 
-  return <EarHubLauncher moduleId={module as ModuleId} />;
+  if (app.status === "live" && app.moduleId) {
+    return <EarHubLauncher moduleId={app.moduleId} />;
+  }
+
+  return <ConceptAppPage app={app} />;
 }
