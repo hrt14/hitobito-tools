@@ -1,13 +1,12 @@
 /**
- * 議事録を利用者自身の Google ドライブへ保存する。
+ * DIGIL CLOUD の対応アプリから、利用者自身の Google ドライブへ保存する。
  *
- * スコープは drive.file だけ。このアプリが作ったファイルしか見えないので、
- * 利用者のドライブの中身を読むことはできない。その代わり「既にあるフォルダを選ぶ」
- * こともできないため、保存先はこのアプリが作る名前付きフォルダになる。
- * 作られたフォルダはドライブ側で自由に移動・改名でき、IDは変わらないので保存先も追随する。
+ * Drive 権限は drive.file だけ。このアプリが作ったファイルしか見えない。
+ * Googleログイン表示のため openid/email/profile も同時に要求する。
  */
 
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const ACCOUNT_SCOPE = `openid email profile ${DRIVE_SCOPE}`;
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 const FOLDER_ID_PREFIX = "earhub.driveFolderId.";
 
@@ -21,7 +20,13 @@ export type TokenClient = {
   requestAccessToken: (options?: { prompt?: string }) => void;
 };
 
-// Window の global 宣言は voice-recorder 側が持っているので、ここでは足さずに読むだけにする。
+export type GoogleProfile = {
+  sub: string;
+  name: string;
+  email: string;
+  picture?: string;
+};
+
 type GoogleIdentity = {
   accounts: {
     oauth2: {
@@ -30,6 +35,7 @@ type GoogleIdentity = {
         scope: string;
         callback: (response: TokenResponse) => void;
       }) => TokenClient;
+      revoke?: (token: string, callback?: () => void) => void;
     };
   };
 };
@@ -42,9 +48,34 @@ export function initTokenClient(callback: (response: TokenResponse) => void) {
   if (!google) return null;
   return google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
-    scope: DRIVE_SCOPE,
+    scope: ACCOUNT_SCOPE,
     callback,
   });
+}
+
+export async function fetchGoogleProfile(token: string): Promise<GoogleProfile | null> {
+  try {
+    const response = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as Partial<GoogleProfile>;
+    if (!data.sub || !data.name || !data.email) return null;
+    return {
+      sub: data.sub,
+      name: data.name,
+      email: data.email,
+      picture: data.picture,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function revokeGoogleToken(token: string) {
+  if (!token || typeof window === "undefined") return;
+  const google = (window as unknown as { google?: GoogleIdentity }).google;
+  google?.accounts.oauth2.revoke?.(token);
 }
 
 function cacheKey(folderName: string) {
@@ -95,10 +126,6 @@ async function createFolder(token: string, folderName: string) {
   return data.id;
 }
 
-/**
- * 保存先フォルダのIDを返す。
- * 端末に覚えたIDを優先し、無ければ(別端末で作った分を)検索し、それも無ければ作る。
- */
 export async function ensureFolder(token: string, folderName: string) {
   const cached = readCachedFolderId(folderName);
   if (cached) return cached;
@@ -150,7 +177,6 @@ export async function saveToDrive(
     let folderId = await ensureFolder(token, folderName);
     let response = await upload(token, folderId, fileName, content);
 
-    // 覚えていたフォルダが消されていたら、作り直して1度だけやり直す。
     if (response.status === 404) {
       forgetFolder(folderName);
       folderId = await ensureFolder(token, folderName);
@@ -167,7 +193,6 @@ export async function saveToDrive(
   }
 }
 
-/** 保存する Markdown 本文を組み立てる。要約が無いときは文字起こしだけを残す。 */
 export function buildDocument(title: string, summary: string, transcript: string) {
   const parts = [`# ${title}`, ""];
   if (summary.trim()) parts.push(summary.trim(), "", "---", "");
