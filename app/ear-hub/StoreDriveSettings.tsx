@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { GOOGLE_CLIENT_ID } from "./drive";
 import { DEFAULT_DRIVE_FOLDER, DEFAULT_SETTINGS, type EarHubSettings } from "./modules";
 import { loadSettings, saveSettings } from "./storage";
-import styles from "./ear-hub-store.module.css";
+import styles from "./store-drive-settings.module.css";
 
 export default function StoreDriveSettings() {
   const [settings, setSettings] = useState<EarHubSettings>(DEFAULT_SETTINGS);
