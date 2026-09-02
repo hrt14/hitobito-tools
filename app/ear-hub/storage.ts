@@ -1,5 +1,10 @@
 import { isLanguageCode } from "./languages";
-import { DEFAULT_DRIVE_FOLDER, DEFAULT_SETTINGS, type EarHubSettings } from "./modules";
+import {
+  DEFAULT_DRIVE_FOLDER,
+  DEFAULT_DRIVE_FOLDER_ID,
+  DEFAULT_SETTINGS,
+  type EarHubSettings,
+} from "./modules";
 
 /**
  * 議事録と設定は端末の中だけに置く。サーバーに会話を残さないので、
@@ -44,6 +49,8 @@ function write(key: string, value: unknown) {
 export function loadSettings(): EarHubSettings {
   const stored = read<Partial<EarHubSettings>>(SETTINGS_KEY);
   if (!stored) return DEFAULT_SETTINGS;
+
+  const hasFolderId = typeof stored.driveFolderId === "string" && stored.driveFolderId.trim().length > 0;
   return {
     partnerLang: isLanguageCode(stored.partnerLang) ? stored.partnerLang : DEFAULT_SETTINGS.partnerLang,
     myLang: isLanguageCode(stored.myLang) ? stored.myLang : DEFAULT_SETTINGS.myLang,
@@ -51,10 +58,13 @@ export function loadSettings(): EarHubSettings {
     speakToPartner: stored.speakToPartner === true,
     watchwords: typeof stored.watchwords === "string" ? stored.watchwords : DEFAULT_SETTINGS.watchwords,
     driveEnabled: stored.driveEnabled === true,
+    // 旧バージョンは「フォルダ名」しか持っていなかった。安全に root へ移行し、
+    // Google Picker で明示的に選んだ場合だけ folderId と表示名を復元する。
     driveFolder:
-      typeof stored.driveFolder === "string" && stored.driveFolder.trim()
+      hasFolderId && typeof stored.driveFolder === "string" && stored.driveFolder.trim()
         ? stored.driveFolder.trim()
         : DEFAULT_DRIVE_FOLDER,
+    driveFolderId: hasFolderId ? stored.driveFolderId!.trim() : DEFAULT_DRIVE_FOLDER_ID,
   };
 }
 
