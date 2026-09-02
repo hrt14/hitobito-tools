@@ -10,6 +10,8 @@ const ACCOUNT_SCOPE = `openid email profile ${DRIVE_SCOPE}`;
 const SESSION_TOKEN_KEY = "digil.googleAccessToken.v1";
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 const FOLDER_ID_PREFIX = "earhub.driveFolderId.";
+const DEFAULT_GOOGLE_CLIENT_ID =
+  "995292381518-83gfadr84g4e8tl6svl28rsj3hpi3av5.apps.googleusercontent.com";
 
 export type TokenResponse = {
   access_token?: string;
@@ -41,7 +43,7 @@ type GoogleIdentity = {
   };
 };
 
-export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? DEFAULT_GOOGLE_CLIENT_ID;
 
 function readSessionToken() {
   try {
