@@ -22,11 +22,14 @@ export type EarHubSettings = {
   watchwords: string;
   /** 議事録を止めたときに Google ドライブへも保存するか */
   driveEnabled: boolean;
-  /** ドライブ側の保存先フォルダ名 */
+  /** 画面に表示する保存先名 */
   driveFolder: string;
+  /** Drive API / Picker が返した保存先フォルダID。root はマイドライブ直下。 */
+  driveFolderId: string;
 };
 
-export const DEFAULT_DRIVE_FOLDER = "hitobito Ear Hub";
+export const DEFAULT_DRIVE_FOLDER = "マイドライブ";
+export const DEFAULT_DRIVE_FOLDER_ID = "root";
 
 export const DEFAULT_SETTINGS: EarHubSettings = {
   partnerLang: "en",
@@ -36,6 +39,7 @@ export const DEFAULT_SETTINGS: EarHubSettings = {
   watchwords: "予算, 締め切り, 宿題",
   driveEnabled: false,
   driveFolder: DEFAULT_DRIVE_FOLDER,
+  driveFolderId: DEFAULT_DRIVE_FOLDER_ID,
 };
 
 export type ApiCall = (body: Record<string, unknown>) => Promise<string>;
