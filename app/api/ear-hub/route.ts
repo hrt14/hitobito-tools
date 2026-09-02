@@ -6,7 +6,8 @@ export const runtime = "nodejs";
 // 議事録の要約は入力が長く、既定の10秒では足りない。
 export const maxDuration = 60;
 
-const MODEL = process.env.EARHUB_MODEL ?? "claude-opus-5";
+// 一番安いモデルを既定にする。品質を上げたいときは EARHUB_MODEL で差し替える。
+const MODEL = process.env.EARHUB_MODEL ?? "claude-haiku-4-5";
 const ACCESS_CODE = process.env.EARHUB_ACCESS_CODE ?? "";
 
 /**
@@ -20,8 +21,25 @@ const SUMMARIZE_MAX_CHARS = 24_000;
 const REQUESTS_PER_MINUTE = 40;
 const DAILY_CHAR_BUDGET = Number(process.env.EARHUB_DAILY_CHAR_BUDGET ?? 400_000);
 
+/**
+ * モデルによって受け付けるパラメータが違い、対応していないものを送ると400になる。
+ * EARHUB_MODEL で差し替えられるようにしてある以上、送る前にここで判定する。
+ */
+const startsWithAny = (prefixes: string[]) => prefixes.some((prefix) => MODEL.startsWith(prefix));
+
+// output_config.effort は 4.6 世代以降だけ。Haiku 4.5 に送るとエラーになる。
+const SUPPORTS_EFFORT = startsWithAny([
+  "claude-opus-5",
+  "claude-opus-4-8",
+  "claude-opus-4-7",
+  "claude-opus-4-6",
+  "claude-sonnet-5",
+  "claude-sonnet-4-6",
+  "claude-fable-5",
+]);
+
 // サーバー側のフォールバックは Opus 5 / Fable 5 系だけが受け付ける。
-const SUPPORTS_SERVER_FALLBACK = /^claude-(opus-5|fable-5)/.test(MODEL);
+const SUPPORTS_SERVER_FALLBACK = startsWithAny(["claude-opus-5", "claude-fable-5"]);
 
 type Bucket = { minuteStart: number; count: number };
 const buckets = new Map<string, Bucket>();
@@ -80,6 +98,11 @@ function fallbackParams() {
   };
 }
 
+/** 思考の深さ。対応していないモデルには送らない。 */
+function effortParams(effort: "low" | "medium") {
+  return SUPPORTS_EFFORT ? { output_config: { effort } } : {};
+}
+
 let cachedClient: Anthropic | null = null;
 
 // キーが無い環境で読み込まれただけで落ちないよう、最初の呼び出しまで作らない。
@@ -115,7 +138,7 @@ async function translate(text: string, fromLabel: string, toLabel: string) {
     model: MODEL,
     max_tokens: 1000,
     // 会話に割り込む速さが要るので、思考は浅くする。
-    output_config: { effort: "low" },
+    ...effortParams("low"),
     system: translatePrompt(fromLabel, toLabel),
     messages: [{ role: "user", content: text }],
   });
@@ -129,7 +152,7 @@ async function summarize(transcript: string) {
     ...fallbackParams(),
     model: MODEL,
     max_tokens: 4000,
-    output_config: { effort: "medium" },
+    ...effortParams("medium"),
     system: SUMMARIZE_PROMPT,
     messages: [{ role: "user", content: transcript }],
   });
