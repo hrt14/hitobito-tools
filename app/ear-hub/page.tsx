@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "DIGIL CLOUD",
   description:
     "イヤホン、ボイスレコーダー、スマートグラスにAIアプリを追加して、ハードを買い替えずに機能だけ増やすデバイスアプリストア。",
-  alternates: { canonical: "https://tools.hitobito.jp/ear-hub" },
+  alternates: { canonical: "https://dc.hitobito.jp/" },
 };
 
 export default function DigilCloudPage() {
