@@ -55,7 +55,8 @@ export function proxy(request: NextRequest) {
       pathname.startsWith("/_next") ||
       pathname.startsWith("/api") ||
       pathname === "/favicon.ico" ||
-      pathname === "/favicon.svg"
+      pathname === "/favicon.svg" ||
+      pathname === "/start-game.html"
     ) {
       return NextResponse.next();
     }
