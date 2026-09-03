@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Life1Analytics from "@/components/Life1Analytics";
+import LevelUpAnalytics from "@/components/LevelUpAnalytics";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -56,6 +57,7 @@ export default function RootLayout({
       <body>
         {children}
         <Life1Analytics />
+        <LevelUpAnalytics />
       </body>
     </html>
   );
