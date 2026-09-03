@@ -47,6 +47,17 @@ const games: LevelUpGame[] = [
     href: "/confidence-before-results",
   },
   {
+    id: "stop-self-scoring",
+    title: "気を使いすぎて疲れる人の『心の採点』をやめる練習",
+    kicker: "STOP SELF-SCORING",
+    skill: "事実と解釈 / 終了線 / 自己攻撃を止める",
+    description: "勝手な翻訳をはがし、見直しの終わりを決め、自分への追撃を止めて、小さく試す。",
+    icon: "OFF",
+    accent: "#d8ff5b",
+    accentSoft: "rgba(216, 255, 91, .20)",
+    href: "/stop-self-scoring",
+  },
+  {
     id: "yesterday-self",
     title: "人と比べてしまったときの 昨日の自分に1勝",
     kicker: "BEAT YESTERDAY, NOT PEOPLE",
@@ -361,6 +372,7 @@ const games: LevelUpGame[] = [
 const updateCounts: Record<string, number> = {
   "breakthrough-90": 1,
   "confidence-before-results": 1,
+  "stop-self-scoring": 1,
   "yesterday-self": 1,
   "boundary-map": 1,
   "dont-decide-now": 1,
