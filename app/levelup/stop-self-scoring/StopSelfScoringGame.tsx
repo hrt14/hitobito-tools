@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import styles from "./stopSelfScoring.module.css";
 
 type Phase = "facts" | "finish" | "voice" | "experiment" | "done";
@@ -31,8 +31,15 @@ type ExperimentResult = PendingExperiment & {
   resolvedAt: number;
 };
 
+type PersistenceState = {
+  pending: PendingExperiment | null;
+  history: ExperimentResult[];
+};
+
 const PENDING_KEY = "hitobito-levelup-stop-self-scoring-pending-v1";
 const HISTORY_KEY = "hitobito-levelup-stop-self-scoring-history-v1";
+const PERSISTENCE_EVENT = "hitobito-levelup-stop-self-scoring-change";
+const EMPTY_SNAPSHOT = JSON.stringify({ pending: "", history: "[]" });
 
 const SCENES: Scene[] = [
   {
@@ -76,7 +83,7 @@ const SCENES: Scene[] = [
     tab: "気を配りすぎる",
     moment: "場にいる全員の機嫌や居心地を自分が整えようとしている",
     received: "会話中、何人もの表情をずっと確認している",
-    facts: ["自分は会話に参加している", "相手の気持ちは相手本人にしか確定できない"],
+    facts: ["自分は会話に参加している", "会話中、何人もの表情を確認している"],
     translations: ["退屈させているかも", "全員に話を振らないと", "誰かが不機嫌なら自分のせい"],
     selfAttack: "もっと気を回せたはず。ちゃんとできない自分はダメだ。",
     friendVoice: "気づける力はそのままでいい。全員の状態を完璧に管理する役まで引き受けなくていい。",
@@ -103,63 +110,88 @@ function vibrate(pattern: number | number[]) {
   }
 }
 
-function readPending(): PendingExperiment | null {
-  try {
-    const raw = window.localStorage.getItem(PENDING_KEY);
-    if (!raw) return null;
-    const value = JSON.parse(raw) as Partial<PendingExperiment>;
-    if (
-      typeof value.sceneId === "string" &&
-      typeof value.experiment === "string" &&
-      typeof value.prediction === "number" &&
-      typeof value.createdAt === "number"
-    ) {
-      return value as PendingExperiment;
-    }
-  } catch {
-    // Storage is optional. The main exercise still works without it.
-  }
-  return null;
+function isPendingExperiment(value: unknown): value is PendingExperiment {
+  if (!value || typeof value !== "object") return false;
+  const pending = value as Partial<PendingExperiment>;
+  return (
+    typeof pending.sceneId === "string" &&
+    typeof pending.experiment === "string" &&
+    typeof pending.prediction === "number" &&
+    typeof pending.createdAt === "number"
+  );
 }
 
-function readHistory(): ExperimentResult[] {
+function isExperimentResult(value: unknown): value is ExperimentResult {
+  if (!isPendingExperiment(value)) return false;
+  const result = value as Partial<ExperimentResult>;
+  return (
+    typeof result.resolvedAt === "number" &&
+    (result.outcome === "none" || result.outcome === "small" || result.outcome === "problem")
+  );
+}
+
+function getPersistenceSnapshot() {
   try {
-    const raw = window.localStorage.getItem(HISTORY_KEY);
-    if (!raw) return [];
-    const value: unknown = JSON.parse(raw);
-    if (!Array.isArray(value)) return [];
-    return value.filter((item): item is ExperimentResult => {
-      if (!item || typeof item !== "object") return false;
-      const result = item as Partial<ExperimentResult>;
-      return (
-        typeof result.sceneId === "string" &&
-        typeof result.experiment === "string" &&
-        typeof result.prediction === "number" &&
-        typeof result.createdAt === "number" &&
-        typeof result.resolvedAt === "number" &&
-        (result.outcome === "none" || result.outcome === "small" || result.outcome === "problem")
-      );
+    return JSON.stringify({
+      pending: window.localStorage.getItem(PENDING_KEY) ?? "",
+      history: window.localStorage.getItem(HISTORY_KEY) ?? "[]",
     });
   } catch {
-    return [];
+    return EMPTY_SNAPSHOT;
   }
 }
 
-function storePending(value: PendingExperiment | null) {
+function getPersistenceServerSnapshot() {
+  return EMPTY_SNAPSHOT;
+}
+
+function subscribePersistence(onStoreChange: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === PENDING_KEY || event.key === HISTORY_KEY) onStoreChange();
+  };
+  const handleLocalChange = () => onStoreChange();
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(PERSISTENCE_EVENT, handleLocalChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(PERSISTENCE_EVENT, handleLocalChange);
+  };
+}
+
+function parsePersistenceSnapshot(snapshot: string): PersistenceState {
   try {
-    if (value) window.localStorage.setItem(PENDING_KEY, JSON.stringify(value));
+    const outer = JSON.parse(snapshot) as { pending?: unknown; history?: unknown };
+    const pendingRaw = typeof outer.pending === "string" ? outer.pending : "";
+    const historyRaw = typeof outer.history === "string" ? outer.history : "[]";
+
+    let pending: PendingExperiment | null = null;
+    if (pendingRaw) {
+      const value: unknown = JSON.parse(pendingRaw);
+      if (isPendingExperiment(value)) pending = value;
+    }
+
+    const historyValue: unknown = JSON.parse(historyRaw);
+    const history = Array.isArray(historyValue)
+      ? historyValue.filter(isExperimentResult)
+      : [];
+
+    return { pending, history };
+  } catch {
+    return { pending: null, history: [] };
+  }
+}
+
+function writePersistence(pending: PendingExperiment | null, history: ExperimentResult[]) {
+  try {
+    if (pending) window.localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
     else window.localStorage.removeItem(PENDING_KEY);
+    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-80)));
   } catch {
-    // Ignore storage failures.
+    // Local persistence is optional. The exercise still works without it.
   }
-}
-
-function storeHistory(value: ExperimentResult[]) {
-  try {
-    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(value.slice(-80)));
-  } catch {
-    // Ignore storage failures.
-  }
+  window.dispatchEvent(new Event(PERSISTENCE_EVENT));
 }
 
 export default function StopSelfScoringGame() {
@@ -170,21 +202,23 @@ export default function StopSelfScoringGame() {
   const [finishLocked, setFinishLocked] = useState(false);
   const [voiceSwitched, setVoiceSwitched] = useState(false);
   const [prediction, setPrediction] = useState(6);
-  const [pending, setPending] = useState<PendingExperiment | null>(null);
-  const [history, setHistory] = useState<ExperimentResult[]>([]);
   const [answerBack, setAnswerBack] = useState("");
   const [shareStatus, setShareStatus] = useState("");
 
-  useEffect(() => {
-    setPending(readPending());
-    setHistory(readHistory());
-  }, []);
+  const persistenceSnapshot = useSyncExternalStore(
+    subscribePersistence,
+    getPersistenceSnapshot,
+    getPersistenceServerSnapshot,
+  );
+  const { pending, history } = useMemo(
+    () => parsePersistenceSnapshot(persistenceSnapshot),
+    [persistenceSnapshot],
+  );
 
   const scene = useMemo(
     () => SCENES.find((item) => item.id === sceneId) ?? SCENES[0],
     [sceneId],
   );
-
   const noProblemCount = history.filter((item) => item.outcome === "none").length;
 
   const chooseScene = (id: string) => {
@@ -199,21 +233,6 @@ export default function StopSelfScoringGame() {
     vibrate(8);
   };
 
-  const stripTranslations = () => {
-    setStripped(true);
-    vibrate([14, 18, 30]);
-  };
-
-  const lockFinish = () => {
-    setFinishLocked(true);
-    vibrate(24);
-  };
-
-  const switchVoice = () => {
-    setVoiceSwitched(true);
-    vibrate([12, 16, 28]);
-  };
-
   const saveExperiment = () => {
     const next: PendingExperiment = {
       sceneId: scene.id,
@@ -221,8 +240,7 @@ export default function StopSelfScoringGame() {
       prediction,
       createdAt: Date.now(),
     };
-    setPending(next);
-    storePending(next);
+    writePersistence(next, history);
     setPhase("done");
     vibrate([22, 28, 46]);
   };
@@ -234,11 +252,7 @@ export default function StopSelfScoringGame() {
       outcome,
       resolvedAt: Date.now(),
     };
-    const nextHistory = [...history, result];
-    setHistory(nextHistory);
-    storeHistory(nextHistory);
-    setPending(null);
-    storePending(null);
+    writePersistence(null, [...history, result]);
     setAnswerBack(
       outcome === "none"
         ? "予想していた大きな問題は、今回は起きなかった。"
@@ -361,7 +375,14 @@ export default function StopSelfScoringGame() {
             </div>
 
             {!stripped ? (
-              <button className={styles.primaryButton} type="button" onClick={stripTranslations}>
+              <button
+                className={styles.primaryButton}
+                type="button"
+                onClick={() => {
+                  setStripped(true);
+                  vibrate([14, 18, 30]);
+                }}
+              >
                 勝手な字幕をはがす
                 <span aria-hidden="true">↓</span>
               </button>
@@ -427,7 +448,14 @@ export default function StopSelfScoringGame() {
             </div>
 
             {!finishLocked ? (
-              <button className={styles.stopButton} type="button" onClick={lockFinish}>
+              <button
+                className={styles.stopButton}
+                type="button"
+                onClick={() => {
+                  setFinishLocked(true);
+                  vibrate(24);
+                }}
+              >
                 ここで終わり、と決める
               </button>
             ) : (
@@ -470,7 +498,14 @@ export default function StopSelfScoringGame() {
             </div>
 
             {!voiceSwitched ? (
-              <button className={styles.primaryButton} type="button" onClick={switchVoice}>
+              <button
+                className={styles.primaryButton}
+                type="button"
+                onClick={() => {
+                  setVoiceSwitched(true);
+                  vibrate([12, 16, 28]);
+                }}
+              >
                 自分にも同じ言葉を使う
                 <span aria-hidden="true">↓</span>
               </button>
