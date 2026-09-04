@@ -1,0 +1,20 @@
+name: Energy Bucket verify
+
+on:
+  push:
+    branches: [levelup/energy-bucket]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Lint new LEVEL UP app
+        run: npx eslint app/levelup/energy-bucket/EnergyBucketClient.tsx app/levelup/energy-bucket/page.tsx app/levelup/page.tsx
+      - name: Build whole Next.js app
+        run: npm run build
