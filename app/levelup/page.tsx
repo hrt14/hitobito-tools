@@ -25,6 +25,17 @@ const gameUrl = (slug: string) => `https://games.hitobito.jp/apps/${slug}/`;
 
 const games: LevelUpGame[] = [
   {
+    id: "anti-vision-day",
+    title: "『このままの5年後は嫌だ』を明日の一手に変える 1日アンチビジョン",
+    kicker: "ONE DAY / TWO FUTURES / ONE MOVE",
+    skill: "アンチビジョン / 価値観 / 行動設計",
+    description: "朝に嫌な未来と選びたい未来を描き、昼5回で自動運転を止め、夜に明日の一手まで落とす。",
+    icon: "↗",
+    accent: "#d9ff52",
+    accentSoft: "rgba(217, 255, 82, .18)",
+    href: "/anti-vision-day",
+  },
+  {
     id: "breakthrough-90",
     title: "八方塞がりで動けないときの 90秒で次の一手を取り戻す",
     kicker: "ZOOM OUT. MOVE ONE STEP.",
@@ -370,6 +381,7 @@ const games: LevelUpGame[] = [
 // Increment this count whenever a game receives a meaningful update.
 // The catalog is always sorted by update count so the most iterated games rise to the top.
 const updateCounts: Record<string, number> = {
+  "anti-vision-day": 1,
   "breakthrough-90": 1,
   "confidence-before-results": 1,
   "stop-self-scoring": 1,
