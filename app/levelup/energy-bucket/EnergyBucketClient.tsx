@@ -198,13 +198,17 @@ export default function EnergyBucketClient() {
   const [shareLabel, setShareLabel] = useState("結果をシェア");
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setSavedPlan(JSON.parse(raw) as SavedPlan);
-    } catch {
-      // Ignore malformed or unavailable local storage.
-    }
-    setHydrated(true);
+    const timer = window.setTimeout(() => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) setSavedPlan(JSON.parse(raw) as SavedPlan);
+      } catch {
+        // Ignore malformed or unavailable local storage.
+      }
+      setHydrated(true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   const selectedDefinitions = useMemo(
