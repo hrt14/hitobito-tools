@@ -25,6 +25,17 @@ const gameUrl = (slug: string) => `https://games.hitobito.jp/apps/${slug}/`;
 
 const games: LevelUpGame[] = [
   {
+    id: "energy-bucket",
+    title: "夕方に電池切れする人の 体力の穴を1個ふさぐ",
+    kicker: "LEAK FIRST / ONE PLUG",
+    skill: "疲労チェック / 行動設計 / If-Then",
+    description: "10個の『体力の穴』から、明日ふさぐ1個だけを選び、疲れた自分にも実行できるIf-Thenルールにする。",
+    icon: "▰",
+    accent: "#caff57",
+    accentSoft: "rgba(202, 255, 87, .20)",
+    href: "/energy-bucket",
+  },
+  {
     id: "anti-vision-day",
     title: "『このままの5年後は嫌だ』を明日の一手に変える 1日アンチビジョン",
     kicker: "ONE DAY / TWO FUTURES / ONE MOVE",
@@ -381,6 +392,7 @@ const games: LevelUpGame[] = [
 // Increment this count whenever a game receives a meaningful update.
 // The catalog is always sorted by update count so the most iterated games rise to the top.
 const updateCounts: Record<string, number> = {
+  "energy-bucket": 1,
   "anti-vision-day": 1,
   "breakthrough-90": 1,
   "confidence-before-results": 1,
