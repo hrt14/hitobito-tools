@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import AntiVisionDayApp from "./AntiVisionDayApp";
+import AntiVisionDayClient from "./AntiVisionDayClient";
 
 export const metadata: Metadata = {
   title: { absolute: "『このままの5年後は嫌だ』を明日の一手に変える | LEVEL UP" },
@@ -11,5 +11,5 @@ export const metadata: Metadata = {
 };
 
 export default function AntiVisionDayPage() {
-  return <AntiVisionDayApp />;
+  return <AntiVisionDayClient />;
 }
