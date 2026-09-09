@@ -2,6 +2,7 @@ import type { ModuleId } from "./modules";
 
 export type GadgetId = "earbuds" | "recorder" | "glasses";
 export type CatalogAppId =
+  | "earhonya"
   | "translate"
   | "translate-premium"
   | "minutes"
@@ -56,6 +57,20 @@ export const GADGETS: Array<{
 ];
 
 export const APP_CATALOG: CatalogApp[] = [
+  {
+    id: "earhonya",
+    name: "イヤホニャ！",
+    englishName: "EARHONYA",
+    tagline: "いつものイヤホンを、AIイヤホンに。",
+    description: "手持ちのイヤホンとスマホだけで、AI議事録とAI通訳を使える統合アプリ。将来は会議中のAI耳打ちや会議記憶まで拡張します。",
+    category: "AIイヤホン",
+    icon: "耳",
+    gradient: "linear-gradient(145deg, #6552ff, #2e7dff 52%, #15d0bf)",
+    gadgets: ["earbuds"],
+    premium: false,
+    status: "live",
+    highlights: ["AI議事録", "AI通訳", "専用ハード不要"],
+  },
   {
     id: "translate",
     name: "リアルタイム翻訳",
