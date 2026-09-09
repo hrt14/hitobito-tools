@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ConceptAppPage from "../ConceptAppPage";
+import EarhonyaProduct from "../EarhonyaProduct";
 import EarHubLauncher from "../EarHubLauncher";
 import { catalogById } from "../catalog";
 
@@ -22,6 +23,10 @@ export default async function DigilCloudAppPage({ params }: Props) {
   const { module } = await params;
   const app = catalogById(module);
   if (!app) notFound();
+
+  if (app.id === "earhonya") {
+    return <EarhonyaProduct />;
+  }
 
   if (app.status === "live" && app.moduleId) {
     return <EarHubLauncher moduleId={app.moduleId} />;
