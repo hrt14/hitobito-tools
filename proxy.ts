@@ -39,16 +39,28 @@ export function proxy(request: NextRequest) {
   }
 
   if (host === LEVEL_UP_HOST) {
+    const url = request.nextUrl.clone();
+
+    if (pathname === "/robots.txt") {
+      url.pathname = "/levelup-robots.txt";
+      return NextResponse.rewrite(url);
+    }
+
+    if (pathname === "/sitemap.xml") {
+      url.pathname = "/levelup-sitemap.xml";
+      return NextResponse.rewrite(url);
+    }
+
     if (
       pathname.startsWith("/_next") ||
       pathname.startsWith("/api") ||
       pathname === "/favicon.ico" ||
-      pathname === "/favicon.svg"
+      pathname === "/favicon.svg" ||
+      pathname === "/start-game.html"
     ) {
       return NextResponse.next();
     }
 
-    const url = request.nextUrl.clone();
     url.pathname = pathname === "/" ? LEVEL_UP_ROOT_PATH : `${LEVEL_UP_ROOT_PATH}${pathname}`;
     return NextResponse.rewrite(url);
   }
