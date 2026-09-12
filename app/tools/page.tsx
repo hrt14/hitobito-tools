@@ -9,6 +9,15 @@ export const metadata: Metadata = {
 
 const tools = [
   {
+    href: "https://tools.hitobito.jp/drive-recorder",
+    tag: "WORK / RECORD",
+    title: "Drive Recorder",
+    text: "iPhoneやPCで録音した生の音声を、選んだGoogle Driveフォルダへそのまま保存するシンプルなレコーダー。",
+    accent: "orange",
+    status: "NEW",
+    icon: "●",
+  },
+  {
     href: "https://habitegg.hitobito.jp",
     tag: "LIFE / HABIT",
     title: "Habit Egg",
