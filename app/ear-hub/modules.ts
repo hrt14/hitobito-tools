@@ -1,3 +1,4 @@
+import { translateInBrowser } from "./browser-translator";
 import { labelOf, type LanguageCode } from "./languages";
 
 /**
@@ -93,6 +94,7 @@ const translateModule: EarModule = {
   name: "翻訳",
   tagline: "相手の声を、自分の耳に自分の言葉で",
   icon: "🗣",
+  // PC版Chromeでは内蔵 Translator API を優先する。未対応環境だけサーバーAPIへフォールバックする。
   usesApi: true,
   requiresConsent: false,
   hint: (settings) => {
@@ -104,7 +106,15 @@ const translateModule: EarModule = {
   recognitionLang: (settings) => translationPair(settings).from,
   onUtterance: async (text, { settings, api }) => {
     const { from, to } = translationPair(settings);
-    const translated = await api({ task: "translate", text, from, to });
+
+    // Chrome 138+ desktop はブラウザ内蔵の Translator API で処理できる。
+    // 初回の言語パック準備は browser-translator.ts がユーザー操作時に開始している。
+    let translated = await translateInBrowser(text, from, to);
+
+    // Chrome以外・非対応端末・言語パック取得失敗時だけ従来APIへ逃がす。
+    if (!translated) {
+      translated = await api({ task: "translate", text, from, to });
+    }
     if (!translated) return null;
 
     // 自分→相手のときは、訳文はイヤホン(自分の耳)ではなく画面で相手に渡すのが既定。
