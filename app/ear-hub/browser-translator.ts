@@ -68,19 +68,54 @@ export function prepareBrowserTranslator(from: LanguageCode, to: LanguageCode) {
   return promise;
 }
 
-export async function translateInBrowser(text: string, from: LanguageCode, to: LanguageCode) {
-  if (!text.trim()) return null;
-  if (from === to) return text.trim();
+function canUseEnglishBridge(from: LanguageCode, to: LanguageCode) {
+  return from !== "en" && to !== "en" && from !== to;
+}
 
-  const translator = await prepareBrowserTranslator(from, to);
+/**
+ * 直接の言語ペアが端末で使えない場合に備え、開始操作の瞬間に英語経由の
+ * 2段翻訳も同時に準備しておく。これなら後からモデルを落とす段階で
+ * user activation を失わない。
+ */
+export function prepareBrowserTranslationRoute(from: LanguageCode, to: LanguageCode) {
+  const direct = prepareBrowserTranslator(from, to);
+  if (canUseEnglishBridge(from, to)) {
+    void prepareBrowserTranslator(from, "en");
+    void prepareBrowserTranslator("en", to);
+  }
+  return direct;
+}
+
+async function translateWith(
+  translator: TranslatorInstance | null,
+  text: string,
+): Promise<string | null> {
   if (!translator) return null;
-
   try {
     const translated = (await translator.translate(text)).trim();
     return translated || null;
   } catch {
     return null;
   }
+}
+
+export async function translateInBrowser(text: string, from: LanguageCode, to: LanguageCode) {
+  const input = text.trim();
+  if (!input) return null;
+  if (from === to) return input;
+
+  // まず直接ペアを試す。英語→日本語などはこの1段で終わる。
+  const direct = await translateWith(await prepareBrowserTranslator(from, to), input);
+  if (direct) return direct;
+
+  // 中国語→日本語など、直接ペアが端末で使えない場合は Chrome 内だけで
+  // source → English → target と2段にする。外部APIには送らない。
+  if (!canUseEnglishBridge(from, to)) return null;
+
+  const first = await translateWith(await prepareBrowserTranslator(from, "en"), input);
+  if (!first) return null;
+
+  return translateWith(await prepareBrowserTranslator("en", to), first);
 }
 
 function storedTranslationPair(): { from: LanguageCode; to: LanguageCode } {
@@ -112,7 +147,7 @@ function installGesturePriming() {
 
   const prime = () => {
     const { from, to } = storedTranslationPair();
-    void prepareBrowserTranslator(from, to);
+    void prepareBrowserTranslationRoute(from, to);
   };
 
   // click は「開始」用。change は言語セレクト変更後の設定を先に準備するため bubble で拾う。
