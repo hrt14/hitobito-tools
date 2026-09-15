@@ -1,0 +1,73 @@
+name: Make Vercel source bundle
+
+on:
+  push:
+    branches:
+      - chatgpt/vercel-source-bundle-20260915
+    paths-ignore:
+      - 'deployment-manifests/**'
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Generate base64 deployment manifests
+        shell: python
+        run: |
+          import base64, json, os, subprocess
+          from pathlib import Path
+
+          excluded_prefixes = ('.github/', 'docs/', 'deployment-manifests/')
+          excluded_exact = {'AGENTS.md', 'README.md'}
+          paths = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+          entries = []
+          for path in paths:
+              if path in excluded_exact or path.startswith(excluded_prefixes):
+                  continue
+              p = Path(path)
+              if not p.is_file():
+                  continue
+              data = base64.b64encode(p.read_bytes()).decode('ascii')
+              entries.append({'file': path, 'data': data, 'encoding': 'base64'})
+
+          out = Path('deployment-manifests')
+          out.mkdir(exist_ok=True)
+          max_chars = 180_000
+          parts, current, size = [], [], 2
+          for entry in entries:
+              encoded = json.dumps(entry, ensure_ascii=False, separators=(',', ':'))
+              if current and size + len(encoded) + 1 > max_chars:
+                  parts.append(current)
+                  current, size = [], 2
+              current.append(entry)
+              size += len(encoded) + 1
+          if current:
+              parts.append(current)
+
+          names = []
+          for i, part in enumerate(parts, 1):
+              name = f'part-{i:03d}.json'
+              names.append(name)
+              (out / name).write_text(json.dumps(part, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+
+          (out / 'index.json').write_text(json.dumps({
+              'commit': os.environ.get('GITHUB_SHA'),
+              'parts': names,
+              'fileCount': len(entries),
+          }, separators=(',', ':')), encoding='utf-8')
+          print(f'files={len(entries)} parts={len(parts)}')
+
+      - name: Commit manifests
+        run: |
+          git config user.name 'chatgpt-deploy-bot'
+          git config user.email '151790680+hrt14@users.noreply.github.com'
+          git add deployment-manifests
+          git commit -m 'Generate Vercel source bundle [skip ci]'
+          git push
