@@ -1,0 +1,282 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fbfcf5 0%, #f0ffd0 100%);
+  color: #172018;
+  padding: 24px 18px 64px;
+}
+
+.header,
+.hero,
+.panel {
+  width: min(980px, 100%);
+  margin-inline: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+
+.back {
+  color: #3d4e36;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.badge {
+  border: 1px solid #cbd7b6;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  background: rgba(255,255,255,.8);
+}
+
+.hero {
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: #5b714a;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .15em;
+}
+
+.hero h1,
+.logHeader h2 {
+  margin: 0;
+  letter-spacing: -.03em;
+}
+
+.hero h1 {
+  font-size: clamp(30px, 5vw, 46px);
+}
+
+.hero > p:last-child {
+  margin: 10px 0 0;
+  color: #687264;
+  line-height: 1.7;
+}
+
+.panel {
+  background: rgba(255,255,255,.94);
+  border: 1px solid #dce2d5;
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 12px 34px rgba(38, 55, 29, .07);
+  margin-bottom: 18px;
+}
+
+.choiceGridThree,
+.choiceGridTwo {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.choiceGridThree {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.choiceGridTwo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.choice {
+  border: 1px solid #d4dacd;
+  border-radius: 999px;
+  padding: 13px 16px;
+  background: #f5f6f1;
+  color: #273024;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.choice:hover {
+  background: #eef3df;
+}
+
+.active {
+  background: #d9f577;
+  border-color: #b9d54f;
+}
+
+.status {
+  margin: 14px 2px;
+  color: #596653;
+  font-size: 14px;
+}
+
+.stage {
+  min-height: 185px;
+  border-radius: 21px;
+  padding: 24px;
+  background: #f8f9f4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.translation {
+  margin: 0;
+  font-size: clamp(27px, 4vw, 36px);
+  line-height: 1.4;
+  font-weight: 900;
+  letter-spacing: -.02em;
+}
+
+.original {
+  margin: 14px 0 0;
+  color: #747d70;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.startButton {
+  width: 100%;
+  margin-top: 15px;
+  border: 0;
+  border-radius: 17px;
+  padding: 17px;
+  background: #172018;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.startButton:disabled {
+  opacity: .55;
+  cursor: progress;
+}
+
+.stopButton {
+  background: #8e3131;
+}
+
+.error,
+.help {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.error {
+  background: #fff0eb;
+  color: #933a2c;
+}
+
+.help {
+  background: #f1f6e7;
+  color: #4e5c48;
+}
+
+.logHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logHeader span {
+  color: #697466;
+  font-size: 14px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 15px 0 4px;
+}
+
+.smallButton,
+.primarySmall {
+  border-radius: 11px;
+  padding: 10px 14px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.smallButton {
+  border: 1px solid #ccd3c5;
+  background: #fff;
+  color: #273024;
+}
+
+.primarySmall {
+  border: 1px solid #172018;
+  background: #172018;
+  color: #fff;
+}
+
+.log {
+  max-height: 460px;
+  overflow: auto;
+}
+
+.empty {
+  margin: 0;
+  padding: 20px 0 4px;
+  color: #899184;
+}
+
+.logRow {
+  padding: 15px 0;
+  border-top: 1px solid #e6e9e1;
+}
+
+.meta,
+.logOriginal,
+.logJapanese {
+  margin: 0;
+}
+
+.meta {
+  color: #879083;
+  font-size: 12px;
+}
+
+.logOriginal {
+  margin-top: 5px;
+  color: #6d7769;
+  line-height: 1.55;
+}
+
+.logJapanese {
+  margin-top: 5px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+@media (max-width: 680px) {
+  .page {
+    padding-inline: 12px;
+  }
+
+  .panel {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .choiceGridThree,
+  .choiceGridTwo {
+    grid-template-columns: 1fr;
+  }
+
+  .choice {
+    border-radius: 14px;
+  }
+
+  .stage {
+    min-height: 160px;
+    padding: 18px;
+  }
+}
