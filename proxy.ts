@@ -29,13 +29,24 @@ export function proxy(request: NextRequest) {
       return NextResponse.next();
     }
 
-    if (pathname === "/") {
+    // 旧URLは外向けの短いURLへ恒久リダイレクトする。
+    if (pathname === DIGIL_CLOUD_ROOT_PATH) {
       const url = request.nextUrl.clone();
-      url.pathname = DIGIL_CLOUD_ROOT_PATH;
-      return NextResponse.rewrite(url);
+      url.pathname = "/";
+      return NextResponse.redirect(url, 308);
     }
 
-    return NextResponse.next();
+    if (pathname.startsWith(`${DIGIL_CLOUD_ROOT_PATH}/`)) {
+      const url = request.nextUrl.clone();
+      url.pathname = pathname.slice(DIGIL_CLOUD_ROOT_PATH.length) || "/";
+      return NextResponse.redirect(url, 308);
+    }
+
+    // dc.hitobito.jp では /translate のような短いURLを見せつつ、
+    // 実装は既存の /ear-hub/* をそのまま使う。
+    const url = request.nextUrl.clone();
+    url.pathname = pathname === "/" ? DIGIL_CLOUD_ROOT_PATH : `${DIGIL_CLOUD_ROOT_PATH}${pathname}`;
+    return NextResponse.rewrite(url);
   }
 
   if (host === LEVEL_UP_HOST) {
