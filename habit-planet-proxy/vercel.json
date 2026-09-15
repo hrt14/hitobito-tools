@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "https://habit-planet.hiratamanabu14.workers.dev/$1"
+    }
+  ]
+}

@@ -25,6 +25,28 @@ const gameUrl = (slug: string) => `https://games.hitobito.jp/apps/${slug}/`;
 
 const games: LevelUpGame[] = [
   {
+    id: "energy-bucket",
+    title: "夕方に電池切れする人の 体力の穴を1個ふさぐ",
+    kicker: "LEAK FIRST / ONE PLUG",
+    skill: "疲労チェック / 行動設計 / If-Then",
+    description: "10個の『体力の穴』から、明日ふさぐ1個だけを選び、疲れた自分にも実行できるIf-Thenルールにする。",
+    icon: "▰",
+    accent: "#caff57",
+    accentSoft: "rgba(202, 255, 87, .20)",
+    href: "/energy-bucket",
+  },
+  {
+    id: "anti-vision-day",
+    title: "『このままの5年後は嫌だ』を明日の一手に変える 1日アンチビジョン",
+    kicker: "ONE DAY / TWO FUTURES / ONE MOVE",
+    skill: "アンチビジョン / 価値観 / 行動設計",
+    description: "朝に嫌な未来と選びたい未来を描き、昼5回で自動運転を止め、夜に明日の一手まで落とす。",
+    icon: "↗",
+    accent: "#d9ff52",
+    accentSoft: "rgba(217, 255, 82, .18)",
+    href: "/anti-vision-day",
+  },
+  {
     id: "breakthrough-90",
     title: "八方塞がりで動けないときの 90秒で次の一手を取り戻す",
     kicker: "ZOOM OUT. MOVE ONE STEP.",
@@ -45,6 +67,17 @@ const games: LevelUpGame[] = [
     accent: "#d8ff5b",
     accentSoft: "rgba(216, 255, 91, .22)",
     href: "/confidence-before-results",
+  },
+  {
+    id: "stop-self-scoring",
+    title: "気を使いすぎて疲れる人の『心の採点』をやめる練習",
+    kicker: "STOP SELF-SCORING",
+    skill: "事実と解釈 / 終了線 / 自己攻撃を止める",
+    description: "勝手な翻訳をはがし、見直しの終わりを決め、自分への追撃を止めて、小さく試す。",
+    icon: "OFF",
+    accent: "#d8ff5b",
+    accentSoft: "rgba(216, 255, 91, .20)",
+    href: "/stop-self-scoring",
   },
   {
     id: "yesterday-self",
@@ -359,8 +392,11 @@ const games: LevelUpGame[] = [
 // Increment this count whenever a game receives a meaningful update.
 // The catalog is always sorted by update count so the most iterated games rise to the top.
 const updateCounts: Record<string, number> = {
+  "energy-bucket": 1,
+  "anti-vision-day": 1,
   "breakthrough-90": 1,
   "confidence-before-results": 1,
+  "stop-self-scoring": 1,
   "yesterday-self": 1,
   "boundary-map": 1,
   "dont-decide-now": 1,
