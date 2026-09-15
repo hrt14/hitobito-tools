@@ -18,7 +18,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Generate base64 deployment manifests
+      - name: Generate compact deployment manifests
         shell: python
         run: |
           import base64, json, os, subprocess
@@ -28,21 +28,36 @@ jobs:
           excluded_exact = {'AGENTS.md', 'README.md'}
           paths = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
           entries = []
+          binary_count = 0
           for path in paths:
               if path in excluded_exact or path.startswith(excluded_prefixes):
                   continue
               p = Path(path)
               if not p.is_file():
                   continue
-              data = base64.b64encode(p.read_bytes()).decode('ascii')
-              entries.append({'file': path, 'data': data, 'encoding': 'base64'})
+              raw = p.read_bytes()
+              try:
+                  text = raw.decode('utf-8')
+                  entries.append({'file': path, 'data': text})
+              except UnicodeDecodeError:
+                  binary_count += 1
+                  entries.append({
+                      'file': path,
+                      'data': base64.b64encode(raw).decode('ascii'),
+                      'encoding': 'base64',
+                  })
 
           out = Path('deployment-manifests')
           out.mkdir(exist_ok=True)
-          max_chars = 180_000
+          for old in out.glob('*.json'):
+              old.unlink()
+
+          max_chars = 220_000
           parts, current, size = [], [], 2
+          total_chars = 0
           for entry in entries:
               encoded = json.dumps(entry, ensure_ascii=False, separators=(',', ':'))
+              total_chars += len(encoded)
               if current and size + len(encoded) + 1 > max_chars:
                   parts.append(current)
                   current, size = [], 2
@@ -55,19 +70,24 @@ jobs:
           for i, part in enumerate(parts, 1):
               name = f'part-{i:03d}.json'
               names.append(name)
-              (out / name).write_text(json.dumps(part, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+              (out / name).write_text(
+                  json.dumps(part, ensure_ascii=False, separators=(',', ':')),
+                  encoding='utf-8',
+              )
 
           (out / 'index.json').write_text(json.dumps({
               'commit': os.environ.get('GITHUB_SHA'),
               'parts': names,
               'fileCount': len(entries),
+              'binaryCount': binary_count,
+              'totalChars': total_chars,
           }, separators=(',', ':')), encoding='utf-8')
-          print(f'files={len(entries)} parts={len(parts)}')
+          print(f'files={len(entries)} binary={binary_count} parts={len(parts)} chars={total_chars}')
 
       - name: Commit manifests
         run: |
           git config user.name 'chatgpt-deploy-bot'
           git config user.email '151790680+hrt14@users.noreply.github.com'
-          git add deployment-manifests
-          git commit -m 'Generate Vercel source bundle [skip ci]'
+          git add -A deployment-manifests
+          git commit -m 'Generate compact Vercel source bundle [skip ci]'
           git push
