@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import BrowserTranslatePage from "../BrowserTranslatePage";
 import ConceptAppPage from "../ConceptAppPage";
 import EarhonyaProduct from "../EarhonyaProduct";
 import EarHubLauncher from "../EarHubLauncher";
@@ -16,6 +17,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${app.name} | DIGIL CLOUD`,
     description: app.tagline,
+    alternates: {
+      canonical: `https://dc.hitobito.jp/${app.id}`,
+    },
   };
 }
 
@@ -23,6 +27,10 @@ export default async function DigilCloudAppPage({ params }: Props) {
   const { module } = await params;
   const app = catalogById(module);
   if (!app) notFound();
+
+  if (app.id === "translate") {
+    return <BrowserTranslatePage />;
+  }
 
   if (app.id === "earhonya") {
     return <EarhonyaProduct />;
