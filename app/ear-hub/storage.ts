@@ -14,8 +14,17 @@ import {
 
 const SETTINGS_KEY = "earhub.settings.v1";
 const MINUTES_KEY = "earhub.minutes.v1";
+const MINUTES_LANGUAGE_KEY = "earhub.minutes.languages.v1";
 const CODE_KEY = "earhub.code.v1";
 const MAX_SAVED = 30;
+
+type MinutesLanguages = Pick<EarHubSettings, "myLang" | "partnerLang">;
+
+// 議事録の言語は翻訳アプリの言語設定と独立させる。
+function isMinutesPage() {
+  if (typeof window === "undefined") return false;
+  return /^\/(?:ear-hub\/)?minutes\/?$/.test(window.location.pathname);
+}
 
 export type SavedMinutes = {
   id: string;
@@ -48,10 +57,8 @@ function write(key: string, value: unknown) {
 
 export function loadSettings(): EarHubSettings {
   const stored = read<Partial<EarHubSettings>>(SETTINGS_KEY);
-  if (!stored) return DEFAULT_SETTINGS;
-
-  const hasFolderId = typeof stored.driveFolderId === "string" && stored.driveFolderId.trim().length > 0;
-  return {
+  const hasFolderId = typeof stored?.driveFolderId === "string" && stored.driveFolderId.trim().length > 0;
+  const shared: EarHubSettings = !stored ? { ...DEFAULT_SETTINGS } : {
     partnerLang: isLanguageCode(stored.partnerLang) ? stored.partnerLang : DEFAULT_SETTINGS.partnerLang,
     myLang: isLanguageCode(stored.myLang) ? stored.myLang : DEFAULT_SETTINGS.myLang,
     direction: stored.direction === "toPartner" ? "toPartner" : "toMe",
@@ -66,10 +73,29 @@ export function loadSettings(): EarHubSettings {
         : DEFAULT_DRIVE_FOLDER,
     driveFolderId: hasFolderId ? stored.driveFolderId!.trim() : DEFAULT_DRIVE_FOLDER_ID,
   };
+  if (!isMinutesPage()) return shared;
+
+  const minutes = read<Partial<MinutesLanguages>>(MINUTES_LANGUAGE_KEY);
+  return {
+    ...shared,
+    myLang: isLanguageCode(minutes?.myLang) ? minutes.myLang : "ja",
+    partnerLang: isLanguageCode(minutes?.partnerLang) ? minutes.partnerLang : "ja",
+  };
 }
 
 export function saveSettings(settings: EarHubSettings) {
-  write(SETTINGS_KEY, settings);
+  if (!isMinutesPage()) {
+    write(SETTINGS_KEY, settings);
+    return;
+  }
+  // 議事録で言語を選んでも、翻訳アプリの「自分＝日本語／相手＝英語」は変更しない。
+  write(MINUTES_LANGUAGE_KEY, { myLang: settings.myLang, partnerLang: settings.partnerLang });
+  const shared = read<Partial<EarHubSettings>>(SETTINGS_KEY);
+  write(SETTINGS_KEY, {
+    ...settings,
+    myLang: isLanguageCode(shared?.myLang) ? shared.myLang : DEFAULT_SETTINGS.myLang,
+    partnerLang: isLanguageCode(shared?.partnerLang) ? shared.partnerLang : DEFAULT_SETTINGS.partnerLang,
+  });
 }
 
 export function loadMinutes(): SavedMinutes[] {
