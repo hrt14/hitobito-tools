@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "hitobito-contact",
+  "main": "./worker/index.mjs",
+  "compatibility_date": "2026-09-19",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hitobito-contact",
+      "database_id": "REPLACE_WITH_NEW_CONTACT_D1_DATABASE_ID",
+      "migrations_dir": "./migrations"
+    }
+  ],
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "vars": {
+    "PUBLIC_ORIGINS": "https://hitobito.jp,https://contact.hitobito.jp",
+    "TURNSTILE_SITE_KEY": "REPLACE_WITH_PUBLIC_TURNSTILE_SITE_KEY"
+  }
+}

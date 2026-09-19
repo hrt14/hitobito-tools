@@ -8,6 +8,8 @@ const LIFE_ONE_HOST = "life1.hitobito.jp";
 const DROP_HOST = "drop.hitobito.jp";
 const HABIT_PLANET_HOST = "habit-planet.hitobito.jp";
 const HABIT_PLANET_ORIGIN = "https://habit-planet.hiratamanabu14.workers.dev";
+const CONTACT_HOST = "contact.hitobito.jp";
+const CONTACT_WORKER_ORIGIN = "https://hitobito-contact.hiratamanabu14.workers.dev";
 const DROP_ROOT_PATH = "/drop";
 const LEVEL_UP_ROOT_PATH = "/levelup";
 const DIGIL_CLOUD_ROOT_PATH = "/ear-hub";
@@ -23,6 +25,25 @@ export function proxy(request: NextRequest) {
 
   if (host === HABIT_PLANET_HOST) {
     const target = new URL(`${pathname}${request.nextUrl.search}`, HABIT_PLANET_ORIGIN);
+    return NextResponse.rewrite(target);
+  }
+
+  // Turnstile/POST allow only hitobito.jp and the optional contact hostname.
+  // If www is configured, redirect its form GET to the canonical origin.
+  if (host === "www.hitobito.jp" && pathname === "/contact") {
+    const url = request.nextUrl.clone();
+    url.hostname = "hitobito.jp";
+    return NextResponse.redirect(url, 308);
+  }
+
+  // Contact is a separately deployed Worker. The portal path works without
+  // provisioning an extra Vercel domain; the vanity host is optional.
+  if (
+    host === CONTACT_HOST ||
+    (host === "hitobito.jp" &&
+      (pathname === "/contact" || pathname === "/api/contact"))
+  ) {
+    const target = new URL(`${pathname}${request.nextUrl.search}`, CONTACT_WORKER_ORIGIN);
     return NextResponse.rewrite(target);
   }
 
