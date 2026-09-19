@@ -35,10 +35,10 @@ jobs:
           node -e 'const p=require("./.vercel/project.json"); if(p.projectId!==process.env.VERCEL_PROJECT_ID||p.orgId!==process.env.VERCEL_ORG_ID){console.error("Wrong Vercel project");process.exit(1)}'
       - name: Build preview
         run: vercel build --token="$VERCEL_TOKEN"
-      - name: Deploy preview only
+      - name: Deploy preview only (archive to respect upload quota)
         id: preview
         run: |
-          url="$(vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
+          url="$(vercel deploy --prebuilt --archive=tgz --token="$VERCEL_TOKEN")"
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Preview URL: $url"
       - name: Publish preview URL
