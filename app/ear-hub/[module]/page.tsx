@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import MultilingualTranslatePage from "../MultilingualTranslatePage";
+import TwoLanguageTranslatePage from "../TwoLanguageTranslatePage";
 import ConceptAppPage from "../ConceptAppPage";
 import EarhonyaProduct from "../EarhonyaProduct";
 import EarHubLauncher from "../EarHubLauncher";
@@ -29,7 +29,7 @@ export default async function DigilCloudAppPage({ params }: Props) {
   if (!app) notFound();
 
   if (app.id === "translate") {
-    return <MultilingualTranslatePage />;
+    return <TwoLanguageTranslatePage />;
   }
 
   if (app.id === "earhonya") {
