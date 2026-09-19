@@ -1,14 +1,15 @@
 name: Vercel production deploy
 
-# hitobito-tools の既存 Vercel プロジェクトへ Production デプロイする手動ワークフロー。
-# Vercel の Git Integration は使わず、GitHub のランナーから Vercel CLI で直接デプロイする。
-#
-# - 手動起動のみ(workflow_dispatch)。main 以外の ref では実行しない。
-# - 必要な Actions secret は VERCEL_TOKEN のみ。
-# - Team ID / Project ID は既存プロジェクト hitobito-tools に固定(誤デプロイ防止)。
-# - DNS・ドメイン割り当ては変更しない。既にこのプロジェクトへ紐づいたドメインが
-#   新しい Production Deployment を配信するだけ。
+# DIGIL CLOUD (app/ear-hub) の main 更新だけを既存の hitobito-tools へ自動公開。
+# 他アプリの push は自動公開しない。手動実行は従来どおり可能。
+# Git Integration / DNS / ドメイン割り当ては変更しない。
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "app/ear-hub/**"
+      - ".github/workflows/vercel-production.yml" # この自動化を有効にするマージも検証する
   workflow_dispatch:
     inputs:
       confirm:
@@ -25,7 +26,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event.inputs.confirm == 'deploy'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event.inputs.confirm == 'deploy')
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -46,11 +47,24 @@ jobs:
           node-version: 24
           cache: npm
 
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check DIGIL CLOUD code
+        run: npx eslint app/ear-hub/MultilingualTranslatePage.tsx app/ear-hub/TwoLanguageTranslatePage.tsx app/ear-hub/multilingual-languages.ts app/ear-hub/multilingual-translator.ts app/ear-hub/'[module]'/page.tsx
+
+      - name: Check TypeScript
+        run: npx tsc --noEmit
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
       - name: Pull Vercel settings (production)
         run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Verify existing project target
+        run: |
+          node -e 'const p = require("./.vercel/project.json"); if (p.projectId !== process.env.VERCEL_PROJECT_ID || p.orgId !== process.env.VERCEL_ORG_ID) { throw new Error("Incorrect Vercel project/team: aborting production deployment"); }'
 
       - name: Build for production
         run: vercel build --prod --token="$VERCEL_TOKEN"
@@ -61,17 +75,35 @@ jobs:
           url="$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
+      - name: Verify DIGIL CLOUD production page
+        run: |
+          page="$(mktemp)"
+          for attempt in $(seq 1 15); do
+            if curl --fail --silent --show-error --location --max-time 20 \
+              'https://dc.hitobito.jp/translate' --output "$page" \
+              && grep -Fq 'id="my-language"' "$page" \
+              && grep -Fq 'id="partner-language"' "$page" \
+              && grep -Fq '自分の画面' "$page" \
+              && grep -Fq '相手の画面' "$page"; then
+              echo 'DIGIL CLOUD: production returned HTTP 200 with the two-language UI.'
+              exit 0
+            fi
+            echo "Production is not serving the new translation UI yet ($attempt/15)."
+            sleep 5
+          done
+          echo 'Production verification failed; check Vercel deployment and domain routing.' >&2
+          exit 1
+
       - name: Summarize deployment
+        if: always()
         env:
           URL: ${{ steps.deploy.outputs.url }}
         run: |
-          id="$(vercel inspect "$URL" --token="$VERCEL_TOKEN" 2>&1 | grep -oE 'dpl_[A-Za-z0-9]+' | head -1 || true)"
           {
             echo "## Production deploy"
             echo ""
             echo "- Commit: $GITHUB_SHA"
-            echo "- Deployment ID: ${id:-unknown}"
-            echo "- Deployment URL: $URL"
+            echo "- Deployment URL: ${URL:-not deployed}"
+            echo "- Verification: ${{ job.status }}"
             echo "- Check: https://dc.hitobito.jp/translate"
           } >> "$GITHUB_STEP_SUMMARY"
-          echo "production: $URL (commit $GITHUB_SHA, id ${id:-unknown})"
