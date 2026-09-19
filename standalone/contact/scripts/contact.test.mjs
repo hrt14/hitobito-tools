@@ -24,16 +24,16 @@ function makeDb() {
               inquiries.set(id, { id, app, category, name, email, subject, message, next_attempt_at, created_at, updated_at, delivery_status: 'pending', attempts: 0, lease_until: null });
               return { meta: { changes: 1 } };
             }
-            if (sql.startsWith('UPDATE inquiries SET delivery_status')) {
-              const row = inquiries.get(args[2]);
-              if (!row || !['pending', 'retry', 'sending'].includes(row.delivery_status)) return { meta: { changes: 0 } };
-              row.delivery_status = 'sending'; row.lease_until = args[0]; return { meta: { changes: 1 } };
-            }
             if (sql.startsWith("UPDATE inquiries SET delivery_status = 'sent'")) {
               const row = inquiries.get(args[2]); row.delivery_status = 'sent'; row.resend_email_id = args[0]; row.attempts++; return { meta: { changes: 1 } };
             }
             if (sql.startsWith('UPDATE inquiries SET delivery_status = ?')) {
               const row = inquiries.get(args[5]); row.delivery_status = args[0]; row.attempts = args[1]; row.next_attempt_at = args[2]; row.last_error = args[3]; row.lease_until = null; return { meta: { changes: 1 } };
+            }
+            if (sql.startsWith("UPDATE inquiries SET delivery_status = 'sending'")) {
+              const row = inquiries.get(args[2]);
+              if (!row || !['pending', 'retry', 'sending'].includes(row.delivery_status)) return { meta: { changes: 0 } };
+              row.delivery_status = 'sending'; row.lease_until = args[0]; return { meta: { changes: 1 } };
             }
             if (sql.startsWith('DELETE FROM submission_limits')) { limits.clear(); return { meta: { changes: 1 } }; }
             throw new Error(`Unexpected query: ${sql}`);
