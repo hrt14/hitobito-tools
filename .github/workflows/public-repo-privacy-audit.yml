@@ -1,0 +1,112 @@
+name: Read-only privacy triage of public repositories
+
+on:
+  push:
+    branches:
+      - security/read-only-public-repo-scan-20260919
+
+permissions:
+  contents: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Inspect publicly accessible Git objects without logging matched content
+        run: |
+          python3 - <<'PY'
+          import collections, json, pathlib, re, subprocess, tempfile
+
+          REPOS = ['hitobito-tools', 'touch-egg', 'swipe-earth', 'ecplayers',
+                   'coding-egg', 'working-planet', 'forest-camp', '-sleep-egg',
+                   'infra-king', 'hitobito-sozai']
+          PATTERNS = {
+              'personal_email': re.compile(r'(?i)[\w.+-]+@(?:gmail\.com|icloud\.com|outlook\.com|hotmail\.com|yahoo\.co\.jp|docomo\.ne\.jp|softbank\.ne\.jp)\b'),
+              'credential_shape': re.compile(r'(?i)gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{50,}|sk_(?:live|test)_[A-Za-z0-9]{12,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|AKIA[0-9A-Z]{16}'),
+              'local_path': re.compile(r'(?i)(?:/Users/[A-Za-z0-9._-]+/|C:\\Users\\[A-Za-z0-9._-]+\\)'),
+              'family_or_health_review': re.compile(r'次女|長女|不登校|思春期外来|通院|ADHD'),
+              'commercial_private_review': re.compile(r'月額報酬|役員報酬|給与明細|源泉徴収|クライアント|契約金額|取引先名'),
+          }
+          TEXT_SUFFIXES = {'.js','.jsx','.ts','.tsx','.mjs','.cjs','.json','.md','.mdx',
+                           '.txt','.html','.htm','.yml','.yaml','.env','.xml','.csv','.py',
+                           '.sh','.toml','.ini','.sql','.svg','.pem','.key','.properties',
+                           '.gradle','.plist','.gitignore','.css','.scss','.conf'}
+          MAX_BLOB = 500_000
+
+          def git(directory, *args, data=None, timeout=180):
+              return subprocess.run(['git', '-C', str(directory), *args], input=data,
+                                    capture_output=True, check=True, timeout=timeout).stdout
+
+          def inspect(directory, label):
+              if not subprocess.run(['git','-C',str(directory),'rev-parse','--verify',
+                                     'refs/heads/main'],capture_output=True).returncode == 0:
+                  return {'repository':label,'status':'no_main_branch','complete':False}
+              current=set()
+              for rec in git(directory,'ls-tree','-r','-z','refs/heads/main').split(b'\0'):
+                  if rec:
+                      parts=rec.split(b'\t',1)[0].split()
+                      if len(parts)>=3: current.add(parts[2].decode())
+              objects={}
+              for record in git(directory,'rev-list','--objects','--all',timeout=240).splitlines():
+                  oid, sep, path = record.partition(b' ')
+                  if not sep: continue
+                  suffix=pathlib.PurePosixPath(path.decode('utf-8','replace')).suffix.lower()
+                  fname=path.rsplit(b'/',1)[-1].decode('utf-8','replace')
+                  if suffix not in TEXT_SUFFIXES and fname not in {'.gitignore','.npmrc','.env','.env.local','.env.production','.env.development','.env.example'}:
+                      continue
+                  objects.setdefault(oid.decode(),None)
+              candidates=list(objects)
+              stats=collections.Counter()
+              for start in range(0,len(candidates),1000):
+                  part=candidates[start:start+1000]
+                  rows=git(directory,'cat-file','--batch-check=%(objectname) %(objecttype) %(objectsize)',data=('\n'.join(part)+'\n').encode()).splitlines()
+                  for row in rows:
+                      cols=row.split()
+                      if len(cols)==3 and cols[1]==b'blob' and int(cols[2])<=MAX_BLOB:
+                          objects[cols[0].decode()]=int(cols[2])
+              selected=[oid for oid,size in objects.items() if isinstance(size,int)]
+              for start in range(0,len(selected),100):
+                  part=selected[start:start+100]
+                  raw=git(directory,'cat-file','--batch',data=('\n'.join(part)+'\n').encode())
+                  pos=0
+                  for oid in part:
+                      end=raw.index(b'\n',pos)
+                      header=raw[pos:end].split()
+                      size=int(header[-1]); body=raw[end+1:end+1+size]; pos=end+2+size
+                      if b'\0' in body: continue
+                      content=body.decode('utf-8','ignore')
+                      stats['scanned_text_blobs']+=1
+                      for category,pattern in PATTERNS.items():
+                          if pattern.search(content):
+                              stats[category+'_all_git_blobs']+=1
+                              if oid in current: stats[category+'_current_main_blobs']+=1
+              return {'repository':label,'status':'scanned',
+                      'complete':'default_and_normal_git_refs_only',
+                      'candidate_objects':len(candidates),
+                      'eligible_text_blobs':len(selected),
+                      'total_current_main_blobs':len(current),
+                      'counts':dict(stats)}
+
+          with tempfile.TemporaryDirectory() as temp:
+              for name in REPOS:
+                  repo='hrt14/'+name
+                  try:
+                      target=pathlib.Path(temp)/name
+                      subprocess.run(['git','clone','--mirror','--quiet',
+                                      'https://github.com/'+repo+'.git',str(target)],
+                                     capture_output=True,check=True,timeout=180)
+                      try:
+                          subprocess.run(['git','-C',str(target),'fetch','--quiet','origin',
+                                          '+refs/pull/*/head:refs/pull/*/head'],
+                                         capture_output=True,check=True,timeout=150)
+                          pr_status='fetched_where_available'
+                      except (subprocess.CalledProcessError,subprocess.TimeoutExpired):
+                          pr_status='not_verified'
+                      result=inspect(target,repo)
+                      result['pull_request_refs']=pr_status
+                  except Exception as exc:
+                      result={'repository':repo,'status':'scan_failed',
+                              'error_type':type(exc).__name__,'complete':False}
+                  print(json.dumps(result,ensure_ascii=False,sort_keys=True),flush=True)
+          PY
