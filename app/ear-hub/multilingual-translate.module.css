@@ -1,0 +1,64 @@
+.pickers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 14px;
+  color: #344a2f;
+  min-width: 0;
+}
+
+.picker select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #b9c5b0;
+  border-radius: 11px;
+  padding: 10px;
+  background: #fff;
+  color: #172018;
+  font: inherit;
+  cursor: pointer;
+}
+
+.picker select:disabled { opacity: .62; cursor: not-allowed; }
+.picker small { color: #62705c; font-size: 12px; font-weight: 500; }
+.heading { margin: 22px 0 0; font-weight: 850; color: #273b23; }
+.support {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 15px;
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f5f7f1;
+  color: #40513a;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.translationRow {
+  padding: 12px 0;
+  border-top: 1px solid #dce5d3;
+}
+.translationRow:first-of-type { border-top: none; }
+.translationLanguage {
+  display: block;
+  color: #52703f;
+  font-size: 13px;
+  font-weight: 900;
+  margin-bottom: 5px;
+}
+.transcriptTranslation {
+  margin: 7px 0 0;
+  color: #273b23;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.transcriptTranslation strong { margin-right: 5px; }
+@media (max-width: 680px) { .pickers { grid-template-columns: 1fr; } }
