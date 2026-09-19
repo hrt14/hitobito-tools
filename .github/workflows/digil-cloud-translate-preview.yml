@@ -8,7 +8,7 @@ on:
 
 jobs:
   preview:
-    if: github.head_ref == 'feat/digil-dual-bilingual-translate-20260919' || github.head_ref == 'fix/digil-two-language-two-windows-20260919'
+    if: github.head_ref == 'feat/digil-dual-bilingual-translate-20260919' || github.head_ref == 'fix/digil-two-language-two-windows-20260919' || github.head_ref == 'feat/digil-minutes-google-docs-20260919'
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -30,6 +30,9 @@ jobs:
       - run: npm install --global vercel@latest
       - name: Pull preview settings (not production)
         run: vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+      - name: Verify existing project target
+        run: |
+          node -e 'const p=require("./.vercel/project.json"); if(p.projectId!==process.env.VERCEL_PROJECT_ID||p.orgId!==process.env.VERCEL_ORG_ID){console.error("Wrong Vercel project");process.exit(1)}'
       - name: Build preview
         run: vercel build --token="$VERCEL_TOKEN"
       - name: Deploy preview only
@@ -44,3 +47,4 @@ jobs:
         run: |
           echo "## DIGIL CLOUD Preview" >> "$GITHUB_STEP_SUMMARY"
           echo "$URL/ear-hub/translate" >> "$GITHUB_STEP_SUMMARY"
+          echo "$URL/ear-hub/minutes" >> "$GITHUB_STEP_SUMMARY"
