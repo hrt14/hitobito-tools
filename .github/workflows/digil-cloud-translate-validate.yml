@@ -20,6 +20,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx eslint app/ear-hub/MultilingualTranslatePage.tsx app/ear-hub/TwoLanguageTranslatePage.tsx app/ear-hub/multilingual-languages.ts app/ear-hub/multilingual-translator.ts app/ear-hub/'[module]'/page.tsx
+      - run: npx eslint app/ear-hub/MultilingualTranslatePage.tsx app/ear-hub/TwoLanguageTranslatePage.tsx app/ear-hub/MinutesPage.tsx app/ear-hub/minutes-google-docs.ts app/ear-hub/multilingual-languages.ts app/ear-hub/multilingual-translator.ts app/ear-hub/'[module]'/page.tsx
       - run: npx tsc --noEmit
       - run: npm run build
