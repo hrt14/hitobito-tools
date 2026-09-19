@@ -7,17 +7,20 @@ import { GOOGLE_CLIENT_ID, fetchGoogleProfile, getGoogleSessionToken, initTokenC
 import { bcp47, LANGUAGES, LANGUAGE_CODES, type LanguageCode } from "./languages";
 import { DEFAULT_SETTINGS, type EarHubSettings } from "./modules";
 import { isRecognitionSupported, Listener } from "./speech";
+import { PcTrackListener } from "./minutes-pc-listener";
 import { loadAccessCode, loadMinutes, loadSettings, saveAccessCode, saveMinutes, saveSettings, type SavedMinutes } from "./storage";
 import { saveMinutesGoogleDoc } from "./minutes-google-docs";
 import styles from "./minutes-page.module.css";
 
 type DriveState = { kind: "saving" | "saved" | "error" | "auth"; message: string };
 type Session = { id: string; title: string; createdAt: number; lines: string[] };
+type Source = "mic" | "pc";
+type CaptureMode = "both" | "mic";
+const SOURCE_LABEL: Record<Source, string> = { mic: "自分のマイク", pc: "PCの音声" };
 
 function sessionTitle(time: number) {
   return `議事録 ${new Date(time).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}`;
 }
-
 function statusDate(time: number) {
   return new Date(time).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
@@ -28,9 +31,12 @@ export default function MinutesPage() {
   const [selectedId, setSelectedId] = useState("");
   const [ready, setReady] = useState(false);
   const [supported, setSupported] = useState(true);
+  const [captureMode, setCaptureMode] = useState<CaptureMode>("both");
+  const [busy, setBusy] = useState(false);
   const [running, setRunning] = useState(false);
-  const [listening, setListening] = useState(false);
-  const [interim, setInterim] = useState("");
+  const [micListening, setMicListening] = useState(false);
+  const [pcListening, setPcListening] = useState(false);
+  const [interim, setInterim] = useState<Record<Source, string>>({ mic: "", pc: "" });
   const [liveLines, setLiveLines] = useState<string[]>([]);
   const [consent, setConsent] = useState(false);
   const [summarizing, setSummarizing] = useState(false);
@@ -46,6 +52,10 @@ export default function MinutesPage() {
   const settingsRef = useRef(settings);
   const sessionRef = useRef<Session | null>(null);
   const listenerRef = useRef<Listener | null>(null);
+  const pcListenerRef = useRef<PcTrackListener | null>(null);
+  const captureStreamsRef = useRef<MediaStream[]>([]);
+  const attemptRef = useRef(0);
+  const stopRef = useRef<(() => Promise<void>) | null>(null);
   const tokenRef = useRef("");
   const tokenClientRef = useRef<TokenClient | null>(null);
   const pendingDocRef = useRef<SavedMinutes | null>(null);
@@ -70,6 +80,17 @@ export default function MinutesPage() {
     }
   }, []);
 
+  // Keep both input sources as separate, labeled lines in the local draft and Google document.
+  const appendLine = useCallback((source: Source, text: string) => {
+    const session = sessionRef.current;
+    if (!session || !text.trim()) return;
+    const time = new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    session.lines.push(`[${time}] ${SOURCE_LABEL[source]}：${text.trim()}`);
+    setLiveLines([...session.lines]);
+    setInterim((old) => ({ ...old, [source]: "" }));
+    persistRecord({ id: session.id, title: session.title, createdAt: session.createdAt, transcript: session.lines.join("\n"), summary: "" });
+  }, [persistRecord]);
+
   const saveDoc = useCallback(async (record: SavedMinutes, override?: string) => {
     if (inFlightRef.current.has(record.id)) return;
     const token = override || tokenRef.current;
@@ -79,24 +100,28 @@ export default function MinutesPage() {
     }
     inFlightRef.current.add(record.id);
     setDriveStates((old) => ({ ...old, [record.id]: { kind: "saving", message: "Googleドキュメントへ保存しています…" } }));
-    const result = await saveMinutesGoogleDoc(token, settingsRef.current.driveFolderId, record);
-    inFlightRef.current.delete(record.id);
-    if (result.status === "saved") {
-      persistRecord({ ...record, driveLink: result.link });
-      setDriveStates((old) => ({ ...old, [record.id]: { kind: "saved", message: "Googleドキュメントに保存済み。リンクから開けます。" } }));
-      return;
+    try {
+      const result = await saveMinutesGoogleDoc(token, settingsRef.current.driveFolderId, record);
+      if (result.status === "saved") {
+        persistRecord({ ...record, driveLink: result.link });
+        setDriveStates((old) => ({ ...old, [record.id]: { kind: "saved", message: "Googleドキュメントに保存済み。リンクから開けます。" } }));
+        return;
+      }
+      if (result.status === "auth") {
+        tokenRef.current = "";
+        setGoogleConnected(false);
+      }
+      setDriveStates((old) => ({ ...old, [record.id]: { kind: result.status === "auth" ? "auth" : "error", message: result.message } }));
+    } catch (cause) {
+      setDriveStates((old) => ({ ...old, [record.id]: { kind: "error", message: cause instanceof Error ? cause.message : "Googleへの保存に失敗しました。" } }));
+    } finally {
+      inFlightRef.current.delete(record.id);
     }
-    if (result.status === "auth") {
-      tokenRef.current = "";
-      setGoogleConnected(false);
-    }
-    setDriveStates((old) => ({ ...old, [record.id]: { kind: result.status === "auth" ? "auth" : "error", message: result.message } }));
   }, [persistRecord]);
 
   useEffect(() => { saveDocRef.current = saveDoc; }, [saveDoc]);
 
   useEffect(() => {
-    // Hydrate browser-only localStorage and speech support after server rendering.
     const loaded = loadSettings();
     settingsRef.current = loaded;
     setSettings(loaded);
@@ -114,25 +139,24 @@ export default function MinutesPage() {
       });
     }
     const listener = new Listener({
-      onFinal: (text) => {
-        const session = sessionRef.current;
-        if (!session) return;
-        session.lines.push(text);
-        setLiveLines([...session.lines]);
-        setInterim("");
-        persistRecord({ id: session.id, title: session.title, createdAt: session.createdAt, transcript: session.lines.join("\n"), summary: "" });
-      },
-      onInterim: setInterim,
-      onError: (message, fatal) => {
-        setError(message);
-        if (fatal) setRunning(false);
-      },
-      onListeningChange: setListening,
+      onFinal: (text) => appendLine("mic", text),
+      onInterim: (text) => setInterim((old) => ({ ...old, mic: text })),
+      onError: (message) => setError(`自分のマイク：${message}`),
+      onListeningChange: setMicListening,
     });
     listenerRef.current = listener;
     setReady(true);
-    return () => { listener.stop(); listenerRef.current = null; sessionRef.current = null; };
-  }, [persistRecord]);
+    return () => {
+      attemptRef.current += 1;
+      listener.stop();
+      pcListenerRef.current?.stop();
+      captureStreamsRef.current.forEach((stream) => stream.getTracks().forEach((track) => track.stop()));
+      captureStreamsRef.current = [];
+      pcListenerRef.current = null;
+      listenerRef.current = null;
+      sessionRef.current = null;
+    };
+  }, [appendLine]);
 
   useEffect(() => {
     if (!googleReady) return;
@@ -158,21 +182,85 @@ export default function MinutesPage() {
     }
     pendingDocRef.current = record || null;
     setGoogleMessage("Googleの接続画面を開きます…");
-    // Always request a fresh token on a direct user click; sessionStorage tokens may expire.
     tokenClientRef.current.requestAccessToken({ prompt: "select_account" });
   };
 
-  const start = () => {
-    if (running || summarizing) return;
-    const createdAt = Date.now();
-    sessionRef.current = { id: `${createdAt}-${Math.random().toString(36).slice(2, 9)}`, createdAt, title: sessionTitle(createdAt), lines: [] };
-    setLiveLines([]);
-    setInterim("");
-    setNotice("");
-    setError("");
-    listenerRef.current?.start(bcp47(settingsRef.current.myLang));
-    setRunning(true);
+  const releaseCapture = () => {
+    listenerRef.current?.stop();
+    pcListenerRef.current?.stop();
+    pcListenerRef.current = null;
+    captureStreamsRef.current.forEach((stream) => stream.getTracks().forEach((track) => track.stop()));
+    captureStreamsRef.current = [];
+    setMicListening(false);
+    setPcListening(false);
+    setInterim({ mic: "", pc: "" });
+  };
+
+  const start = async () => {
+    if (running || busy || summarizing) return;
     setConsent(false);
+    setBusy(true);
+    setError("");
+    setNotice("");
+    const attempt = ++attemptRef.current;
+    try {
+      let pcAudio: MediaStreamTrack | undefined;
+      let display: MediaStream | undefined;
+      if (captureMode === "both") {
+        if (!navigator.mediaDevices?.getDisplayMedia) {
+          throw new Error("このブラウザはPC音声の共有に対応していません。Chrome PCを使うか、マイクのみを選んでください。");
+        }
+        setNotice("会議タブを選んで『タブの音声を共有』をONにしてください。マイクは別途認識します。");
+        // Permission prompt must follow the user's direct confirmation click.
+        display = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: { suppressLocalAudioPlayback: false },
+          systemAudio: "include",
+          surfaceSwitching: "include",
+          selfBrowserSurface: "exclude",
+        } as DisplayMediaStreamOptions);
+        if (attempt !== attemptRef.current) { display.getTracks().forEach((track) => track.stop()); return; }
+        captureStreamsRef.current.push(display);
+        pcAudio = display.getAudioTracks()[0];
+        if (!pcAudio) throw new Error("PC音声がありません。共有画面で『タブの音声を共有』をONにして開始し直してください。");
+      }
+      const createdAt = Date.now();
+      sessionRef.current = { id: `${createdAt}-${Math.random().toString(36).slice(2, 9)}`, createdAt, title: sessionTitle(createdAt), lines: [] };
+      setLiveLines([]);
+      setInterim({ mic: "", pc: "" });
+      if (pcAudio) {
+        const pcListener = new PcTrackListener(pcAudio, bcp47(settingsRef.current.partnerLang), {
+          onFinal: (text) => { if (attempt === attemptRef.current) appendLine("pc", text); },
+          onInterim: (text) => { if (attempt === attemptRef.current) setInterim((old) => ({ ...old, pc: text })); },
+          onError: (message) => { if (attempt === attemptRef.current) setError(message); },
+          onListeningChange: (value) => { if (attempt === attemptRef.current) setPcListening(value); },
+          onTrackEnded: () => {
+            if (attempt !== attemptRef.current) return;
+            void stopRef.current?.();
+            setError("PC音声の共有が終了したため、議事録を確定しました。");
+          },
+        });
+        pcListenerRef.current = pcListener;
+        pcListener.start();
+        display?.getVideoTracks().forEach((track) => track.addEventListener("ended", () => {
+          if (attempt !== attemptRef.current) return;
+          void stopRef.current?.();
+          setError("共有画面が終了したため、議事録を確定しました。");
+        }, { once: true }));
+      }
+      listenerRef.current?.start(bcp47(settingsRef.current.myLang));
+      setRunning(true);
+      setNotice(captureMode === "both" ? "自分のマイクとPC音声を別々に文字起こししています。" : "自分のマイクを文字起こししています。");
+    } catch (cause) {
+      attemptRef.current += 1;
+      releaseCapture();
+      sessionRef.current = null;
+      setRunning(false);
+      setError(cause instanceof Error ? cause.message : "音声取得を開始できませんでした。");
+      setNotice("開始できませんでした。共有元とブラウザの権限を確認してください。");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const summarize = useCallback(async (record: SavedMinutes): Promise<SavedMinutes | null> => {
@@ -193,19 +281,19 @@ export default function MinutesPage() {
   }, [accessCode, persistRecord]);
 
   const stop = async () => {
-    listenerRef.current?.stop();
+    attemptRef.current += 1;
+    releaseCapture();
     setRunning(false);
-    setListening(false);
-    setInterim("");
+    setBusy(false);
     const session = sessionRef.current;
     sessionRef.current = null;
     if (!session?.lines.length) {
-      setNotice("発言がありませんでした。記録は作成していません。");
+      setNotice("発言がありませんでした。記録は作成していません。マイクとPC音声の共有状態をご確認ください。");
       return;
     }
     let record: SavedMinutes = { id: session.id, title: session.title, createdAt: session.createdAt, transcript: session.lines.join("\n"), summary: "" };
     persistRecord(record);
-    setNotice("文字起こしをこの端末に保存しました。");
+    setNotice("自分のマイク・PC音声のラベル付き文字起こしをこの端末に保存しました。");
     if (record.transcript.trim().length >= 20) {
       setSummarizing(true);
       try {
@@ -218,12 +306,10 @@ export default function MinutesPage() {
         setSummarizing(false);
       }
     }
-    if (settingsRef.current.driveEnabled) {
-      await saveDoc(record);
-    } else {
-      setNotice("議事録はこの端末に保存済みです。Googleへの保存はOFFです。");
-    }
+    if (settingsRef.current.driveEnabled) await saveDoc(record);
+    else setNotice("議事録はこの端末に保存済みです。Googleへの保存はOFFです。");
   };
+  stopRef.current = stop;
 
   const retrySummary = async (record: SavedMinutes) => {
     setError("");
@@ -264,20 +350,33 @@ export default function MinutesPage() {
           <div>
             <section className={styles.panel} aria-label="会議の文字起こし">
               <div className={styles.row}>
-                <span className={`${styles.status} ${running ? styles.on : ""}`}>{running ? (listening ? "文字起こし中" : "マイク準備中") : summarizing ? "議事録を作成中" : "待機中"}</span>
-                <label className={styles.field}>聞き取る言語
-                  <select value={settings.myLang} disabled={running || summarizing} onChange={(event) => updateSettings({ myLang: event.target.value as LanguageCode })}>
+                <span className={`${styles.status} ${running ? styles.on : ""}`}>{busy ? "音声共有の準備中" : running ? "文字起こし中" : summarizing ? "議事録を作成中" : "待機中"}</span>
+                <label className={styles.field}>入力元
+                  <select value={captureMode} disabled={running || busy || summarizing} onChange={(event) => setCaptureMode(event.target.value as CaptureMode)}>
+                    <option value="both">自分のマイク + PCの音声</option>
+                    <option value="mic">自分のマイクのみ</option>
+                  </select>
+                </label>
+                <label className={styles.field}>自分のマイクの言語
+                  <select value={settings.myLang} disabled={running || busy || summarizing} onChange={(event) => updateSettings({ myLang: event.target.value as LanguageCode })}>
                     {LANGUAGE_CODES.map((code) => <option key={code} value={code}>{LANGUAGES[code].label}</option>)}
                   </select>
                 </label>
+                {captureMode === "both" && <label className={styles.field}>PC音声の言語
+                  <select value={settings.partnerLang} disabled={running || busy || summarizing} onChange={(event) => updateSettings({ partnerLang: event.target.value as LanguageCode })}>
+                    {LANGUAGE_CODES.map((code) => <option key={code} value={code}>{LANGUAGES[code].label}</option>)}
+                  </select>
+                </label>}
               </div>
-              <p className={styles.note}>現在はマイクの音だけを文字起こしします。オンライン会議の相手のPC音声は自動では取り込まれません。音声ファイルは保存しません。</p>
-              <div className={styles.live} aria-live="polite">{liveLines.length ? liveLines.join("\n") : running ? "話しかけてください…" : "「開始」を押すと文字起こしが始まります。"}</div>
-              {interim && <p className={styles.interim}>聞き取り中：{interim}</p>}
+              <p className={styles.note}>オンライン会議のタブを共有すると、そのタブの音声を「PCの音声」として認識します。共有画面の「音声を共有」を必ずONにしてください。入力元を区別する機能であり、人物ごとの声を識別する機能ではありません。イヤホン推奨。音声ファイルは保存しません。</p>
+              {running && <div className={styles.row} role="status"><span className={`${styles.status} ${micListening ? styles.on : ""}`}>自分のマイク：{micListening ? "認識中" : "確認中・停止"}</span>{captureMode === "both" && <span className={`${styles.status} ${pcListening ? styles.on : ""}`}>PCの音声：{pcListening ? "認識中" : "確認中・停止"}</span>}</div>}
+              <div className={styles.live} aria-live="polite">{liveLines.length ? liveLines.join("\n") : running ? "マイク・PC音声から発言を待っています…" : "「開始」を押すと文字起こしが始まります。"}</div>
+              {interim.mic && <p className={styles.interim}>自分のマイク・聞き取り中：{interim.mic}</p>}
+              {interim.pc && <p className={styles.interim}>PCの音声・聞き取り中：{interim.pc}</p>}
               <div className={styles.row}>
-                {running ? <button type="button" className={styles.danger} onClick={() => void stop()}>停止して議事録を作成</button> : <button type="button" className={styles.primary} disabled={!ready || !supported || summarizing} onClick={() => setConsent(true)}>開始</button>}
+                {running ? <button type="button" className={styles.danger} onClick={() => void stop()}>停止して議事録を作成</button> : <button type="button" className={styles.primary} disabled={!ready || !supported || summarizing || busy} onClick={() => setConsent(true)}>{busy ? "共有の許可待ち…" : "開始"}</button>}
               </div>
-              {!supported && <p className={`${styles.message} ${styles.error}`}>このブラウザは音声認識に対応していません。Chromeなどでお試しください。</p>}
+              {!supported && <p className={`${styles.message} ${styles.error}`}>このブラウザは音声認識に対応していません。Chrome PCでお試しください。</p>}
               {notice && <p role="status" className={styles.message}>{notice}</p>}
               {error && <p role="alert" className={`${styles.message} ${styles.error}`}>{error}</p>}
               {needsCode && <div className={styles.account}><h3>要約用アクセスコード</h3><p className={styles.note}>文字起こしは保存済みです。コードを保存してから、記録の「要約を再試行」を押してください。</p><label className={styles.field}>アクセスコード<input type="password" autoComplete="off" value={accessCode} onChange={(event) => setAccessCode(event.target.value)} /></label><div className={styles.actions}><button className={`${styles.secondary} ${styles.small}`} type="button" onClick={() => { saveAccessCode(accessCode); setNeedsCode(false); setError(""); }}>コードを保存</button></div></div>}
@@ -300,7 +399,7 @@ export default function MinutesPage() {
             )}
           </section>
         </div>
-        {consent && <section role="dialog" aria-modal="true" aria-label="文字起こしの同意確認" className={`${styles.panel} ${styles.consent}`}><h2>会議の記録を始めます</h2><p>参加者に文字起こしを行うことを伝え、同意を得てから開始してください。文字起こしは端末に保存され、要約時にAPIへ送信されます。</p><div className={styles.row}><button type="button" className={styles.primary} onClick={start}>伝えた・開始する</button><button type="button" className={styles.secondary} onClick={() => setConsent(false)}>やめる</button></div></section>}
+        {consent && <section role="dialog" aria-modal="true" aria-label="文字起こしの同意確認" className={`${styles.panel} ${styles.consent}`}><h2>会議の記録を始めます</h2><p>参加者に文字起こしを行うことを伝え、同意を得てから開始してください。マイクと、共有を許可したタブ・画面の音声を認識します。ブラウザの音声認識サービスに音声が送信される場合があり、文字起こしは端末に保存され、要約時にAPIへ送信されます。</p>{captureMode === "both" && <p className={styles.note}>次の画面でオンライン会議のタブを選び、「タブの音声を共有」をONにしてください。マイクの許可も必要です。</p>}<div className={styles.row}><button type="button" className={styles.primary} onClick={() => void start()}>伝えた・開始する</button><button type="button" className={styles.secondary} onClick={() => setConsent(false)}>やめる</button></div></section>}
         <p className={styles.footer}>議事録の端末保存は直近30件です。別のブラウザや端末からは自動で同期されません。Googleドキュメントには保存成功後にアクセスできます。</p>
       </div>
     </main>
