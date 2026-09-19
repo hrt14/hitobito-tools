@@ -28,11 +28,19 @@ export function proxy(request: NextRequest) {
     return NextResponse.rewrite(target);
   }
 
+  // Turnstile/POST allow only hitobito.jp and the optional contact hostname.
+  // If www is configured, redirect its form GET to the canonical origin.
+  if (host === "www.hitobito.jp" && pathname === "/contact") {
+    const url = request.nextUrl.clone();
+    url.hostname = "hitobito.jp";
+    return NextResponse.redirect(url, 308);
+  }
+
   // Contact is a separately deployed Worker. The portal path works without
   // provisioning an extra Vercel domain; the vanity host is optional.
   if (
     host === CONTACT_HOST ||
-    ((host === "hitobito.jp" || host === "www.hitobito.jp") &&
+    (host === "hitobito.jp" &&
       (pathname === "/contact" || pathname === "/api/contact"))
   ) {
     const target = new URL(`${pathname}${request.nextUrl.search}`, CONTACT_WORKER_ORIGIN);
