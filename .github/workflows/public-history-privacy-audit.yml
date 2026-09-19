@@ -1,4 +1,4 @@
-name: Hitobito tools privacy check - seven historical candidates
+name: Hitobito tools privacy check - credential metadata only
 on:
   push:
     branches: [security/public-history-audit-20260919]
@@ -12,31 +12,37 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Fetch original refs
+      - name: Fetch existing history
         run: |
           set -euo pipefail
           git fetch -q origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*'
           git fetch -q origin '+refs/pull/*/head:refs/remotes/pull/*/head' || true
-      - name: Classify seven candidates without printing their contents
+      - name: Print metadata only, never values or matching lines
         run: |
           python3 - <<'PY'
           import json,re,subprocess
           shas=['5cf216019cb2bdd1c1f3f3c0527b492c2999f339','878f0de0f3bc9c0bfc3df5ea5cebaaf9c1befb38','9de69ab868e774668f3a335d148ddcdac9bf8c4e','59b9c85ae9a7e04e54820d9735a2910a3e00aca5','25facc34aff18e67a7c0fe745583180a7ee0d5f2','85961bef57bdeaaacbf3b5fd71a629023400c673','5f027ca540ee1516468bd295a014ebc487fe7b6c']
-          def git(*args): return subprocess.check_output(['git',*args],stderr=subprocess.DEVNULL)
+          def git(*args):return subprocess.check_output(['git',*args],stderr=subprocess.DEVNULL)
           refs=[r for r in git('for-each-ref','--format=%(refname)','refs/remotes/origin','refs/remotes/pull','refs/tags').decode().splitlines() if '/security/public-history-audit-' not in r and '/security/privacy-audit-' not in r]
           reachable={}
-          for row in git('rev-list','--objects',*refs).decode('utf8','replace').splitlines():
+          for row in git('rev-list','--objects',*refs).decode('utf-8','replace').splitlines():
             oid,sep,path=row.partition(' ')
             if oid in shas:reachable.setdefault(oid,set()).add(path if sep else '')
-          pattern=re.compile(rb'(?i)(?:api[_-]?key|secret|token|password|passwd|client[_-]?secret|private[_-]?key)\s*[:=]\s*[\'\"][^\'\"\r\n]{6,}[\'\"]')
-          result=[]
+          pat=re.compile(rb'(?i)(api[_-]?key|client[_-]?secret|private[_-]?key|password|passwd|secret|token)\s*[:=]\s*([\'\"])([^\'\"\r\n]{6,})\2')
+          strong_sample=(b'placeholder',b'example',b'dummy',b'change_me',b'changeme',b'replace_me',b'replace-with',b'your_',b'your-',b'fake_',b'fake-',b'sample_',b'sample-',b'not_a_real',b'not-real',b'xxxxxxxx')
+          results=[];seen_values={}
           for i,sha in enumerate(shas,1):
             data=git('cat-file','blob',sha)
+            hits=pat.findall(data)
             paths=reachable.get(sha,set())
-            matches=[line for line in data.splitlines() if pattern.search(line)]
-            scanner_markers=any(x in data for x in (b're.compile(',b'credential_assignment',b'credential_like',b'secret_patterns'))
-            looks_regex_only=bool(matches) and all((b're.compile(' in line or b're.compile ' in line or b'rb\'' in line or b'rb"' in line) and (b'(?:' in line or b'\\b' in line or b'\\s' in line) for line in matches)
-            known_audit_paths=sorted(p for p in paths if re.fullmatch(r'\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml',p) and ('audit' in p or 'privacy' in p))
-            result.append({'candidate_number':i,'reachable_in_original_refs':bool(paths),'only_known_audit_workflow_path':bool(paths) and len(known_audit_paths)==len(paths),'audit_workflow_paths':known_audit_paths,'scanner_markers':scanner_markers,'candidate_matches_all_look_like_regex_source':looks_regex_only,'candidate_line_count':len(matches),'requires_manual_review':not (bool(paths) and len(known_audit_paths)==len(paths) and scanner_markers and looks_regex_only)})
-          print(json.dumps({'repo':'hitobito-tools','scope':'seven preidentified historical blobs; no blob data or matched values printed','results':result},sort_keys=True))
+            safe_paths=sorted(p for p in paths if re.fullmatch(r'[A-Za-z0-9_./-]{1,160}',p) and not any(part in p for part in ('@','..')))
+            clues=[];families=[];value_groups=[]
+            for key,quote,value in hits:
+              v=value.strip().lower()
+              if value not in seen_values:seen_values[value]=len(seen_values)+1
+              value_groups.append(seen_values[value])
+              families.append(key.decode('ascii').lower())
+              clues.append({'explicit_placeholder_marker':any(w in v for w in strong_sample),'known_credential_prefix':v.startswith((b'sk_live_',b'sk_test_',b'ghp_',b'github_pat_',b'akia',b'asia')),'value_length_bucket':('under_20' if len(value)<20 else '20_to_59' if len(value)<60 else '60_or_more')})
+            results.append({'number':i,'paths':safe_paths[:3],'path_count':len(paths),'file_size_bytes':len(data),'matched_setting_names':sorted(set(families)),'matched_assignments':len(hits),'distinct_value_group_ids':sorted(set(value_groups)),'value_clues':clues})
+          print(json.dumps({'scope':'7 distinct old blob versions; no secret values, complete matching lines, value hashes or arbitrary unsafe paths are printed','results':results},sort_keys=True))
           PY
