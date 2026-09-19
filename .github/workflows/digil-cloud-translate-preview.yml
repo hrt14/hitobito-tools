@@ -8,7 +8,7 @@ on:
 
 jobs:
   preview:
-    if: github.head_ref == 'feat/digil-dual-bilingual-translate-20260919' || github.head_ref == 'fix/digil-two-language-two-windows-20260919' || github.head_ref == 'feat/digil-minutes-google-docs-20260919'
+    if: github.head_ref == 'feat/digil-dual-bilingual-translate-20260919' || github.head_ref == 'fix/digil-two-language-two-windows-20260919' || github.head_ref == 'feat/digil-minutes-google-docs-20260919' || github.head_ref == 'feat/minutes-dual-audio-20260919'
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
