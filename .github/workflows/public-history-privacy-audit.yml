@@ -1,4 +1,4 @@
-name: Hitobito tools privacy check - one historical candidate
+name: Hitobito tools privacy check - seven historical candidates
 on:
   push:
     branches: [security/public-history-audit-20260919]
@@ -15,27 +15,28 @@ jobs:
       - name: Fetch original refs
         run: |
           set -euo pipefail
-          git fetch -q origin '+refs/heads/*:refs/remotes/origin/*'
+          git fetch -q origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*'
           git fetch -q origin '+refs/pull/*/head:refs/remotes/pull/*/head' || true
-      - name: Classify single historical blob without exposing content
+      - name: Classify seven candidates without printing their contents
         run: |
           python3 - <<'PY'
           import json,re,subprocess
-          oid='6add387ce51403940582c1fd15f43f48d070d5f8'
-          def git(*args):return subprocess.check_output(['git',*args],stderr=subprocess.DEVNULL)
-          data=git('cat-file','blob',oid)
-          refs=git('for-each-ref','--format=%(refname)','refs/remotes/origin','refs/remotes/pull').decode().splitlines()
-          found=[]; source_paths=[]
-          for ref in refs:
-            if '/security/public-history-audit-' in ref or '/security/privacy-audit-' in ref:continue
-            objects=git('rev-list','--objects',ref).decode('utf-8','replace').splitlines()
-            matches=[line.split(' ',1)[1] for line in objects if line.startswith(oid+' ')]
-            if matches:
-              found.append(ref)
-              source_paths.extend(matches)
-          safe_paths=[p for p in set(source_paths) if re.fullmatch(r'[A-Za-z0-9_./-]+',p) and p.startswith('.github/workflows/')]
-          local_pat=re.compile(rb'(?i)(?:/Users/[^/\s]+/|[A-Z]:\\Users\\[^\\\s]+\\)')
-          local_matches=local_pat.findall(data)
-          local_literals_are_patterns=bool(local_matches) and all(b'[' in x or b'\\' in x or b'example' in x.lower() or b'username' in x.lower() for x in local_matches)
-          print(json.dumps({'blob_sha':oid,'size_bytes':len(data),'appears_in_audit_workflow':any(p.startswith('.github/workflows/') for p in source_paths),'safe_workflow_paths':sorted(safe_paths),'audit_script_markers':{'python_git_scanner':b'git(' in data and b're.compile' in data,'regex_category_names':b'family_detail_review' in data and b'local_user_path' in data},'local_path_matches_look_like_regex_or_placeholders':local_literals_are_patterns,'references':{'audit_named':sum('/security/' in r or 'audit' in r for r in found),'other':sum('/security/' not in r and 'audit' not in r for r in found)},'only_original_main':any(r=='refs/remotes/origin/main' for r in found),'caveat':'No actual match values or arbitrary file paths printed; classification is not proof of no exposure.'},sort_keys=True))
+          shas=['5cf216019cb2bdd1c1f3f3c0527b492c2999f339','878f0de0f3bc9c0bfc3df5ea5cebaaf9c1befb38','9de69ab868e774668f3a335d148ddcdac9bf8c4e','59b9c85ae9a7e04e54820d9735a2910a3e00aca5','25facc34aff18e67a7c0fe745583180a7ee0d5f2','85961bef57bdeaaacbf3b5fd71a629023400c673','5f027ca540ee1516468bd295a014ebc487fe7b6c']
+          def git(*args): return subprocess.check_output(['git',*args],stderr=subprocess.DEVNULL)
+          refs=[r for r in git('for-each-ref','--format=%(refname)','refs/remotes/origin','refs/remotes/pull','refs/tags').decode().splitlines() if '/security/public-history-audit-' not in r and '/security/privacy-audit-' not in r]
+          reachable={}
+          for row in git('rev-list','--objects',*refs).decode('utf8','replace').splitlines():
+            oid,sep,path=row.partition(' ')
+            if oid in shas:reachable.setdefault(oid,set()).add(path if sep else '')
+          pattern=re.compile(rb'(?i)(?:api[_-]?key|secret|token|password|passwd|client[_-]?secret|private[_-]?key)\s*[:=]\s*[\'\"][^\'\"\r\n]{6,}[\'\"]')
+          result=[]
+          for i,sha in enumerate(shas,1):
+            data=git('cat-file','blob',sha)
+            paths=reachable.get(sha,set())
+            matches=[line for line in data.splitlines() if pattern.search(line)]
+            scanner_markers=any(x in data for x in (b're.compile(',b'credential_assignment',b'credential_like',b'secret_patterns'))
+            looks_regex_only=bool(matches) and all((b're.compile(' in line or b're.compile ' in line or b'rb\'' in line or b'rb"' in line) and (b'(?:' in line or b'\\b' in line or b'\\s' in line) for line in matches)
+            known_audit_paths=sorted(p for p in paths if re.fullmatch(r'\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml',p) and ('audit' in p or 'privacy' in p))
+            result.append({'candidate_number':i,'reachable_in_original_refs':bool(paths),'only_known_audit_workflow_path':bool(paths) and len(known_audit_paths)==len(paths),'audit_workflow_paths':known_audit_paths,'scanner_markers':scanner_markers,'candidate_matches_all_look_like_regex_source':looks_regex_only,'candidate_line_count':len(matches),'requires_manual_review':not (bool(paths) and len(known_audit_paths)==len(paths) and scanner_markers and looks_regex_only)})
+          print(json.dumps({'repo':'hitobito-tools','scope':'seven preidentified historical blobs; no blob data or matched values printed','results':result},sort_keys=True))
           PY
