@@ -1,0 +1,24 @@
+name: DIGIL CLOUD translate validation
+
+on:
+  pull_request:
+    paths:
+      - "app/ear-hub/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/digil-cloud-translate-validate.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx eslint app/ear-hub/MultilingualTranslatePage.tsx app/ear-hub/multilingual-languages.ts app/ear-hub/multilingual-translator.ts app/ear-hub/'[module]'/page.tsx
+      - run: npx tsc --noEmit
+      - run: npm run build

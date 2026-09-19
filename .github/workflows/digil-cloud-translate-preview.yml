@@ -1,0 +1,46 @@
+name: DIGIL CLOUD dual translation preview
+
+on:
+  pull_request:
+    paths:
+      - "app/ear-hub/**"
+      - ".github/workflows/digil-cloud-translate-preview.yml"
+
+jobs:
+  preview:
+    if: github.head_ref == 'feat/digil-dual-bilingual-translate-20260919'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: team_vCUqyPcmj2xuDuBM7f7aOiMQ
+      VERCEL_PROJECT_ID: prj_UXim4rDyF8jqIIe2TFZO8eUP5PZl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Check deployment credential
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo 'VERCEL_TOKEN is not configured; cannot create preview.' >&2
+            exit 1
+          fi
+      - run: npm ci
+      - run: npm install --global vercel@latest
+      - name: Pull preview settings (not production)
+        run: vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+      - name: Build preview
+        run: vercel build --token="$VERCEL_TOKEN"
+      - name: Deploy preview only
+        id: preview
+        run: |
+          url="$(vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Preview URL: $url"
+      - name: Publish preview URL
+        env:
+          URL: ${{ steps.preview.outputs.url }}
+        run: |
+          echo "## DIGIL CLOUD Preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "$URL/ear-hub/translate" >> "$GITHUB_STEP_SUMMARY"
