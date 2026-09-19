@@ -1,71 +1,41 @@
-name: Public privacy audit - phase 2 current tree only
-
+name: Hitobito tools privacy check - historical blobs
 on:
   push:
-    branches:
-      - security/public-history-audit-20260919
-
+    branches: [security/public-history-audit-20260919]
 permissions:
   contents: read
-
 jobs:
-  current-source:
+  historical:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
-      - name: Fetch only the current main snapshot
-        run: git fetch --depth=1 origin '+refs/heads/main:refs/remotes/origin/main'
-      - name: Inspect current tracked files without printing matching text
+          fetch-depth: 0
+      - name: Fetch existing historical refs
+        run: |
+          set -euo pipefail
+          git fetch -q origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*'
+          git fetch -q origin '+refs/pull/*/head:refs/remotes/pull/*/head' || true
+      - name: Summarize historical candidates by opaque blob identifiers
         run: |
           python3 - <<'PY'
-          import json, re, subprocess
-          from collections import Counter
-
-          def git(*args):
-              return subprocess.check_output(('git', *args), stderr=subprocess.DEVNULL)
-
-          patterns = {
-              'email': re.compile(rb'(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b'),
-              'credential_assignment': re.compile(rb'(?i)(?:api[_-]?key|secret|token|password|passwd|client[_-]?secret|private[_-]?key)\s*[:=]\s*[\'\"][^\'\"\r\n]{6,}[\'\"]'),
-              'private_key': re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),
-              'github_token': re.compile(rb'\b(?:ghp_|github_pat_)[A-Za-z0-9_-]{20,}\b'),
-              'stripe_secret': re.compile(rb'\bsk_(?:live|test)_[A-Za-z0-9]{12,}\b'),
-              'aws_access_key': re.compile(rb'\b(?:AKIA|ASIA)[A-Z0-9]{16}\b'),
-              'local_user_path': re.compile(rb'(?i)(?:/Users/[^/\s]+/|[A-Z]:\\Users\\[^\\\s]+\\)'),
-              'family_review': re.compile('次女|長女|不登校|精神科|ADHD|ASD|家族|娘|妻|クリニック|通院'.encode()),
-              'business_review': re.compile('年収|給与|月商|売上目標|取引先|クライアント|顧客情報|報酬'.encode()),
-          }
-          counts = Counter()
-          paths = {}
-          examined = 0
-          skipped = 0
-          for entry in git('ls-tree','-r','-z','origin/main').split(b'\0'):
-              if not entry: continue
-              meta, rawpath = entry.split(b'\t',1)
-              mode, typ, oid = meta.split()
-              if typ != b'blob': continue
-              size = int(git('cat-file','-s',oid.decode()))
-              if size > 1_000_000:
-                  skipped += 1
-                  continue
-              data = git('cat-file','-p',oid.decode())
-              if b'\0' in data:
-                  skipped += 1
-                  continue
-              examined += 1
-              path = rawpath.decode('utf-8','replace')
-              safe_path = path if re.fullmatch(r'[A-Za-z0-9_./-]+', path) else '(non-ASCII or unusual path)'
-              for category, pattern in patterns.items():
-                  if category == 'email':
-                      matches = [x.group(0).lower() for x in pattern.finditer(data)]
-                      hit = any(not x.endswith((b'@users.noreply.github.com',b'@example.com',b'@localhost')) for x in matches)
-                  else:
-                      hit = bool(pattern.search(data))
-                  if hit:
-                      counts[category] += 1
-                      paths.setdefault(category,[]).append(safe_path)
-          print(json.dumps({'scope':'ONLY FILES IN CURRENT MAIN TREE; NO GIT HISTORY','main_sha':git('rev-parse','origin/main').decode().strip(),'text_files_scanned':examined,'large_or_binary_skipped':skipped,'candidate_file_counts':dict(sorted(counts.items())),'candidate_paths_without_match_text':{k:v[:30] for k,v in sorted(paths.items())}},ensure_ascii=False,sort_keys=True))
+          import json,re,subprocess
+          def git(*a):return subprocess.check_output(['git',*a],stderr=subprocess.DEVNULL)
+          current={e.split(b'\t',1)[0].split()[2].decode() for e in git('ls-tree','-r','-z','origin/main').split(b'\0') if e and e.split(b'\t',1)[0].split()[1]==b'blob'}
+          refs=[x for x in git('for-each-ref','--format=%(refname)','refs/remotes/origin','refs/remotes/pull','refs/tags').decode().splitlines() if '/security/public-history-audit-' not in x and '/security/privacy-audit-' not in x]
+          objects={line.split(' ',1)[0] for line in git('rev-list','--objects',*refs).decode().splitlines()}
+          pats={'email':re.compile(rb'(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b'),'credential_assignment':re.compile(rb'(?i)(?:api[_-]?key|secret|token|password|passwd|client[_-]?secret|private[_-]?key)\s*[:=]\s*[\'\"][^\'\"\r\n]{6,}[\'\"]'),'local_user_path':re.compile(rb'(?i)(?:/Users/[^/\s]+/|[A-Z]:\\Users\\[^\\\s]+\\)'),'private_key':re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),'github_token':re.compile(rb'\b(?:ghp_|github_pat_)[A-Za-z0-9_-]{20,}\b'),'family_detail_review':re.compile('次女|長女|不登校|精神科|通院|クリニック'.encode())}
+          hits={k:[] for k in pats};examined=0;skipped=0
+          for oid in objects:
+            if oid in current or git('cat-file','-t',oid).strip()!=b'blob':continue
+            if int(git('cat-file','-s',oid))>1000000:skipped+=1;continue
+            data=git('cat-file','-p',oid)
+            if b'\0' in data:skipped+=1;continue
+            examined+=1
+            for k,p in pats.items():
+              matches=p.findall(data)
+              if k=='email':matches=[x for x in matches if not x.lower().endswith((b'@example.com',b'@example.org',b'@users.noreply.github.com'))]
+              if matches:hits[k].append(oid)
+          print(json.dumps({'scope':'historical-only blobs reachable from original refs (audit branches excluded); no sensitive contents printed','examined':examined,'skipped_binary_or_large':skipped,'candidates':{k:{'count':len(v),'blob_shas':v[:16]} for k,v in hits.items()}},sort_keys=True))
           PY
