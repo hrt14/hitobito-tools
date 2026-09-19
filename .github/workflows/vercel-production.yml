@@ -1,0 +1,77 @@
+name: Vercel production deploy
+
+# hitobito-tools の既存 Vercel プロジェクトへ Production デプロイする手動ワークフロー。
+# Vercel の Git Integration は使わず、GitHub のランナーから Vercel CLI で直接デプロイする。
+#
+# - 手動起動のみ(workflow_dispatch)。main 以外の ref では実行しない。
+# - 必要な Actions secret は VERCEL_TOKEN のみ。
+# - Team ID / Project ID は既存プロジェクト hitobito-tools に固定(誤デプロイ防止)。
+# - DNS・ドメイン割り当ては変更しない。既にこのプロジェクトへ紐づいたドメインが
+#   新しい Production Deployment を配信するだけ。
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type deploy to publish the latest main to production"
+        required: true
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hitobito-tools-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event.inputs.confirm == 'deploy'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: team_vCUqyPcmj2xuDuBM7f7aOiMQ
+      VERCEL_PROJECT_ID: prj_UXim4rDyF8jqIIe2TFZO8eUP5PZl
+    steps:
+      - name: Check deployment credential
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN secret is not configured in this repository." >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel settings (production)
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build for production
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy to production
+        id: deploy
+        run: |
+          url="$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Summarize deployment
+        env:
+          URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          id="$(vercel inspect "$URL" --token="$VERCEL_TOKEN" 2>&1 | grep -oE 'dpl_[A-Za-z0-9]+' | head -1 || true)"
+          {
+            echo "## Production deploy"
+            echo ""
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Deployment ID: ${id:-unknown}"
+            echo "- Deployment URL: $URL"
+            echo "- Check: https://dc.hitobito.jp/translate"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "production: $URL (commit $GITHUB_SHA, id ${id:-unknown})"
