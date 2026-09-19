@@ -96,6 +96,7 @@ export default function MinutesPage() {
   useEffect(() => { saveDocRef.current = saveDoc; }, [saveDoc]);
 
   useEffect(() => {
+    // Hydrate browser-only localStorage and speech support after server rendering.
     const loaded = loadSettings();
     settingsRef.current = loaded;
     setSettings(loaded);
@@ -157,7 +158,7 @@ export default function MinutesPage() {
     }
     pendingDocRef.current = record || null;
     setGoogleMessage("Googleの接続画面を開きます…");
-    // Always request a fresh token from this click. Cached sessionStorage tokens may be expired.
+    // Always request a fresh token on a direct user click; sessionStorage tokens may expire.
     tokenClientRef.current.requestAccessToken({ prompt: "select_account" });
   };
 
@@ -211,8 +212,8 @@ export default function MinutesPage() {
         record = (await summarize(record)) || record;
       } catch (cause) {
         setError(`${cause instanceof Error ? cause.message : "要約に失敗しました。"} 文字起こしは端末に保存済みです。`);
-        setSummarizing(false);
-        return; // Keep the draft locally until the summary is retried, rather than silently uploading a partial document.
+        setNotice("要約の再試行、または「Googleに保存」から文字起こしの保存ができます。");
+        return;
       } finally {
         setSummarizing(false);
       }
@@ -247,6 +248,7 @@ export default function MinutesPage() {
   const selected = records.find((record) => record.id === selectedId) || records[0];
   const activeDocState = selected ? driveStates[selected.id] : undefined;
   const canRetrySummary = Boolean(selected && !selected.summary && selected.transcript.trim().length >= 20 && !selected.driveLink && !running && !summarizing);
+  const isNativeDoc = Boolean(selected?.driveLink?.startsWith("https://docs.google.com/document/"));
 
   return (
     <main className={styles.page}>
@@ -255,21 +257,21 @@ export default function MinutesPage() {
         <Link className={styles.back} href="/ear-hub">‹ DIGIL CLOUD</Link>
         <header className={styles.hero}>
           <p className={styles.eyebrow}>LIVE MINUTES / GOOGLE DOCS</p>
-          <h1>会議を録って、議事録を残す。</h1>
+          <h1>会議を文字起こしして、議事録を残す。</h1>
           <p>開始 → 会話 → 停止。文字起こしは端末に残し、Googleに接続すると自分のドキュメントにも保存します。</p>
         </header>
         <div className={styles.layout}>
           <div>
-            <section className={styles.panel} aria-label="会議の録音と文字起こし">
+            <section className={styles.panel} aria-label="会議の文字起こし">
               <div className={styles.row}>
-                <span className={`${styles.status} ${running ? styles.on : ""}`}>{running ? (listening ? "録音中・聞き取り中" : "録音中・マイク準備中") : summarizing ? "議事録を作成中" : "待機中"}</span>
+                <span className={`${styles.status} ${running ? styles.on : ""}`}>{running ? (listening ? "文字起こし中" : "マイク準備中") : summarizing ? "議事録を作成中" : "待機中"}</span>
                 <label className={styles.field}>聞き取る言語
                   <select value={settings.myLang} disabled={running || summarizing} onChange={(event) => updateSettings({ myLang: event.target.value as LanguageCode })}>
                     {LANGUAGE_CODES.map((code) => <option key={code} value={code}>{LANGUAGES[code].label}</option>)}
                   </select>
                 </label>
               </div>
-              <p className={styles.note}>現在はマイクの音だけを記録します。オンライン会議の相手のPC音声は自動では取り込まれません。</p>
+              <p className={styles.note}>現在はマイクの音だけを文字起こしします。オンライン会議の相手のPC音声は自動では取り込まれません。音声ファイルは保存しません。</p>
               <div className={styles.live} aria-live="polite">{liveLines.length ? liveLines.join("\n") : running ? "話しかけてください…" : "「開始」を押すと文字起こしが始まります。"}</div>
               {interim && <p className={styles.interim}>聞き取り中：{interim}</p>}
               <div className={styles.row}>
@@ -282,22 +284,23 @@ export default function MinutesPage() {
             </section>
             <section className={styles.panel} aria-label="Googleドキュメント保存">
               <h2>Googleドキュメントに保存</h2>
-              <label className={styles.check}><input type="checkbox" checked={settings.driveEnabled} onChange={(event) => updateSettings({ driveEnabled: event.target.checked })} />会議終了時に自動保存する</label>
+              <label className={styles.check}><input type="checkbox" checked={settings.driveEnabled} disabled={!GOOGLE_CLIENT_ID} onChange={(event) => updateSettings({ driveEnabled: event.target.checked })} />会議終了時に自動保存する</label>
               <p className={styles.folder}>保存先：{settings.driveFolder} · <Link className={styles.open} href="/ear-hub#account">フォルダを変更</Link></p>
-              <div className={styles.row}><span className={styles.status}>{googleConnected ? "Google接続済み" : "Google未接続・要確認"}</span><button type="button" className={`${styles.secondary} ${styles.small}`} onClick={() => connectGoogle()}>{googleConnected ? "再接続" : "Googleに接続"}</button></div>
+              <div className={styles.row}><span className={styles.status}>{googleConnected ? "Google接続済み" : "Google未接続・要確認"}</span><button type="button" className={`${styles.secondary} ${styles.small}`} disabled={!GOOGLE_CLIENT_ID} onClick={() => connectGoogle()}>{googleConnected ? "再接続" : "Googleに接続"}</button></div>
+              {!GOOGLE_CLIENT_ID && <p className={`${styles.message} ${styles.error}`}>この環境ではGoogle連携が設定されていません。</p>}
               {googleMessage && <p role="status" className={styles.message}>{googleMessage}</p>}
-              <p className={styles.note}>保存に成功すると各議事録に「Googleドキュメントを開く」が表示されます。接続切れや保存失敗時も、文字起こしはこの端末に残り、後から再試行できます。接続状態だけでは保存成功とは判定しません。</p>
+              <p className={styles.note}>保存に成功すると各議事録にGoogleドキュメントへのリンクが付きます。接続切れや保存失敗時も文字起こしはこの端末に残り、後から再試行できます。接続状態だけでは保存成功とは判定しません。</p>
             </section>
           </div>
           <section className={styles.panel} aria-label="保存した議事録">
             <h2>保存した議事録</h2>
             {records.length === 0 ? <p className={styles.empty}>まだ議事録はありません。会議を開始すると文字起こしがここに残ります。</p> : (
-              <><ul className={styles.list}>{records.map((record) => <li key={record.id}><button type="button" className={styles.record} aria-pressed={selected?.id === record.id} onClick={() => setSelectedId(record.id)}><span><strong>{record.title}</strong><small>{statusDate(record.createdAt)} · {record.transcript.split("\n").filter(Boolean).length} 発言</small></span><span className={`${styles.pill} ${record.driveLink ? "" : styles.pending}`}>{record.driveLink ? "Google保存済み" : "端末に保存"}</span></button></li>)}</ul>
-              {selected && <div className={styles.detail}><h3>{selected.title}</h3><div className={styles.actions}>{selected.driveLink ? <a className={styles.link} href={selected.driveLink} rel="noreferrer" target="_blank">Googleドキュメントを開く ↗</a> : <button type="button" disabled={activeDocState?.kind === "saving"} className={`${styles.primary} ${styles.small}`} onClick={() => { if (!tokenRef.current) connectGoogle(selected); else void saveDoc(selected); }}>{activeDocState?.kind === "saving" ? "保存中…" : googleConnected ? "Googleに保存・再試行" : "Googleに接続して保存"}</button>}<button className={`${styles.secondary} ${styles.small}`} type="button" onClick={() => void copyRecord(selected)}>コピー</button>{canRetrySummary && <button className={`${styles.secondary} ${styles.small}`} type="button" onClick={() => void retrySummary(selected!)}>要約を再試行</button>}</div>{activeDocState && <p role="status" className={`${styles.message} ${activeDocState.kind === "error" || activeDocState.kind === "auth" ? styles.error : ""}`}>{activeDocState.message}</p>}{!selected.driveLink && !activeDocState && <p className={styles.note}>Googleへの保存は未確認です。上のボタンで保存してください。</p>}<h4>要約・決定事項・ToDo</h4><div className={styles.content}>{selected.summary || "要約はまだありません。文字起こしは保存されています。"}</div><h4>文字起こし</h4><div className={styles.content}>{selected.transcript}</div></div>}</>
+              <><ul className={styles.list}>{records.map((record) => <li key={record.id}><button type="button" className={styles.record} aria-pressed={selected?.id === record.id} onClick={() => setSelectedId(record.id)}><span><strong>{record.title}</strong><small>{statusDate(record.createdAt)} · {record.transcript.split("\n").filter(Boolean).length} 発言</small></span><span className={`${styles.pill} ${record.driveLink ? "" : styles.pending}`}>{record.driveLink ? "Google保存リンクあり" : "端末に保存"}</span></button></li>)}</ul>
+              {selected && <div className={styles.detail}><h3>{selected.title}</h3><div className={styles.actions}>{selected.driveLink ? <a className={styles.link} href={selected.driveLink} rel="noreferrer" target="_blank">{isNativeDoc ? "Googleドキュメントを開く ↗" : "以前のDriveファイルを開く ↗"}</a> : <button type="button" disabled={activeDocState?.kind === "saving" || !GOOGLE_CLIENT_ID} className={`${styles.primary} ${styles.small}`} onClick={() => { if (!tokenRef.current) connectGoogle(selected); else void saveDoc(selected); }}>{activeDocState?.kind === "saving" ? "保存中…" : googleConnected ? "Googleに保存・再試行" : "Googleに接続して保存"}</button>}<button className={`${styles.secondary} ${styles.small}`} type="button" onClick={() => void copyRecord(selected)}>コピー</button>{canRetrySummary && <button className={`${styles.secondary} ${styles.small}`} type="button" onClick={() => void retrySummary(selected)}>要約を再試行</button>}</div>{activeDocState && <p role="status" className={`${styles.message} ${activeDocState.kind === "error" || activeDocState.kind === "auth" ? styles.error : ""}`}>{activeDocState.message}</p>}{!selected.driveLink && !activeDocState && <p className={styles.note}>Googleへの保存は未確認です。上のボタンで保存してください。</p>}<h4>要約・決定事項・ToDo</h4><div className={styles.content}>{selected.summary || "要約はまだありません。文字起こしは保存されています。"}</div><h4>文字起こし</h4><div className={styles.content}>{selected.transcript}</div></div>}</>
             )}
           </section>
         </div>
-        {consent && <section role="dialog" aria-modal="true" aria-label="録音の同意確認" className={`${styles.panel} ${styles.consent}`}><h2>会議の記録を始めます</h2><p>参加者に録音・文字起こしを行うことを伝え、同意を得てから開始してください。文字起こしは端末に保存され、要約時にAPIへ送信されます。</p><div className={styles.row}><button type="button" className={styles.primary} onClick={start}>伝えた・開始する</button><button type="button" className={styles.secondary} onClick={() => setConsent(false)}>やめる</button></div></section>}
+        {consent && <section role="dialog" aria-modal="true" aria-label="文字起こしの同意確認" className={`${styles.panel} ${styles.consent}`}><h2>会議の記録を始めます</h2><p>参加者に文字起こしを行うことを伝え、同意を得てから開始してください。文字起こしは端末に保存され、要約時にAPIへ送信されます。</p><div className={styles.row}><button type="button" className={styles.primary} onClick={start}>伝えた・開始する</button><button type="button" className={styles.secondary} onClick={() => setConsent(false)}>やめる</button></div></section>}
         <p className={styles.footer}>議事録の端末保存は直近30件です。別のブラウザや端末からは自動で同期されません。Googleドキュメントには保存成功後にアクセスできます。</p>
       </div>
     </main>
