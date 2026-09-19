@@ -1,0 +1,36 @@
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  max-height: 540px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.utterance {
+  border-top: 1px solid #dce5d3;
+  padding-top: 11px;
+}
+
+.utterance:first-child { border-top: none; padding-top: 0; }
+
+.speaker {
+  display: block;
+  color: #52694b;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+
+.speaker time { font-weight: 500; margin-left: 8px; }
+
+.text {
+  color: #172018;
+  font-size: clamp(19px, 2.4vw, 29px);
+  font-weight: 750;
+  line-height: 1.5;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.empty { color: #53664b; font-size: 20px; margin: 10px 0; }
