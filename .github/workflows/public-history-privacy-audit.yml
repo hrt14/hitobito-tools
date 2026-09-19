@@ -1,0 +1,88 @@
+name: Public history privacy audit
+
+on:
+  push:
+    branches:
+      - security/public-history-audit-20260919
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch all ordinary and PR refs
+        run: |
+          set -euo pipefail
+          git fetch --force origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*' '+refs/pull/*/head:refs/remotes/pull/*/head' || true
+      - name: Scan reachable history without printing matched values
+        run: |
+          python3 - <<'PY'
+          import json,re,subprocess
+          from collections import defaultdict
+
+          def sh(*args):
+              return subprocess.check_output(args, stderr=subprocess.DEVNULL)
+
+          def blob_ids(args):
+              out=sh('git','rev-list','--objects',*args).decode('utf-8','replace').splitlines()
+              ids=[]
+              for line in out:
+                  oid=line.split(' ',1)[0]
+                  try:
+                      if sh('git','cat-file','-t',oid).strip()==b'blob': ids.append(oid)
+                  except subprocess.CalledProcessError:
+                      pass
+              return set(ids)
+
+          current=blob_ids(['origin/main'])
+          all_blobs=blob_ids(['--all'])
+          patterns={
+            'email': re.compile(rb'(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b'),
+            'credential_assignment': re.compile(rb'(?i)(?:api[_-]?key|secret|token|password|passwd|client[_-]?secret|private[_-]?key)\s*[:=]\s*[\'\"][^\'\"\r\n]{6,}[\'\"]'),
+            'private_key': re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),
+            'github_token': re.compile(rb'\b(?:ghp_|github_pat_)[A-Za-z0-9_\-]{20,}\b'),
+            'stripe_secret': re.compile(rb'\bsk_(?:live|test)_[A-Za-z0-9]{12,}\b'),
+            'aws_access_key': re.compile(rb'\b(?:AKIA|ASIA)[A-Z0-9]{16}\b'),
+            'local_user_path': re.compile(rb'(?i)(?:/Users/[^/\s]+/|[A-Z]:\\Users\\[^\\\s]+\\)'),
+            'family_health_review': re.compile('次女|長女|不登校|精神科|ADHD|ASD|家族|娘|妻|クリニック|通院'.encode()),
+            'business_private_review': re.compile('年収|給与|月商|売上目標|取引先|クライアント|顧客情報|報酬'.encode()),
+          }
+          counts_all=defaultdict(int); counts_current=defaultdict(int)
+          scanned=0
+          for oid in all_blobs:
+              try:
+                  size=int(sh('git','cat-file','-s',oid))
+                  if size>2_000_000: continue
+                  data=sh('git','cat-file','-p',oid)
+              except Exception:
+                  continue
+              if b'\0' in data: continue
+              scanned+=1
+              for name,pat in patterns.items():
+                  if name=='email':
+                      matches=[m.group(0).lower() for m in pat.finditer(data)]
+                      matches=[m for m in matches if not (m.endswith(b'@users.noreply.github.com') or m.endswith(b'@example.com') or m.endswith(b'@localhost'))]
+                      hit=bool(matches)
+                  else:
+                      hit=bool(pat.search(data))
+                  if hit:
+                      counts_all[name]+=1
+                      if oid in current: counts_current[name]+=1
+          report={
+            'repo': subprocess.check_output(['git','config','--get','remote.origin.url']).decode().strip().split('/')[-1].replace('.git',''),
+            'current_blob_count': len(current),
+            'reachable_blob_count': len(all_blobs),
+            'scanned_text_blobs': scanned,
+            'current_hit_blob_counts': dict(sorted(counts_current.items())),
+            'all_history_hit_blob_counts': dict(sorted(counts_all.items())),
+            'historical_only_hit_blob_counts': {k:max(0,counts_all[k]-counts_current.get(k,0)) for k in sorted(counts_all)},
+            'note':'Counts are unique blobs with category hits; no matched values or file contents are printed.'
+          }
+          print(json.dumps(report, ensure_ascii=False, sort_keys=True))
+          PY
