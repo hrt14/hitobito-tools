@@ -243,6 +243,8 @@
   align-items: center;
   gap: 8px;
   flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .folderPickerButton,
@@ -261,7 +263,8 @@
   border: 1px solid #1d1d1f;
 }
 
-.folderPickerButton:disabled {
+.folderPickerButton:disabled,
+.folderResetButton:disabled {
   opacity: 0.5;
   cursor: default;
 }
@@ -270,6 +273,42 @@
   color: #515154;
   background: #f5f5f7;
   border: 1px solid #d2d2d7;
+}
+
+.newFolderForm {
+  padding: 15px 18px;
+  background: #f8faff;
+  border-top: 1px solid #e8e8ed;
+}
+
+.newFolderForm label {
+  display: block;
+  margin-bottom: 9px;
+  color: #515154;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.newFolderControls {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.newFolderControls input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 12px;
+  font: inherit;
+  font-size: 14px;
+  background: white;
+  border: 1px solid #c7c7cc;
+  border-radius: 10px;
+}
+
+.newFolderControls input:focus-visible {
+  outline: 2px solid #467aff;
+  outline-offset: 2px;
 }
 
 .message {
@@ -338,6 +377,7 @@
 
   .folderActions {
     width: 100%;
+    justify-content: flex-start;
   }
 
   .folderPickerButton {
@@ -346,6 +386,20 @@
 
   .folderCurrent strong {
     max-width: 70vw;
+  }
+
+  .newFolderForm {
+    padding: 15px 14px;
+  }
+
+  .newFolderControls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .newFolderControls input,
+  .newFolderControls button {
+    width: 100%;
   }
 
   .driveFootnote,
