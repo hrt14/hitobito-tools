@@ -8,11 +8,11 @@ import {
   fetchGoogleProfile,
   getGoogleSessionToken,
   initTokenClient,
-  openDriveFolderPicker,
   revokeGoogleToken,
   type GoogleProfile,
   type TokenClient,
 } from "./drive";
+import { createDriveFolder, openReadableFolderPicker } from "./drive-folder-actions";
 import {
   DEFAULT_DRIVE_FOLDER,
   DEFAULT_DRIVE_FOLDER_ID,
@@ -23,6 +23,8 @@ import { loadSettings, saveSettings } from "./storage";
 import styles from "./store-drive-settings.module.css";
 
 const PROFILE_KEY = "digil.googleProfile.v1";
+
+type PendingFolder = { name: string; parentId: string };
 
 function loadProfile(): GoogleProfile | null {
   try {
@@ -46,12 +48,16 @@ export default function StoreDriveSettings() {
   const tokenClientRef = useRef<TokenClient | null>(null);
   const accessTokenRef = useRef("");
   const pendingPickerRef = useRef(false);
+  const pendingFolderRef = useRef<PendingFolder | null>(null);
   const [settings, setSettings] = useState<EarHubSettings>(DEFAULT_SETTINGS);
   const [profile, setProfile] = useState<GoogleProfile | null>(null);
   const [ready, setReady] = useState(false);
   const [googleReady, setGoogleReady] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [pickerOpening, setPickerOpening] = useState(false);
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [creatingFolder, setCreatingFolder] = useState(false);
   const [message, setMessage] = useState("");
 
   const updateDriveSettings = useCallback(
@@ -74,10 +80,14 @@ export default function StoreDriveSettings() {
       setPickerOpening(true);
       setMessage("");
       try {
-        const opened = await openDriveFolderPicker(token, (folder) => {
-          updateDriveSettings({ driveFolder: folder.name, driveFolderId: folder.id });
-          setMessage(`保存先を「${folder.name}」に変更しました。次回の議事録からこのフォルダへ保存します。`);
-        });
+        const opened = await openReadableFolderPicker(
+          token,
+          (folder) => {
+            updateDriveSettings({ driveFolder: folder.name, driveFolderId: folder.id });
+            setMessage(`保存先を「${folder.name}」に変更しました。次回の議事録からこのフォルダへ保存します。`);
+          },
+          () => setMessage("ファイルは保存先に指定できません。フォルダを選択してください。"),
+        );
         if (!opened) setMessage("Googleドライブのフォルダ選択を開けませんでした。画面を再読み込みしてお試しください。");
       } catch {
         setMessage("Googleドライブのフォルダ選択を開けませんでした。画面を再読み込みしてお試しください。");
@@ -101,6 +111,8 @@ export default function StoreDriveSettings() {
       setConnecting(false);
       if (response.error || !response.access_token) {
         pendingPickerRef.current = false;
+        pendingFolderRef.current = null;
+        setCreatingFolder(false);
         setMessage(response.error_description || "Googleログインを完了できませんでした。");
         return;
       }
@@ -110,6 +122,28 @@ export default function StoreDriveSettings() {
       if (nextProfile) {
         setProfile(nextProfile);
         saveProfile(nextProfile);
+      }
+
+      if (pendingFolderRef.current) {
+        const folderRequest = pendingFolderRef.current;
+        pendingFolderRef.current = null;
+        try {
+          const folder = await createDriveFolder(response.access_token, folderRequest.name, folderRequest.parentId);
+          updateDriveSettings({ driveFolder: folder.name, driveFolderId: folder.id });
+          setNewFolderName("");
+          setShowNewFolder(false);
+          setMessage(`「${folder.name}」を作成し、議事録の保存先に設定しました。`);
+        } catch (error) {
+          const code = error instanceof Error ? error.message : "";
+          setMessage(code === "parent-not-accessible"
+            ? "フォルダを作成できませんでした。親フォルダへのアクセス権を確認するか、マイドライブ直下に戻してからお試しください。"
+            : code === "needs-login"
+              ? "Googleの認証が切れました。もう一度お試しください。"
+              : "フォルダを作成できませんでした。時間をおいて再度お試しください。");
+        } finally {
+          setCreatingFolder(false);
+        }
+        return;
       }
 
       if (pendingPickerRef.current) {
@@ -124,22 +158,22 @@ export default function StoreDriveSettings() {
           : "Googleには接続できました。Googleドライブ保存を利用できます。",
       );
     });
-  }, [googleReady, launchFolderPicker]);
+  }, [googleReady, launchFolderPicker, updateDriveSettings]);
 
   const connectGoogle = (refreshToken = false) => {
     if (!GOOGLE_CLIENT_ID) {
       setMessage("Google OAuth Client ID が設定されていません。");
-      return;
+      return false;
     }
     if (!tokenClientRef.current) {
       setMessage("Googleログインを読み込み中です。数秒後にもう一度押してください。");
-      return;
+      return false;
     }
     setConnecting(true);
     setMessage("");
-    // Pickerで既存フォルダを開く際は、キャッシュされた期限切れトークンを使わず
-    // ユーザーのクリック操作からGoogleに新しいトークンを要求する。
+    // ユーザー操作から新しいGoogleトークンを要求し、期限切れのキャッシュを使わない。
     tokenClientRef.current.requestAccessToken({ prompt: refreshToken ? "" : profile ? "" : "consent" });
+    return true;
   };
 
   const chooseFolder = () => {
@@ -151,10 +185,28 @@ export default function StoreDriveSettings() {
       setMessage("Googleログインを読み込み中です。数秒後にもう一度押してください。");
       return;
     }
-    // フォルダの閲覧権限はGoogle Pickerによる明示的な選択から付与する。
-    // 保存済みのトークンを直接Pickerへ渡すと期限切れでも再認証されない。
     pendingPickerRef.current = true;
-    connectGoogle(true);
+    if (!connectGoogle(true)) pendingPickerRef.current = false;
+  };
+
+  const submitNewFolder = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const name = newFolderName.trim();
+    if (!name || name.length > 255) {
+      setMessage("フォルダ名を1〜255文字で入力してください。");
+      return;
+    }
+    if (!tokenClientRef.current) {
+      setMessage("Googleログインを読み込み中です。数秒後にもう一度押してください。");
+      return;
+    }
+    // すでに選択したフォルダの中に作る。マイドライブ選択中ならrootに作る。
+    pendingFolderRef.current = { name, parentId: settings.driveFolderId || DEFAULT_DRIVE_FOLDER_ID };
+    setCreatingFolder(true);
+    if (!connectGoogle(true)) {
+      pendingFolderRef.current = null;
+      setCreatingFolder(false);
+    }
   };
 
   const useMyDrive = () => {
@@ -168,6 +220,9 @@ export default function StoreDriveSettings() {
   const logout = () => {
     revokeGoogleToken(accessTokenRef.current);
     accessTokenRef.current = "";
+    pendingPickerRef.current = false;
+    pendingFolderRef.current = null;
+    setCreatingFolder(false);
     setProfile(null);
     saveProfile(null);
     setMessage("この端末のログイン表示を解除しました。");
@@ -249,20 +304,51 @@ export default function StoreDriveSettings() {
             ) : null}
             <button
               type="button"
+              className={styles.folderResetButton}
+              onClick={() => setShowNewFolder((current) => !current)}
+              disabled={!ready || connecting || creatingFolder}
+              aria-expanded={showNewFolder}
+            >
+              ＋ 新しいフォルダ
+            </button>
+            <button
+              type="button"
               className={styles.folderPickerButton}
               onClick={chooseFolder}
-              disabled={!ready || pickerOpening || connecting}
+              disabled={!ready || pickerOpening || connecting || creatingFolder}
             >
               {pickerOpening ? "開いています…" : "フォルダを選ぶ"}
             </button>
           </div>
         </div>
 
-        {message ? <p className={styles.message}>{message}</p> : null}
+        {showNewFolder ? (
+          <form className={styles.newFolderForm} onSubmit={submitNewFolder}>
+            <label htmlFor="digil-new-folder-name">「{settings.driveFolder}」の中に作成するフォルダ名</label>
+            <div className={styles.newFolderControls}>
+              <input
+                id="digil-new-folder-name"
+                type="text"
+                autoComplete="off"
+                maxLength={255}
+                placeholder="例：2026年の議事録"
+                value={newFolderName}
+                onChange={(event) => setNewFolderName(event.target.value)}
+                disabled={connecting || creatingFolder}
+                required
+              />
+              <button type="submit" className={styles.folderPickerButton} disabled={!newFolderName.trim() || connecting || creatingFolder}>
+                {creatingFolder ? "作成中…" : "作成して保存先に設定"}
+              </button>
+            </div>
+          </form>
+        ) : null}
+
+        {message ? <p className={styles.message} role="status">{message}</p> : null}
         <p className={styles.driveFootnote}>
           {GOOGLE_PICKER_API_KEY
-            ? "フォルダ選択はGoogle Drive Pickerを使います。Drive権限は drive.file のみで、DIGIL CLOUDが作ったファイルと、あなたがPickerで選んだ保存先だけを扱います。"
-            : "保存先の初期値はマイドライブ直下です。フォルダ選択UIは実装済みで、Google Picker APIキーを設定すると利用できるようになります。"}
+            ? "フォルダ選択では既存ファイルも表示しますが、保存先に指定できるのはフォルダだけです。新しいフォルダは現在の保存先の中に作成します。Drive権限は drive.file のみです。"
+            : "保存先の初期値はマイドライブ直下です。フォルダ選択UIはGoogle Picker APIキーを設定すると利用できます。"}
         </p>
       </div>
     </section>
