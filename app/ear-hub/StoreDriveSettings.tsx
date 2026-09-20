@@ -68,17 +68,22 @@ export default function StoreDriveSettings() {
   const launchFolderPicker = useCallback(
     async (token: string) => {
       if (!GOOGLE_PICKER_API_KEY) {
-        setMessage("Google Drive Picker用のAPIキーがまだ設定されていません。");
+        setMessage("保存先フォルダを選ぶ機能は準備中です。管理者によるGoogle Picker APIキーの設定が必要です。");
         return;
       }
       setPickerOpening(true);
       setMessage("");
-      const opened = await openDriveFolderPicker(token, (folder) => {
-        updateDriveSettings({ driveFolder: folder.name, driveFolderId: folder.id });
-        setMessage(`保存先を「${folder.name}」に変更しました。`);
-      });
-      setPickerOpening(false);
-      if (!opened) setMessage("Googleドライブのフォルダ選択を開けませんでした。");
+      try {
+        const opened = await openDriveFolderPicker(token, (folder) => {
+          updateDriveSettings({ driveFolder: folder.name, driveFolderId: folder.id });
+          setMessage(`保存先を「${folder.name}」に変更しました。次回の議事録からこのフォルダへ保存します。`);
+        });
+        if (!opened) setMessage("Googleドライブのフォルダ選択を開けませんでした。画面を再読み込みしてお試しください。");
+      } catch {
+        setMessage("Googleドライブのフォルダ選択を開けませんでした。画面を再読み込みしてお試しください。");
+      } finally {
+        setPickerOpening(false);
+      }
     },
     [updateDriveSettings],
   );
@@ -121,7 +126,7 @@ export default function StoreDriveSettings() {
     });
   }, [googleReady, launchFolderPicker]);
 
-  const connectGoogle = () => {
+  const connectGoogle = (refreshToken = false) => {
     if (!GOOGLE_CLIENT_ID) {
       setMessage("Google OAuth Client ID が設定されていません。");
       return;
@@ -132,21 +137,24 @@ export default function StoreDriveSettings() {
     }
     setConnecting(true);
     setMessage("");
-    tokenClientRef.current.requestAccessToken({ prompt: profile ? "" : "consent" });
+    // Pickerで既存フォルダを開く際は、キャッシュされた期限切れトークンを使わず
+    // ユーザーのクリック操作からGoogleに新しいトークンを要求する。
+    tokenClientRef.current.requestAccessToken({ prompt: refreshToken ? "" : profile ? "" : "consent" });
   };
 
-  const chooseFolder = async () => {
+  const chooseFolder = () => {
     if (!GOOGLE_PICKER_API_KEY) {
-      setMessage("フォルダ選択の準備中です。Google Picker APIキーを設定するとDriveのフォルダ画面を開けます。");
+      setMessage("保存先フォルダを選ぶ機能は準備中です。管理者によるGoogle Picker APIキーの設定が必要です。");
       return;
     }
-    const token = accessTokenRef.current || getGoogleSessionToken();
-    if (token) {
-      await launchFolderPicker(token);
+    if (!tokenClientRef.current) {
+      setMessage("Googleログインを読み込み中です。数秒後にもう一度押してください。");
       return;
     }
+    // フォルダの閲覧権限はGoogle Pickerによる明示的な選択から付与する。
+    // 保存済みのトークンを直接Pickerへ渡すと期限切れでも再認証されない。
     pendingPickerRef.current = true;
-    connectGoogle();
+    connectGoogle(true);
   };
 
   const useMyDrive = () => {
@@ -197,7 +205,7 @@ export default function StoreDriveSettings() {
             </div>
           </div>
           <div className={styles.accountActions}>
-            <button type="button" className={styles.connectButton} onClick={connectGoogle} disabled={connecting || !ready}>
+            <button type="button" className={styles.connectButton} onClick={() => connectGoogle()} disabled={connecting || !ready}>
               {connecting ? "接続中…" : profile ? "Googleを再接続" : "Googleでログイン"}
             </button>
             {profile ? <button type="button" className={styles.logoutButton} onClick={logout}>ログアウト</button> : null}
@@ -242,8 +250,8 @@ export default function StoreDriveSettings() {
             <button
               type="button"
               className={styles.folderPickerButton}
-              onClick={() => void chooseFolder()}
-              disabled={!ready || pickerOpening}
+              onClick={chooseFolder}
+              disabled={!ready || pickerOpening || connecting}
             >
               {pickerOpening ? "開いています…" : "フォルダを選ぶ"}
             </button>
