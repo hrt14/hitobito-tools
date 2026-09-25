@@ -32,16 +32,19 @@
 - [ ] 本番デプロイして `https://hitobito.jp/links` を確認（`AGENTS.md` の Deployment 手順）
 - [ ] SNS アカウント取得、`marketing/README.md` にハンドルを記入
 
-## Phase 1 — Habit Planet を独立 repo へ（最優先）
+## Phase 1 — Habit Planet を独立 repo へ（最優先・準備済み）
 
 判断基準（課金・認証・独自DB → 独立 repo）に当てはまるため、`hrt14/habit-planet`（private）へ移す。
 
-1. `feat/habit-planet-cloudflare` が本番に出ているコードと一致するかを確認する（Cloudflare の最新デプロイと `wrangler.jsonc` を照合）。
-2. `git subtree split -P standalone/habit-planet feat/habit-planet-cloudflare` で履歴付きのまま切り出し、`hrt14/habit-planet` の `main` にする。
-3. 未マージの `habit-planet` 系ブランチ（約40本）を「新 repo に持っていく／既に取り込み済み／捨てる」に仕分ける。持っていくものは新 repo へ cherry-pick する。
-4. 以後のデプロイは新 repo の `main` から行う。`wrangler.jsonc` の Worker 名・D1・ドメインは**変えない**（コードの置き場所だけを変える）。
-5. hitobito-games 側には `standalone/habit-planet` を置かず、ブランチは新 repo での本番デプロイ確認後に削除する。
-6. 台帳の `repo` / `path` / `branch` を更新する。
+- 移行ツール：hitobito-games `ops/habit-planet-migration/`（`migrate.sh`）。`feat/habit-planet-cloudflare` の `standalone/habit-planet` を履歴ごと切り出し、ワークフローをルートへ移し、本番デプロイと本番チェックを repository variable `HP_DEPLOY_ENABLED` で止めた状態で作る。
+- 検証済み（2026-09-25）：`npm run check` 16件、PR ブラウザスイート11件がすべて新構成で PASS。
+- 切り替え手順・ブランチ仕分け：同ディレクトリの `MIGRATION.md`。Worker・D1・ドメイン・Stripe・Firebase は変えず、「どのリポジトリからデプロイするか」だけを切り替える。
+
+残り：
+- [ ] GitHub で空の private repo `hrt14/habit-planet` を作成（オーナー作業）
+- [ ] 切り替え前に `feat/habit-planet-cloudflare` へのマージを凍結 → `migrate.sh` 再実行 → push
+- [ ] Environment `habit-planet-cloudflare` の secrets 登録、旧デプロイ停止、`HP_DEPLOY_ENABLED=true`、手動デプロイで確認
+- [ ] 1週間後に hitobito-games 側の `standalone/habit-planet`・ワークフロー・habit-planet 系ブランチを削除、台帳を更新
 
 ## Phase 2 — ドメインの役割を明文化
 
