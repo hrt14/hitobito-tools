@@ -1,0 +1,299 @@
+{
+  "$comment": "hitobito 全サービスの正本台帳。ドメイン・repo・ホスティング・公開状態・SNS発信設定はここだけを更新し、ポータル/リンク集/SNS文面はここから作る。検証: npm run check:products",
+  "version": 1,
+  "updatedAt": "2026-09-25",
+  "brand": {
+    "name": "hitobito",
+    "portal": "https://hitobito.jp/",
+    "linksPage": "https://hitobito.jp/links",
+    "contact": "https://hitobito.jp/contact",
+    "hashtags": [
+      "hitobito"
+    ]
+  },
+  "products": [
+    {
+      "slug": "portal",
+      "name": "hitobito",
+      "category": "portal",
+      "status": "live",
+      "url": "https://hitobito.jp/",
+      "repo": "hrt14/hitobito-tools",
+      "path": "app/page.tsx",
+      "hosting": "vercel",
+      "tagline": "使う。遊ぶ。鍛える。hitobitoの入口。",
+      "marketing": {
+        "promote": false
+      }
+    },
+    {
+      "slug": "tools",
+      "name": "hitobito Tools",
+      "category": "portal",
+      "status": "live",
+      "url": "https://tools.hitobito.jp/",
+      "repo": "hrt14/hitobito-tools",
+      "path": "app/tools",
+      "hosting": "vercel",
+      "tagline": "暮らしや学びの「あと少し」を助ける小さな道具。",
+      "marketing": {
+        "promote": false
+      }
+    },
+    {
+      "slug": "habit-planet",
+      "name": "Habit Planet",
+      "category": "tool",
+      "status": "live",
+      "url": "https://habit-planet.hitobito.jp/",
+      "repo": null,
+      "path": null,
+      "hosting": "cloudflare-worker",
+      "tagline": null,
+      "notes": "ソースがGitHubに無い。Worker `habit-planet`（workers.dev）を hitobito-tools/proxy.ts が中継。課金用D1あり。docs/ORGANIZATION_ROADMAP.md の Phase 1 で repo 化する。",
+      "marketing": {
+        "promote": true,
+        "series": "habit-planet",
+        "hashtags": [
+          "HabitPlanet",
+          "習慣化"
+        ],
+        "contactApp": "habit-planet"
+      }
+    },
+    {
+      "slug": "habit-egg",
+      "name": "Habit Egg",
+      "category": "tool",
+      "status": "live",
+      "url": "https://habitegg.hitobito.jp/",
+      "repo": "hrt14/habit-egg",
+      "path": null,
+      "hosting": "vercel",
+      "tagline": "習慣を続けると、卵が育つ。",
+      "marketing": {
+        "promote": true,
+        "series": "habit-egg",
+        "hashtags": [
+          "HabitEgg",
+          "習慣化"
+        ]
+      }
+    },
+    {
+      "slug": "life1",
+      "name": "LIFE +1",
+      "category": "tool",
+      "status": "live",
+      "url": "https://life1.hitobito.jp/",
+      "repo": "hrt14/hitobito-tools",
+      "path": "app/life1",
+      "hosting": "vercel",
+      "tagline": "減ったものではなく、人生に増えたものを見る。",
+      "marketing": {
+        "promote": true,
+        "series": "life1",
+        "hashtags": [
+          "LIFE1"
+        ]
+      }
+    },
+    {
+      "slug": "chinese",
+      "name": "瞬間作文",
+      "category": "tool",
+      "status": "live",
+      "url": "https://chinese.hitobito.jp/",
+      "repo": "hrt14/chinese-instant-composition",
+      "path": null,
+      "hosting": "vercel",
+      "tagline": "日本語を見て、すぐ中国語・英語にする。",
+      "marketing": {
+        "promote": true,
+        "series": "chinese",
+        "hashtags": [
+          "瞬間作文",
+          "中国語学習"
+        ]
+      }
+    },
+    {
+      "slug": "digil-cloud",
+      "name": "Digil Cloud",
+      "category": "tool",
+      "status": "beta",
+      "url": "https://dc.hitobito.jp/",
+      "repo": "hrt14/hitobito-tools",
+      "path": "app/ear-hub",
+      "hosting": "vercel",
+      "tagline": null,
+      "notes": "イヤホニャ（hitobito.jp/earhonya）も同じ app/ear-hub を使う。",
+      "marketing": {
+        "promote": false
+      }
+    },
+    {
+      "slug": "2100",
+      "name": "2100",
+      "category": "tool",
+      "status": "live",
+      "url": "https://2100.hitobito.jp/",
+      "repo": "hrt14/hitobito-tools",
+      "path": "app/2100",
+      "hosting": "vercel",
+      "tagline": "まだ存在しない未来を、物語とともに楽しむ2100年のクラウドファンディング。",
+      "marketing": {
+        "promote": false
+      }
+    },
+    {
+      "slug": "play",
+      "name": "hitobito PLAY",
+      "category": "portal",
+      "status": "live",
+      "url": "https://play.hitobito.jp/",
+      "repo": "hrt14/hitobito-games",
+      "path": "apps/*",
+      "hosting": "cloudflare-pages",
+      "tagline": "スマホですぐ遊べる、小さくて変な世界。",
+      "notes": "ゲーム一覧の正本は hitobito-games/scripts/playtest-catalog.mjs。games.hitobito.jp（Vercelポータル）との表記揺れは Phase 3 で統一。",
+      "marketing": {
+        "promote": true,
+        "series": "play",
+        "hashtags": [
+          "hitobitoPLAY",
+          "ブラウザゲーム"
+        ]
+      }
+    },
+    {
+      "slug": "levelup",
+      "name": "LEVEL UP",
+      "category": "levelup",
+      "status": "live",
+      "url": "https://levelup.hitobito.jp/",
+      "repo": "hrt14/hitobito-games",
+      "path": "apps/* (category: levelup)",
+      "hosting": "firebase",
+      "tagline": "考え方の癖を、反射になるまで鍛えるゲーム集。",
+      "notes": "hitobito-tools/app/levelup/** と直下の互換エントリは旧実装。Phase 3 で整理。",
+      "marketing": {
+        "promote": true,
+        "series": "levelup",
+        "hashtags": [
+          "LEVELUP",
+          "思考の癖"
+        ]
+      }
+    },
+    {
+      "slug": "drop",
+      "name": "大河の一滴",
+      "category": "game",
+      "status": "live",
+      "url": "https://drop.hitobito.jp/",
+      "repo": "hrt14/hitobito-tools",
+      "path": "app/drop",
+      "hosting": "vercel",
+      "tagline": "一滴の水になり、地球を何千年も旅する分岐型シミュレーション。",
+      "notes": "ゲームだが hitobito-tools にある。移設は Phase 3 で判断。",
+      "marketing": {
+        "promote": true,
+        "series": "play",
+        "hashtags": [
+          "hitobitoPLAY"
+        ]
+      }
+    },
+    {
+      "slug": "404-kaiki",
+      "name": "404怪異調査クラブ",
+      "category": "game",
+      "status": "live",
+      "url": "https://404.hitobito.jp/",
+      "repo": "hrt14/hitobito-games",
+      "path": "apps/404-kaiki",
+      "hosting": "vercel",
+      "tagline": "中学生3人組で夜の町を歩き、都市伝説を確かめに行く探索型ホラー。",
+      "marketing": {
+        "promote": true,
+        "series": "404-kaiki",
+        "hashtags": [
+          "404怪異調査クラブ",
+          "ホラーゲーム"
+        ]
+      }
+    },
+    {
+      "slug": "working-planet",
+      "name": "Working Planet",
+      "category": "game",
+      "status": "live",
+      "url": "https://working-planet.hitobito.jp/",
+      "repo": "hrt14/working-planet",
+      "path": null,
+      "hosting": "vercel",
+      "tagline": null,
+      "marketing": {
+        "promote": false
+      }
+    },
+    {
+      "slug": "touch-egg",
+      "name": "Touch Egg",
+      "category": "game",
+      "status": "live",
+      "url": "https://touch-egg.hitobito.jp/",
+      "repo": "hrt14/touch-egg",
+      "path": null,
+      "hosting": "unknown",
+      "tagline": null,
+      "marketing": {
+        "promote": false
+      }
+    },
+    {
+      "slug": "swipe-earth",
+      "name": "Swipe Earth",
+      "category": "game",
+      "status": "live",
+      "url": "https://swipe-earth.hitobito.jp/",
+      "repo": "hrt14/swipe-earth",
+      "path": null,
+      "hosting": "unknown",
+      "tagline": null,
+      "marketing": {
+        "promote": false
+      }
+    },
+    {
+      "slug": "osg",
+      "name": "OneShotGames",
+      "category": "game",
+      "status": "live",
+      "url": "https://osg.hitobito.jp/",
+      "repo": "hrt14/hitobito-games",
+      "path": "oneshotgames",
+      "hosting": "firebase",
+      "tagline": null,
+      "marketing": {
+        "promote": false
+      }
+    },
+    {
+      "slug": "contact",
+      "name": "お問い合わせ",
+      "category": "service",
+      "status": "unreleased",
+      "url": "https://contact.hitobito.jp/",
+      "repo": "hrt14/hitobito-support",
+      "path": null,
+      "hosting": "cloudflare-worker",
+      "tagline": "全サービス共通のお問い合わせ窓口。",
+      "notes": "hitobito-tools/standalone/contact は移行前のコピー。本番E2E確認後に削除（Phase 3）。",
+      "marketing": {
+        "promote": false
+      }
+    }
+  ]
+}

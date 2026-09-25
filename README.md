@@ -18,6 +18,13 @@ Habit Egg と中国語瞬間作文は現在それぞれ独立リポジトリで�
 - `hrt14/habit-egg`
 - `hrt14/chinese-instant-composition`
 
+## サービス台帳・マーケティング
+
+- [`registry/products.json`](./registry/products.json) — hitobito 全サービスのドメイン・repo・公開先・発信設定の正本。`npm run check:products` で検証。
+- [`hitobito.jp/links`](./app/links/page.tsx) — SNSプロフィール用リンク集（台帳から生成）。
+- [`marketing/`](./marketing/README.md) — SNS・YouTube の共通運用ルールとテンプレート（アカウントは hitobito に一本化）。
+- [`docs/ORGANIZATION_ROADMAP.md`](./docs/ORGANIZATION_ROADMAP.md) — リポジトリ・ドメイン整理の段階計画。
+
 ## デプロイ運用
 
 ### LEVEL UP
