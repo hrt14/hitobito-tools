@@ -46,11 +46,11 @@
       "category": "tool",
       "status": "live",
       "url": "https://habit-planet.hitobito.jp/",
-      "repo": "hrt14/hitobito-games",
-      "path": "standalone/habit-planet",
+      "repo": "hrt14/habit-planet",
+      "path": null,
       "hosting": "cloudflare-worker",
       "tagline": "続けるほど、あなたの惑星が育つ。毎日の達成が、惑星の成長になる。",
-      "notes": "hitobito の本命習慣アプリ（Habit Egg の後継・別構成）。Cloudflare Workers + D1 + Firebase Auth（Googleログインのみ）+ Stripe（Pro 月額500円）。ソースは hitobito-games の main ではなく branch 側にある。Vercel の habit-planet-proxy と hitobito-tools/proxy.ts が Worker へ中継。",
+      "notes": "hitobito の本命習慣アプリ（Habit Egg の後継・別構成）。Cloudflare Workers + D1 + Firebase Auth（Googleログインのみ）+ Stripe（Pro 月額500円）。2026-09-25 に hitobito-games から独立 repo へ移行し、main への push で本番デプロイ。Vercel の habit-planet-proxy と hitobito-tools/proxy.ts が Worker へ中継。",
       "marketing": {
         "promote": true,
         "series": "habit-planet",
@@ -59,8 +59,7 @@
           "習慣化"
         ],
         "contactApp": "habit-planet"
-      },
-      "branch": "feat/habit-planet-cloudflare"
+      }
     },
     {
       "slug": "habit-egg",
