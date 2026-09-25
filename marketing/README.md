@@ -21,6 +21,8 @@ hitobito の全サービス（Tools / Games / LEVEL UP）で共通して使う�
 | X | 未取得 | 新作告知・開発ログ | `https://hitobito.jp/links?s=x` |
 | TikTok | 未取得 | ショート（YouTube Shortsと同一素材） | `https://hitobito.jp/links?s=tiktok` |
 | Instagram | 未取得 | リール（同一素材）＋画像カルーセル | `https://hitobito.jp/links?s=instagram` |
+| Threads | 要確認（既存があれば記入） | X と同じ告知・開発ログ | `https://hitobito.jp/links?s=threads` |
+| note | 要確認（既存があれば記入） | 作った理由・使い方の記事 | `https://hitobito.jp/links?s=note` |
 
 アカウントの認証情報（パスワード、2FA、復旧コード）は**このリポジトリに書かない**（public repo）。パスワードマネージャーで管理する。
 
@@ -42,6 +44,10 @@ hitobito の全サービス（Tools / Games / LEVEL UP）で共通して使う�
 3. `series/<series>.md` を `series/habit-planet.md` をひな形に作る。
 4. `templates/launch-post.md` の告知セットを出す。
 5. YouTube に同名の再生リストを作る。
+
+## 始める順番
+
+Habit Planet の「最初の100人は広告費ゼロ」の方針（`series/habit-planet.md`）に合わせ、**X / Threads と note を先に動かし、YouTube・TikTok・Instagram は同じ画面収録素材を再利用して後から足す**。LEVEL UP のように共有・検索でプロダクト自身が人を連れてくるものは、SNS の本数よりアプリ内の共有導線を優先する。
 
 ## 運用リズム（最初の3か月）
 

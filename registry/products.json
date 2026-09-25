@@ -6,7 +6,7 @@
     "name": "hitobito",
     "portal": "https://hitobito.jp/",
     "linksPage": "https://hitobito.jp/links",
-    "contact": "https://hitobito.jp/contact",
+    "contact": "https://contact.hitobito.jp/",
     "hashtags": [
       "hitobito"
     ]
@@ -46,11 +46,11 @@
       "category": "tool",
       "status": "live",
       "url": "https://habit-planet.hitobito.jp/",
-      "repo": null,
-      "path": null,
+      "repo": "hrt14/hitobito-games",
+      "path": "standalone/habit-planet",
       "hosting": "cloudflare-worker",
-      "tagline": null,
-      "notes": "ソースがGitHubに無い。Worker `habit-planet`（workers.dev）を hitobito-tools/proxy.ts が中継。課金用D1あり。docs/ORGANIZATION_ROADMAP.md の Phase 1 で repo 化する。",
+      "tagline": "続けるほど、あなたの惑星が育つ。毎日の達成が、惑星の成長になる。",
+      "notes": "hitobito の本命習慣アプリ（Habit Egg の後継・別構成）。Cloudflare Workers + D1 + Firebase Auth（Googleログインのみ）+ Stripe（Pro 月額500円）。ソースは hitobito-games の main ではなく branch 側にある。Vercel の habit-planet-proxy と hitobito-tools/proxy.ts が Worker へ中継。",
       "marketing": {
         "promote": true,
         "series": "habit-planet",
@@ -59,7 +59,8 @@
           "習慣化"
         ],
         "contactApp": "habit-planet"
-      }
+      },
+      "branch": "feat/habit-planet-cloudflare"
     },
     {
       "slug": "habit-egg",
@@ -72,13 +73,9 @@
       "hosting": "vercel",
       "tagline": "習慣を続けると、卵が育つ。",
       "marketing": {
-        "promote": true,
-        "series": "habit-egg",
-        "hashtags": [
-          "HabitEgg",
-          "習慣化"
-        ]
-      }
+        "promote": false
+      },
+      "notes": "Habit Planet を本命版とし、Habit Egg の良い UX を Habit Planet へ移植中。新規の発信は Habit Planet を優先。"
     },
     {
       "slug": "life1",
@@ -147,6 +144,21 @@
       }
     },
     {
+      "slug": "games",
+      "name": "hitobito Games",
+      "category": "portal",
+      "status": "live",
+      "url": "https://games.hitobito.jp/",
+      "repo": "hrt14/hitobito-games",
+      "path": "index.html",
+      "hosting": "vercel",
+      "tagline": null,
+      "notes": "ゲームの入口ポータル。実プレイは play.hitobito.jp（Cloudflare Pages）。",
+      "marketing": {
+        "promote": false
+      }
+    },
+    {
       "slug": "play",
       "name": "hitobito PLAY",
       "category": "portal",
@@ -156,7 +168,7 @@
       "path": "apps/*",
       "hosting": "cloudflare-pages",
       "tagline": "スマホですぐ遊べる、小さくて変な世界。",
-      "notes": "ゲーム一覧の正本は hitobito-games/scripts/playtest-catalog.mjs。games.hitobito.jp（Vercelポータル）との表記揺れは Phase 3 で統一。",
+      "notes": "通常ゲームの実プレイ側。games.hitobito.jp は入口ポータル（Vercel）。ゲーム一覧の正本は hitobito-games/scripts/playtest-catalog.mjs。",
       "marketing": {
         "promote": true,
         "series": "play",
@@ -236,7 +248,8 @@
       "tagline": null,
       "marketing": {
         "promote": false
-      }
+      },
+      "notes": "主力作品として Vercel で独立運用。通常ゲームの Cloudflare Pages 一括配信に混ぜない。"
     },
     {
       "slug": "touch-egg",
@@ -246,7 +259,7 @@
       "url": "https://touch-egg.hitobito.jp/",
       "repo": "hrt14/touch-egg",
       "path": null,
-      "hosting": "unknown",
+      "hosting": "vercel",
       "tagline": null,
       "marketing": {
         "promote": false
@@ -284,13 +297,13 @@
       "slug": "contact",
       "name": "お問い合わせ",
       "category": "service",
-      "status": "unreleased",
+      "status": "live",
       "url": "https://contact.hitobito.jp/",
       "repo": "hrt14/hitobito-support",
       "path": null,
       "hosting": "cloudflare-worker",
       "tagline": "全サービス共通のお問い合わせ窓口。",
-      "notes": "hitobito-tools/standalone/contact は移行前のコピー。本番E2E確認後に削除（Phase 3）。",
+      "notes": "2026-09-21 本番E2E確認済み。hitobito-tools/standalone/contact は移行元コピーで削除可能（Phase 3）。",
       "marketing": {
         "promote": false
       }

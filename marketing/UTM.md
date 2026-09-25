@@ -9,7 +9,7 @@ SNS・動画から hitobito のサービスへ貼るリンクには、必ず次�
 | `utm_campaign` | `registry/products.json` の `marketing.series` | `habit-planet` |
 | `utm_content` | 投稿の識別子 `YYYYMMDD-短い名前` | `20261001-first-planet` |
 
-`utm_source` の値：`youtube` `x` `tiktok` `instagram` `threads` `note` `links`
+`utm_source` の値：`youtube` `x` `tiktok` `instagram` `threads` `note` `directory`（Webアプリ掲載サイト） `links`
 
 一覧は `lib/products.ts` の `UTM_SOURCES` と同じ。増やすときは両方を更新する。
 

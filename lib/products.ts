@@ -13,6 +13,7 @@ export type Product = {
   path: string | null;
   hosting: string;
   tagline: string | null;
+  branch?: string;
   notes?: string;
   marketing: {
     promote: boolean;
@@ -34,7 +35,7 @@ export function promotedProducts(): Product[] {
 }
 
 // SNS/動画から各サービスへ送るリンクの UTM 規約。詳細は marketing/UTM.md。
-export const UTM_SOURCES = ["youtube", "x", "tiktok", "instagram", "threads", "note", "links"] as const;
+export const UTM_SOURCES = ["youtube", "x", "tiktok", "instagram", "threads", "note", "directory", "links"] as const;
 export type UtmSource = (typeof UTM_SOURCES)[number];
 
 export function isUtmSource(value: unknown): value is UtmSource {
