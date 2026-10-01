@@ -241,6 +241,9 @@ export default function MinutesPage() {
       attemptRef.current += 1;
       listener.stop();
       pcListenerRef.current?.stop();
+      const recording = recordingRef.current;
+      if (recording?.recorder.state !== "inactive") recording?.recorder.stop();
+      recordingRef.current = null;
       captureStreamsRef.current.forEach((stream) => stream.getTracks().forEach((track) => track.stop()));
       captureStreamsRef.current = [];
       pcListenerRef.current = null;
@@ -315,6 +318,17 @@ export default function MinutesPage() {
         pcAudio = display.getAudioTracks()[0];
         if (!pcAudio) throw new Error("PC音声がありません。共有画面で『タブの音声を共有』をONにして開始し直してください。");
       }
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("このブラウザはマイク録音に対応していません。Chrome PCでお試しください。");
+      }
+      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (attempt !== attemptRef.current) {
+        micStream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      captureStreamsRef.current.push(micStream);
+      startAudioRecording(micStream, pcAudio);
+
       const createdAt = Date.now();
       sessionRef.current = { id: `${createdAt}-${Math.random().toString(36).slice(2, 9)}`, createdAt, title: sessionTitle(createdAt), lines: [] };
       setLiveLines([]);
@@ -344,6 +358,7 @@ export default function MinutesPage() {
       setNotice(captureMode === "both" ? "自分のマイクとPC音声を別々に文字起こししています。" : "自分のマイクを文字起こししています。");
     } catch (cause) {
       attemptRef.current += 1;
+      await stopAudioRecording();
       releaseCapture();
       sessionRef.current = null;
       setRunning(false);
@@ -373,32 +388,61 @@ export default function MinutesPage() {
 
   const stop = async () => {
     attemptRef.current += 1;
+    const audioPromise = stopAudioRecording();
     releaseCapture();
     setRunning(false);
     setBusy(false);
     const session = sessionRef.current;
     sessionRef.current = null;
-    if (!session?.lines.length) {
-      setNotice("発言がありませんでした。記録は作成していません。マイクとPC音声の共有状態をご確認ください。");
+    const audioBlob = await audioPromise;
+
+    if (!session) {
+      setNotice("記録セッションを確認できませんでした。");
       return;
     }
-    let record: SavedMinutes = { id: session.id, title: session.title, createdAt: session.createdAt, transcript: session.lines.join("\n"), summary: "" };
+
+    let hasRecording = false;
+    if (audioBlob) {
+      try {
+        await saveMinutesRecording(session.id, audioBlob);
+        hasRecording = true;
+      } catch {
+        setError("録音をこの端末に保存できませんでした。文字起こしは引き続き保存します。");
+      }
+    }
+
+    if (!session.lines.length && !hasRecording) {
+      setNotice("発言と録音データがありませんでした。マイクとPC音声の共有状態をご確認ください。");
+      return;
+    }
+
+    let record: SavedMinutes = {
+      id: session.id,
+      title: session.title,
+      createdAt: session.createdAt,
+      transcript: session.lines.join("\n"),
+      summary: "",
+      hasRecording,
+      recordingMimeType: audioBlob?.type,
+    };
     persistRecord(record);
-    setNotice("自分のマイク・PC音声のラベル付き文字起こしをこの端末に保存しました。");
+    setNotice(hasRecording ? "文字起こしと録音をこの端末に保存しました。" : "文字起こしをこの端末に保存しました。");
+
     if (record.transcript.trim().length >= 20) {
       setSummarizing(true);
       try {
         record = (await summarize(record)) || record;
       } catch (cause) {
-        setError(`${cause instanceof Error ? cause.message : "要約に失敗しました。"} 文字起こしは端末に保存済みです。`);
-        setNotice("要約の再試行、または「Googleに保存」から文字起こしの保存ができます。");
+        setError(`${cause instanceof Error ? cause.message : "要約に失敗しました。"} 文字起こしと録音は端末に保存済みです。`);
+        setNotice("要約の再試行、または「Googleに保存」から保存できます。");
+        if (settingsRef.current.driveEnabled) await saveDoc(record);
         return;
       } finally {
         setSummarizing(false);
       }
     }
     if (settingsRef.current.driveEnabled) await saveDoc(record);
-    else setNotice("議事録はこの端末に保存済みです。Googleへの保存はOFFです。");
+    else setNotice(hasRecording ? "議事録と録音はこの端末に保存済みです。Googleへの保存はOFFです。" : "議事録はこの端末に保存済みです。Googleへの保存はOFFです。");
   };
   stopRef.current = stop;
 
