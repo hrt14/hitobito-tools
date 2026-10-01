@@ -32,8 +32,14 @@ export type SavedMinutes = {
   createdAt: number;
   transcript: string;
   summary: string;
-  /** ドライブへ保存済みなら、そのファイルへのリンク */
+  /** Googleドキュメントへ保存済みなら、そのファイルへのリンク */
   driveLink?: string;
+  /** この端末のIndexedDBに録音があるか */
+  hasRecording?: boolean;
+  /** 録音ファイルのMIME type */
+  recordingMimeType?: string;
+  /** Google Driveへ録音を保存済みなら、そのファイルへのリンク */
+  recordingDriveLink?: string;
 };
 
 function read<T>(key: string): T | null {

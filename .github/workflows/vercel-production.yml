@@ -51,7 +51,7 @@ jobs:
         run: npm ci
 
       - name: Check DIGIL CLOUD code
-        run: npx eslint app/ear-hub/MultilingualTranslatePage.tsx app/ear-hub/TwoLanguageTranslatePage.tsx app/ear-hub/MinutesPage.tsx app/ear-hub/minutes-google-docs.ts app/ear-hub/multilingual-languages.ts app/ear-hub/multilingual-translator.ts app/ear-hub/'[module]'/page.tsx
+        run: npx eslint app/ear-hub/MultilingualTranslatePage.tsx app/ear-hub/TwoLanguageTranslatePage.tsx app/ear-hub/MinutesPage.tsx app/ear-hub/minutes-google-docs.ts app/ear-hub/minutes-recording.ts app/ear-hub/multilingual-languages.ts app/ear-hub/multilingual-translator.ts app/ear-hub/'[module]'/page.tsx
 
       - name: Check TypeScript
         run: npx tsc --noEmit
