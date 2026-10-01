@@ -10,12 +10,26 @@ import { isRecognitionSupported, Listener } from "./speech";
 import { PcTrackListener } from "./minutes-pc-listener";
 import { loadAccessCode, loadMinutes, loadSettings, saveAccessCode, saveMinutes, saveSettings, type SavedMinutes } from "./storage";
 import { saveMinutesGoogleDoc } from "./minutes-google-docs";
+import {
+  loadMinutesRecording,
+  preferredRecordingMimeType,
+  recordingExtension,
+  saveMinutesRecording,
+  saveMinutesRecordingGoogleDrive,
+} from "./minutes-recording";
 import styles from "./minutes-page.module.css";
 
 type DriveState = { kind: "saving" | "saved" | "error" | "auth"; message: string };
 type Session = { id: string; title: string; createdAt: number; lines: string[] };
 type Source = "mic" | "pc";
 type CaptureMode = "both" | "mic";
+type RecordingSession = {
+  recorder: MediaRecorder;
+  chunks: Blob[];
+  stream: MediaStream;
+  context?: AudioContext;
+  done: Promise<Blob | null>;
+};
 const SOURCE_LABEL: Record<Source, string> = { mic: "自分のマイク", pc: "PCの音声" };
 
 function sessionTitle(time: number) {
@@ -48,6 +62,8 @@ export default function MinutesPage() {
   const [googleMessage, setGoogleMessage] = useState("");
   const [accessCode, setAccessCode] = useState("");
   const [needsCode, setNeedsCode] = useState(false);
+  const [recordingUrl, setRecordingUrl] = useState("");
+  const [recordingLoading, setRecordingLoading] = useState(false);
 
   const settingsRef = useRef(settings);
   const sessionRef = useRef<Session | null>(null);
@@ -61,6 +77,7 @@ export default function MinutesPage() {
   const pendingDocRef = useRef<SavedMinutes | null>(null);
   const saveDocRef = useRef<((record: SavedMinutes, token?: string) => Promise<void>) | null>(null);
   const inFlightRef = useRef(new Set<string>());
+  const recordingRef = useRef<RecordingSession | null>(null);
 
   const updateSettings = useCallback((patch: Partial<EarHubSettings>) => {
     setSettings((old) => {
