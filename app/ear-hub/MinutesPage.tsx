@@ -97,6 +97,48 @@ export default function MinutesPage() {
     }
   }, []);
 
+  const startAudioRecording = (micStream: MediaStream, pcAudio?: MediaStreamTrack) => {
+    if (typeof MediaRecorder === "undefined") throw new Error("このブラウザは音声録音に対応していません。Chrome PCでお試しください。");
+
+    let stream = new MediaStream(micStream.getAudioTracks());
+    let context: AudioContext | undefined;
+    if (pcAudio) {
+      context = new AudioContext();
+      const destination = context.createMediaStreamDestination();
+      context.createMediaStreamSource(micStream).connect(destination);
+      context.createMediaStreamSource(new MediaStream([pcAudio])).connect(destination);
+      stream = destination.stream;
+    }
+
+    const mimeType = preferredRecordingMimeType();
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    const chunks: Blob[] = [];
+    let resolveDone!: (blob: Blob | null) => void;
+    const done = new Promise<Blob | null>((resolve) => { resolveDone = resolve; });
+
+    recorder.addEventListener("dataavailable", (event) => {
+      if (event.data.size) chunks.push(event.data);
+    });
+    recorder.addEventListener("stop", () => {
+      const type = recorder.mimeType || mimeType || chunks[0]?.type || "audio/webm";
+      const blob = chunks.length ? new Blob(chunks, { type }) : null;
+      stream.getTracks().forEach((track) => track.stop());
+      if (context) void context.close();
+      resolveDone(blob && blob.size ? blob : null);
+    }, { once: true });
+    recorder.start(1000);
+    recordingRef.current = { recorder, chunks, stream, context, done };
+  };
+
+  const stopAudioRecording = async () => {
+    const session = recordingRef.current;
+    if (!session) return null;
+    if (session.recorder.state !== "inactive") session.recorder.stop();
+    const blob = await session.done;
+    if (recordingRef.current === session) recordingRef.current = null;
+    return blob;
+  };
+
   // Keep both input sources as separate, labeled lines in the local draft and Google document.
   const appendLine = useCallback((source: Source, text: string) => {
     const session = sessionRef.current;
@@ -116,19 +158,51 @@ export default function MinutesPage() {
       return;
     }
     inFlightRef.current.add(record.id);
-    setDriveStates((old) => ({ ...old, [record.id]: { kind: "saving", message: "Googleドキュメントへ保存しています…" } }));
+    setDriveStates((old) => ({ ...old, [record.id]: { kind: "saving", message: "議事録と録音をGoogleへ保存しています…" } }));
     try {
-      const result = await saveMinutesGoogleDoc(token, settingsRef.current.driveFolderId, record);
-      if (result.status === "saved") {
-        persistRecord({ ...record, driveLink: result.link });
-        setDriveStates((old) => ({ ...old, [record.id]: { kind: "saved", message: "Googleドキュメントに保存済み。リンクから開けます。" } }));
-        return;
+      let updated = record;
+      const errors: string[] = [];
+
+      if (record.transcript.trim() && !record.driveLink) {
+        const result = await saveMinutesGoogleDoc(token, settingsRef.current.driveFolderId, record);
+        if (result.status === "auth") {
+          tokenRef.current = "";
+          setGoogleConnected(false);
+          setDriveStates((old) => ({ ...old, [record.id]: { kind: "auth", message: result.message } }));
+          return;
+        }
+        if (result.status === "saved") updated = { ...updated, driveLink: result.link };
+        else errors.push(result.message);
       }
-      if (result.status === "auth") {
-        tokenRef.current = "";
-        setGoogleConnected(false);
+
+      if (record.hasRecording && !record.recordingDriveLink) {
+        const blob = await loadMinutesRecording(record.id);
+        if (blob) {
+          const result = await saveMinutesRecordingGoogleDrive(token, settingsRef.current.driveFolderId, record, blob);
+          if (result.status === "auth") {
+            tokenRef.current = "";
+            setGoogleConnected(false);
+            setDriveStates((old) => ({ ...old, [record.id]: { kind: "auth", message: result.message } }));
+            return;
+          }
+          if (result.status === "saved") updated = { ...updated, recordingDriveLink: result.link };
+          else errors.push(result.message);
+        } else {
+          errors.push("この端末の録音データが見つかりませんでした。");
+        }
       }
-      setDriveStates((old) => ({ ...old, [record.id]: { kind: result.status === "auth" ? "auth" : "error", message: result.message } }));
+
+      persistRecord(updated);
+      if (errors.length) {
+        setDriveStates((old) => ({ ...old, [record.id]: { kind: "error", message: errors.join(" ") } }));
+      } else {
+        const message = updated.driveLink && updated.recordingDriveLink
+          ? "Googleドキュメントと録音を保存しました。"
+          : updated.recordingDriveLink
+            ? "録音をGoogle Driveに保存しました。"
+            : "Googleドキュメントに保存しました。";
+        setDriveStates((old) => ({ ...old, [record.id]: { kind: "saved", message } }));
+      }
     } catch (cause) {
       setDriveStates((old) => ({ ...old, [record.id]: { kind: "error", message: cause instanceof Error ? cause.message : "Googleへの保存に失敗しました。" } }));
     } finally {
