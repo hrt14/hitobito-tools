@@ -88,7 +88,7 @@ jobs:
               && grep -Fq '相手の画面' "$translate" \
               && curl --fail --silent --show-error --location --max-time 20 \
               'https://dc.hitobito.jp/minutes' --output "$minutes" \
-              && grep -Fq 'Googleドキュメントに保存' "$minutes" \
+              && grep -Fq 'Googleドキュメント＋録音を保存' "$minutes" \
               && grep -Fq '保存した議事録' "$minutes"; then
               echo 'DIGIL CLOUD: translation and minutes pages returned HTTP 200 with the expected UI.'
               exit 0
