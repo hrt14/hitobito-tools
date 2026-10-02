@@ -470,7 +470,20 @@ export default function MinutesPage() {
     try {
       await navigator.clipboard.writeText(`${record.title}\n\n${record.summary}\n\n## 文字起こし\n${record.transcript}`);
       setNotice("議事録をコピーしました。");
-    } catch { setError("コピーできませんでした。ブラウザのクリップボード権限を確認してください。"); }
+    } catch { setError("議事録をコピーできませんでした。ブラウザのクリップボード権限を確認してください。"); }
+  };
+
+  const copyRecordingUrl = async (record: SavedMinutes) => {
+    if (!record.recordingDriveLink) {
+      setError("Google Drive上の録音URLがまだありません。先に録音をGoogle Driveへ保存してください。");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(record.recordingDriveLink);
+      setNotice("Google Drive上の録音URLをコピーしました。");
+    } catch {
+      setError("録音URLをコピーできませんでした。ブラウザのクリップボード権限を確認してください。");
+    }
   };
 
   const sortedRecords = sortMinutes(records);
@@ -511,6 +524,9 @@ export default function MinutesPage() {
   const activeDocState = selected ? driveStates[selected.id] : undefined;
   const canRetrySummary = Boolean(SUMMARY_ENABLED && selected && !selected.summary && selected.transcript.trim().length >= 20 && !selected.driveLink && !running && !summarizing);
   const isNativeDoc = Boolean(selected?.driveLink?.startsWith("https://docs.google.com/document/"));
+  const driveFolderUrl = settings.driveFolderId && settings.driveFolderId !== "root"
+    ? `https://drive.google.com/drive/folders/${encodeURIComponent(settings.driveFolderId)}`
+    : "https://drive.google.com/drive/my-drive";
 
   return (
     <main className={styles.page}>
@@ -525,8 +541,10 @@ export default function MinutesPage() {
         <div className={styles.layout}>
           <div>
             <section className={styles.panel} aria-label="会議の文字起こし">
-              <div className={styles.row}>
+              <div className={styles.statusRow}>
                 <span className={`${styles.status} ${running ? styles.on : ""}`}>{busy ? "音声共有の準備中" : running ? "文字起こし・録音中" : summarizing ? "議事録を作成中" : "待機中"}</span>
+              </div>
+              <div className={styles.audioSettings}>
                 <label className={styles.field}>入力元
                   <select value={captureMode} disabled={running || busy || summarizing} onChange={(event) => setCaptureMode(event.target.value as CaptureMode)}>
                     <option value="both">自分のマイク + PCの音声</option>
@@ -561,6 +579,9 @@ export default function MinutesPage() {
               <h2>Googleドキュメント＋録音を保存</h2>
               <label className={styles.check}><input type="checkbox" checked={settings.driveEnabled} disabled={!GOOGLE_CLIENT_ID} onChange={(event) => updateSettings({ driveEnabled: event.target.checked })} />会議終了時に自動保存する</label>
               <p className={styles.folder}>保存先：{settings.driveFolder} · <Link className={styles.open} href="/ear-hub#account">フォルダを変更</Link></p>
+              <div className={styles.actions}>
+                <a className={styles.link} href={driveFolderUrl} rel="noreferrer" target="_blank">保存フォルダを開く ↗</a>
+              </div>
               <div className={styles.row}><span className={styles.status}>{googleConnected ? "Google接続済み" : "Google未接続・要確認"}</span><button type="button" className={`${styles.secondary} ${styles.small}`} disabled={!GOOGLE_CLIENT_ID} onClick={() => connectGoogle()}>{googleConnected ? "再接続" : "Googleに接続"}</button></div>
               {!GOOGLE_CLIENT_ID && <p className={`${styles.message} ${styles.error}`}>この環境ではGoogle連携が設定されていません。</p>}
               {googleMessage && <p role="status" className={styles.message}>{googleMessage}</p>}
@@ -571,7 +592,7 @@ export default function MinutesPage() {
             <h2>保存した議事録</h2>
             {records.length === 0 ? <p className={styles.empty}>まだ議事録はありません。会議を開始すると文字起こしがここに残ります。</p> : (
               <>
-                {selected && <div className={styles.detail}><h3>{selected.title}</h3><div className={styles.actions}>{selected.driveLink && <a className={styles.link} href={selected.driveLink} rel="noreferrer" target="_blank">{isNativeDoc ? "Googleドキュメントを開く ↗" : "以前のDriveファイルを開く ↗"}</a>}{selected.recordingDriveLink && <a className={styles.link} href={selected.recordingDriveLink} rel="noreferrer" target="_blank">録音をGoogle Driveで開く ↗</a>}{(!selected.driveLink || (selected.hasRecording && !selected.recordingDriveLink)) && <button type="button" disabled={activeDocState?.kind === "saving" || !GOOGLE_CLIENT_ID} className={`${styles.primary} ${styles.small}`} onClick={() => { if (!tokenRef.current) connectGoogle(selected); else void saveDoc(selected); }}>{activeDocState?.kind === "saving" ? "保存中…" : googleConnected ? "Googleに保存・再試行" : "Googleに接続して保存"}</button>}<button className={`${styles.secondary} ${styles.small}`} type="button" onClick={() => void copyRecord(selected)}>コピー</button>{canRetrySummary && <button className={`${styles.secondary} ${styles.small}`} type="button" onClick={() => void retrySummary(selected)}>要約を再試行</button>}</div>{activeDocState && <p role="status" className={`${styles.message} ${activeDocState.kind === "error" || activeDocState.kind === "auth" ? styles.error : ""}`}>{activeDocState.message}</p>}{!selected.driveLink && !selected.recordingDriveLink && !activeDocState && <p className={styles.note}>Googleへの保存は未確認です。上のボタンで保存してください。</p>}{selected.hasRecording && <><h4>録音</h4>{recordingLoading ? <p className={styles.note}>録音を読み込み中…</p> : recordingUrl ? <><audio className={styles.audio} controls src={recordingUrl} /><div className={styles.actions}><a className={styles.link} href={recordingUrl} download={`${selected.title}_録音.${recordingExtension(selected.recordingMimeType || "")}`}>録音をダウンロード</a></div></> : <p className={styles.note}>この端末の録音データを読み込めませんでした。</p>}</>}<h4>要約・決定事項・ToDo</h4><div className={styles.content}>{selected.summary || "要約機能は現在使用していません。文字起こしと録音は保存されています。"}</div><h4>文字起こし</h4><div className={styles.content}>{selected.transcript || "文字起こしはありません。録音のみ保存されています。"}</div></div>}
+                {selected && <div className={styles.detail}><h3>{selected.title}</h3><div className={styles.actions}><a className={styles.link} href={driveFolderUrl} rel="noreferrer" target="_blank">保存フォルダを開く ↗</a>{selected.driveLink && <a className={styles.link} href={selected.driveLink} rel="noreferrer" target="_blank">{isNativeDoc ? "Googleドキュメントを開く ↗" : "以前のDriveファイルを開く ↗"}</a>}{selected.recordingDriveLink && <a className={styles.link} href={selected.recordingDriveLink} rel="noreferrer" target="_blank">録音をGoogle Driveで開く ↗</a>}{selected.recordingDriveLink && <button className={`${styles.secondary} ${styles.small}`} type="button" onClick={() => void copyRecordingUrl(selected)}>録音URLをコピー</button>}{(!selected.driveLink || (selected.hasRecording && !selected.recordingDriveLink)) && <button type="button" disabled={activeDocState?.kind === "saving" || !GOOGLE_CLIENT_ID} className={`${styles.primary} ${styles.small}`} onClick={() => { if (!tokenRef.current) connectGoogle(selected); else void saveDoc(selected); }}>{activeDocState?.kind === "saving" ? "保存中…" : googleConnected ? "Googleに保存・再試行" : "Googleに接続して保存"}</button>}<button className={`${styles.secondary} ${styles.small}`} type="button" onClick={() => void copyRecord(selected)}>議事録をコピー</button>{canRetrySummary && <button className={`${styles.secondary} ${styles.small}`} type="button" onClick={() => void retrySummary(selected)}>要約を再試行</button>}</div>{activeDocState && <p role="status" className={`${styles.message} ${activeDocState.kind === "error" || activeDocState.kind === "auth" ? styles.error : ""}`}>{activeDocState.message}</p>}{!selected.driveLink && !selected.recordingDriveLink && !activeDocState && <p className={styles.note}>Googleへの保存は未確認です。上のボタンで保存してください。</p>}{selected.hasRecording && <><h4>録音</h4>{recordingLoading ? <p className={styles.note}>録音を読み込み中…</p> : recordingUrl ? <><audio className={styles.audio} controls src={recordingUrl} /><div className={styles.actions}><a className={styles.link} href={recordingUrl} download={`${selected.title}_録音.${recordingExtension(selected.recordingMimeType || "")}`}>録音をダウンロード</a></div></> : <p className={styles.note}>この端末の録音データを読み込めませんでした。</p>}</>}<h4>要約・決定事項・ToDo</h4><div className={styles.content}>{selected.summary || "要約機能は現在使用していません。文字起こしと録音は保存されています。"}</div><h4>文字起こし</h4><div className={styles.content}>{selected.transcript || "文字起こしはありません。録音のみ保存されています。"}</div></div>}
                 <h3 className={styles.historyTitle}>最近の議事録</h3>
                 <ul className={styles.list}>{visibleRecords.map((record) => <li key={record.id}><button type="button" className={styles.record} aria-pressed={selected?.id === record.id} onClick={() => setSelectedId(record.id)}><span><strong>{record.title}</strong><small>{statusDate(record.createdAt)} · {record.transcript.split("\n").filter(Boolean).length} 発言</small></span><span className={`${styles.pill} ${record.driveLink || record.recordingDriveLink ? "" : styles.pending}`}>{record.recordingDriveLink ? "議事録＋録音" : record.hasRecording ? "録音あり・端末保存" : record.driveLink ? "Google保存リンクあり" : "端末に保存"}</span></button></li>)}</ul>
                 {olderRecords.length > 0 && <div className={styles.actions}><button type="button" className={`${styles.secondary} ${styles.small}`} onClick={() => setShowOlderRecords((value) => !value)}>{showOlderRecords ? "11件目以降を隠す" : `過去の議事録（${olderRecords.length}件）を表示`}</button></div>}

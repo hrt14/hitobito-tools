@@ -3,3 +3,9 @@
 .audio{display:block;width:100%;margin-top:10px}
 
 .historyTitle{font-size:15px;margin:18px 0 10px;color:#486453}
+
+.statusRow{display:flex;align-items:center;margin-bottom:12px}
+.audioSettings{display:grid;grid-template-columns:minmax(220px,1.2fr) repeat(2,minmax(170px,1fr));gap:12px;align-items:end}
+.audioSettings .field,.audioSettings .field select{width:100%;min-width:0}
+@media(max-width:900px){.audioSettings{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.audioSettings{grid-template-columns:1fr}}
