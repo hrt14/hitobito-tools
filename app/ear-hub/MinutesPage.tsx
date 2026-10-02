@@ -146,8 +146,7 @@ export default function MinutesPage() {
       if (!blob.size) return;
       const currentSequence = sequence;
       sequence += 1;
-      let write!: Promise<void>;
-      write = appendMinutesRecordingChunk(recordingId, currentSequence, blob, mimeType)
+      const write = appendMinutesRecordingChunk(recordingId, currentSequence, blob, mimeType)
         .catch(() => {
           setError("録音データの一部を端末へ保存できませんでした。空き容量を確認してください。");
         })
