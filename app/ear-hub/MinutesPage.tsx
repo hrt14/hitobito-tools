@@ -166,6 +166,7 @@ export default function MinutesPage() {
       })();
     }, { once: true });
 
+    recorder.start(RECORDING_CHUNK_MS);
     recordingRef.current = {
       recordingId,
       recorder,
@@ -179,7 +180,6 @@ export default function MinutesPage() {
       sequence,
       done,
     };
-    recorder.start(RECORDING_CHUNK_MS);
     return mimeType;
   };
 
