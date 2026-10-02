@@ -689,8 +689,12 @@ export default function MinutesPage() {
                   </select>
                 </label>}
               </div>
-              <p className={styles.note}>オンライン会議のタブを共有すると、そのタブの音声を「PCの音声」として認識・録音します。自分のマイクも同時に録音します。共有画面の「音声を共有」を必ずONにしてください。入力元を区別する機能であり、人物ごとの声を識別する機能ではありません。イヤホン推奨。</p>
-              {running && <div className={styles.row} role="status"><span className={`${styles.status} ${micListening ? styles.on : ""}`}>自分のマイク：{micListening ? "認識中" : "確認中・停止"}</span>{captureMode === "both" && <span className={`${styles.status} ${pcListening ? styles.on : ""}`}>PCの音声：{pcListening ? "認識中" : "確認中・停止"}</span>}</div>}
+              <p className={styles.note}>オンライン会議のタブを共有すると、そのタブの音声を「PCの音声」として認識・録音します。自分のマイクも同時に録音します。録音は約1分ごとにこの端末へ分割保存します。PC音声の共有が切れてもマイク録音は止まりません。必要なら途中でPC音声だけ再共有できます。共有画面の「音声を共有」を必ずONにしてください。イヤホン推奨。</p>
+              {running && <div className={styles.row} role="status">
+                <span className={`${styles.status} ${micListening ? styles.on : ""}`}>自分のマイク：{micListening ? "認識中" : "確認中・停止"}</span>
+                {captureMode === "both" && <span className={`${styles.status} ${pcShareLost ? styles.shareLost : pcListening ? styles.on : ""}`}>PCの音声：{pcShareLost ? "共有切れ" : pcListening ? "認識中" : "確認中・停止"}</span>}
+                {captureMode === "both" && pcShareLost && <button type="button" className={`${styles.secondary} ${styles.small}`} disabled={pcReconnecting} onClick={() => void reconnectPcAudio()}>{pcReconnecting ? "再共有中…" : "PC音声を再共有"}</button>}
+              </div>}
               <div className={styles.live} aria-live="polite">{liveLines.length ? liveLines.join("\n") : running ? "マイク・PC音声から発言を待っています…" : "「開始」を押すと文字起こしが始まります。"}</div>
               {interim.mic && <p className={styles.interim}>自分のマイク・聞き取り中：{interim.mic}</p>}
               {interim.pc && <p className={styles.interim}>PCの音声・聞き取り中：{interim.pc}</p>}
