@@ -167,7 +167,7 @@ function fail(status: number, error: string, message: string) {
 
 export async function POST(request: NextRequest) {
   if (!process.env.ANTHROPIC_API_KEY) {
-    return fail(503, "not_configured", "ANTHROPIC_API_KEY が設定されていません。");
+    return fail(503, "not_configured", "この機能は現在利用できません。");
   }
 
   if (ACCESS_CODE && request.headers.get("x-earhub-code") !== ACCESS_CODE) {
