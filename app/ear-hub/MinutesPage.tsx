@@ -11,10 +11,11 @@ import { PcTrackListener } from "./minutes-pc-listener";
 import { loadAccessCode, loadMinutes, loadSettings, saveAccessCode, saveMinutes, saveSettings, type SavedMinutes } from "./storage";
 import { saveMinutesGoogleDoc } from "./minutes-google-docs";
 import {
+  appendMinutesRecordingChunk,
+  clearMinutesRecordingChunks,
   loadMinutesRecording,
   preferredRecordingMimeType,
   recordingExtension,
-  saveMinutesRecording,
   saveMinutesRecordingGoogleDrive,
 } from "./minutes-recording";
 import styles from "./minutes-page.module.css";
@@ -24,15 +25,22 @@ type Session = { id: string; title: string; createdAt: number; lines: string[] }
 type Source = "mic" | "pc";
 type CaptureMode = "both" | "mic";
 type RecordingSession = {
+  recordingId: string;
   recorder: MediaRecorder;
-  chunks: Blob[];
   stream: MediaStream;
   context?: AudioContext;
+  destination?: MediaStreamAudioDestinationNode;
+  micSource?: MediaStreamAudioSourceNode;
+  pcSource?: MediaStreamAudioSourceNode;
+  mimeType: string;
+  pendingWrites: Set<Promise<void>>;
+  sequence: number;
   done: Promise<Blob | null>;
 };
 const SOURCE_LABEL: Record<Source, string> = { mic: "自分のマイク", pc: "PCの音声" };
 const SUMMARY_ENABLED = false;
 const RECENT_MINUTES_COUNT = 10;
+const RECORDING_CHUNK_MS = 60_000;
 
 function sortMinutes(items: SavedMinutes[]) {
   return [...items].sort((a, b) => b.createdAt - a.createdAt);
@@ -71,6 +79,8 @@ export default function MinutesPage() {
   const [recordingUrl, setRecordingUrl] = useState("");
   const [recordingLoading, setRecordingLoading] = useState(false);
   const [showOlderRecords, setShowOlderRecords] = useState(false);
+  const [pcShareLost, setPcShareLost] = useState(false);
+  const [pcReconnecting, setPcReconnecting] = useState(false);
 
   const settingsRef = useRef(settings);
   const sessionRef = useRef<Session | null>(null);
@@ -104,37 +114,84 @@ export default function MinutesPage() {
     }
   }, []);
 
-  const startAudioRecording = (micStream: MediaStream, pcAudio?: MediaStreamTrack) => {
+  const startAudioRecording = async (recordingId: string, micStream: MediaStream, pcAudio?: MediaStreamTrack) => {
     if (typeof MediaRecorder === "undefined") throw new Error("このブラウザは音声録音に対応していません。Chrome PCでお試しください。");
+
+    await clearMinutesRecordingChunks(recordingId);
 
     let stream = new MediaStream(micStream.getAudioTracks());
     let context: AudioContext | undefined;
+    let destination: MediaStreamAudioDestinationNode | undefined;
+    let micSource: MediaStreamAudioSourceNode | undefined;
+    let pcSource: MediaStreamAudioSourceNode | undefined;
     if (pcAudio) {
       context = new AudioContext();
-      const destination = context.createMediaStreamDestination();
-      context.createMediaStreamSource(micStream).connect(destination);
-      context.createMediaStreamSource(new MediaStream([pcAudio])).connect(destination);
+      destination = context.createMediaStreamDestination();
+      micSource = context.createMediaStreamSource(micStream);
+      micSource.connect(destination);
+      pcSource = context.createMediaStreamSource(new MediaStream([pcAudio]));
+      pcSource.connect(destination);
       stream = destination.stream;
     }
 
-    const mimeType = preferredRecordingMimeType();
-    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-    const chunks: Blob[] = [];
+    const preferredMimeType = preferredRecordingMimeType();
+    const recorder = new MediaRecorder(stream, preferredMimeType ? { mimeType: preferredMimeType } : undefined);
+    const mimeType = recorder.mimeType || preferredMimeType || "audio/webm";
+    const pendingWrites = new Set<Promise<void>>();
+    let sequence = 0;
     let resolveDone!: (blob: Blob | null) => void;
     const done = new Promise<Blob | null>((resolve) => { resolveDone = resolve; });
 
-    recorder.addEventListener("dataavailable", (event) => {
-      if (event.data.size) chunks.push(event.data);
-    });
+    const persistChunk = (blob: Blob) => {
+      if (!blob.size) return;
+      const currentSequence = sequence;
+      sequence += 1;
+      let write!: Promise<void>;
+      write = appendMinutesRecordingChunk(recordingId, currentSequence, blob, mimeType)
+        .catch(() => {
+          setError("録音データの一部を端末へ保存できませんでした。空き容量を確認してください。");
+        })
+        .finally(() => pendingWrites.delete(write));
+      pendingWrites.add(write);
+    };
+
+    recorder.addEventListener("dataavailable", (event) => persistChunk(event.data));
     recorder.addEventListener("stop", () => {
-      const type = recorder.mimeType || mimeType || chunks[0]?.type || "audio/webm";
-      const blob = chunks.length ? new Blob(chunks, { type }) : null;
-      stream.getTracks().forEach((track) => track.stop());
-      if (context) void context.close();
-      resolveDone(blob && blob.size ? blob : null);
+      void (async () => {
+        await Promise.allSettled([...pendingWrites]);
+        stream.getTracks().forEach((track) => track.stop());
+        if (context) await context.close().catch(() => undefined);
+        const blob = await loadMinutesRecording(recordingId).catch(() => null);
+        resolveDone(blob && blob.size ? blob : null);
+      })();
     }, { once: true });
-    recorder.start(1000);
-    recordingRef.current = { recorder, chunks, stream, context, done };
+
+    recordingRef.current = {
+      recordingId,
+      recorder,
+      stream,
+      context,
+      destination,
+      micSource,
+      pcSource,
+      mimeType,
+      pendingWrites,
+      sequence,
+      done,
+    };
+    recorder.start(RECORDING_CHUNK_MS);
+    return mimeType;
+  };
+
+  const connectPcAudioToRecording = (pcAudio: MediaStreamTrack) => {
+    const recording = recordingRef.current;
+    if (!recording?.context || !recording.destination) {
+      throw new Error("PC音声を録音へ再接続できませんでした。");
+    }
+    try { recording.pcSource?.disconnect(); } catch { /* already disconnected */ }
+    const source = recording.context.createMediaStreamSource(new MediaStream([pcAudio]));
+    source.connect(recording.destination);
+    recording.pcSource = source;
   };
 
   const stopAudioRecording = async () => {
@@ -154,7 +211,15 @@ export default function MinutesPage() {
     session.lines.push(`[${time}] ${SOURCE_LABEL[source]}：${text.trim()}`);
     setLiveLines([...session.lines]);
     setInterim((old) => ({ ...old, [source]: "" }));
-    persistRecord({ id: session.id, title: session.title, createdAt: session.createdAt, transcript: session.lines.join("\n"), summary: "" });
+    persistRecord({
+      id: session.id,
+      title: session.title,
+      createdAt: session.createdAt,
+      transcript: session.lines.join("\n"),
+      summary: "",
+      hasRecording: Boolean(recordingRef.current),
+      recordingMimeType: recordingRef.current?.mimeType,
+    });
   }, [persistRecord]);
 
   const saveDoc = useCallback(async (record: SavedMinutes, override?: string) => {
