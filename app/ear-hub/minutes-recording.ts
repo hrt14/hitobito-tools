@@ -2,7 +2,9 @@ import type { SavedMinutes } from "./storage";
 
 const DB_NAME = "digil-minutes-recordings";
 const STORE_NAME = "recordings";
-const DB_VERSION = 1;
+const CHUNK_STORE_NAME = "recordingChunks";
+const CHUNK_INDEX_NAME = "recordingId";
+const DB_VERSION = 2;
 const RECORDING_KEY = "digilMinutesRecordingId";
 
 export type RecordingDriveResult =
@@ -16,18 +18,34 @@ type RecordingRow = {
   createdAt: number;
 };
 
+type RecordingChunkRow = {
+  key: string;
+  recordingId: string;
+  sequence: number;
+  blob: Blob;
+  mimeType: string;
+  createdAt: number;
+};
+
 function openDb() {
   return new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(CHUNK_STORE_NAME)) {
+        const chunks = db.createObjectStore(CHUNK_STORE_NAME, { keyPath: "key" });
+        chunks.createIndex(CHUNK_INDEX_NAME, "recordingId", { unique: false });
+      }
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error("recording-db-open-failed"));
   });
 }
 
+/** 旧形式の1ファイル保存。既存録音との互換性維持用。 */
 export async function saveMinutesRecording(id: string, blob: Blob) {
   const db = await openDb();
   try {
@@ -43,17 +61,81 @@ export async function saveMinutesRecording(id: string, blob: Blob) {
   }
 }
 
+/** 新しい録音を始める前に同じIDの分割データだけを消す。 */
+export async function clearMinutesRecordingChunks(id: string) {
+  const db = await openDb();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(CHUNK_STORE_NAME, "readwrite");
+      const store = transaction.objectStore(CHUNK_STORE_NAME);
+      const index = store.index(CHUNK_INDEX_NAME);
+      const request = index.getAllKeys(IDBKeyRange.only(id));
+      request.onsuccess = () => {
+        for (const key of request.result) store.delete(key);
+      };
+      request.onerror = () => reject(request.error ?? new Error("recording-chunks-read-failed"));
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error ?? new Error("recording-chunks-clear-failed"));
+      transaction.onabort = () => reject(transaction.error ?? new Error("recording-chunks-clear-aborted"));
+    });
+  } finally {
+    db.close();
+  }
+}
+
+/** MediaRecorderの断片を順番付きでIndexedDBへ逐次保存する。 */
+export async function appendMinutesRecordingChunk(
+  id: string,
+  sequence: number,
+  blob: Blob,
+  mimeType: string,
+) {
+  if (!blob.size) return;
+  const db = await openDb();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(CHUNK_STORE_NAME, "readwrite");
+      const row: RecordingChunkRow = {
+        key: `${id}:${String(sequence).padStart(8, "0")}`,
+        recordingId: id,
+        sequence,
+        blob,
+        mimeType: mimeType || blob.type || "audio/webm",
+        createdAt: Date.now(),
+      };
+      transaction.objectStore(CHUNK_STORE_NAME).put(row);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error ?? new Error("recording-chunk-save-failed"));
+      transaction.onabort = () => reject(transaction.error ?? new Error("recording-chunk-save-aborted"));
+    });
+  } finally {
+    db.close();
+  }
+}
+
+async function loadChunkRows(db: IDBDatabase, id: string) {
+  return new Promise<RecordingChunkRow[]>((resolve, reject) => {
+    const transaction = db.transaction(CHUNK_STORE_NAME, "readonly");
+    const request = transaction.objectStore(CHUNK_STORE_NAME).index(CHUNK_INDEX_NAME).getAll(IDBKeyRange.only(id));
+    request.onsuccess = () => resolve((request.result as RecordingChunkRow[]).sort((a, b) => a.sequence - b.sequence));
+    request.onerror = () => reject(request.error ?? new Error("recording-chunks-load-failed"));
+  });
+}
+
 export async function loadMinutesRecording(id: string) {
   const db = await openDb();
   try {
-    return await new Promise<Blob | null>((resolve, reject) => {
+    const legacy = await new Promise<RecordingRow | null>((resolve, reject) => {
       const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get(id);
-      request.onsuccess = () => {
-        const row = request.result as RecordingRow | undefined;
-        resolve(row?.blob instanceof Blob ? row.blob : null);
-      };
+      request.onsuccess = () => resolve((request.result as RecordingRow | undefined) ?? null);
       request.onerror = () => reject(request.error ?? new Error("recording-load-failed"));
     });
+    if (legacy?.blob instanceof Blob) return legacy.blob;
+
+    const chunks = await loadChunkRows(db, id);
+    if (!chunks.length) return null;
+    const mimeType = chunks.find((item) => item.mimeType)?.mimeType || chunks[0]?.blob.type || "audio/webm";
+    return new Blob(chunks.map((item) => item.blob), { type: mimeType });
   } finally {
     db.close();
   }

@@ -11,10 +11,11 @@ import { PcTrackListener } from "./minutes-pc-listener";
 import { loadAccessCode, loadMinutes, loadSettings, saveAccessCode, saveMinutes, saveSettings, type SavedMinutes } from "./storage";
 import { saveMinutesGoogleDoc } from "./minutes-google-docs";
 import {
+  appendMinutesRecordingChunk,
+  clearMinutesRecordingChunks,
   loadMinutesRecording,
   preferredRecordingMimeType,
   recordingExtension,
-  saveMinutesRecording,
   saveMinutesRecordingGoogleDrive,
 } from "./minutes-recording";
 import styles from "./minutes-page.module.css";
@@ -24,15 +25,22 @@ type Session = { id: string; title: string; createdAt: number; lines: string[] }
 type Source = "mic" | "pc";
 type CaptureMode = "both" | "mic";
 type RecordingSession = {
+  recordingId: string;
   recorder: MediaRecorder;
-  chunks: Blob[];
   stream: MediaStream;
   context?: AudioContext;
+  destination?: MediaStreamAudioDestinationNode;
+  micSource?: MediaStreamAudioSourceNode;
+  pcSource?: MediaStreamAudioSourceNode;
+  mimeType: string;
+  pendingWrites: Set<Promise<void>>;
+  sequence: number;
   done: Promise<Blob | null>;
 };
 const SOURCE_LABEL: Record<Source, string> = { mic: "自分のマイク", pc: "PCの音声" };
 const SUMMARY_ENABLED = false;
 const RECENT_MINUTES_COUNT = 10;
+const RECORDING_CHUNK_MS = 60_000;
 
 function sortMinutes(items: SavedMinutes[]) {
   return [...items].sort((a, b) => b.createdAt - a.createdAt);
@@ -71,6 +79,8 @@ export default function MinutesPage() {
   const [recordingUrl, setRecordingUrl] = useState("");
   const [recordingLoading, setRecordingLoading] = useState(false);
   const [showOlderRecords, setShowOlderRecords] = useState(false);
+  const [pcShareLost, setPcShareLost] = useState(false);
+  const [pcReconnecting, setPcReconnecting] = useState(false);
 
   const settingsRef = useRef(settings);
   const sessionRef = useRef<Session | null>(null);
@@ -104,37 +114,83 @@ export default function MinutesPage() {
     }
   }, []);
 
-  const startAudioRecording = (micStream: MediaStream, pcAudio?: MediaStreamTrack) => {
+  const startAudioRecording = async (recordingId: string, micStream: MediaStream, pcAudio?: MediaStreamTrack) => {
     if (typeof MediaRecorder === "undefined") throw new Error("このブラウザは音声録音に対応していません。Chrome PCでお試しください。");
+
+    await clearMinutesRecordingChunks(recordingId);
 
     let stream = new MediaStream(micStream.getAudioTracks());
     let context: AudioContext | undefined;
+    let destination: MediaStreamAudioDestinationNode | undefined;
+    let micSource: MediaStreamAudioSourceNode | undefined;
+    let pcSource: MediaStreamAudioSourceNode | undefined;
     if (pcAudio) {
       context = new AudioContext();
-      const destination = context.createMediaStreamDestination();
-      context.createMediaStreamSource(micStream).connect(destination);
-      context.createMediaStreamSource(new MediaStream([pcAudio])).connect(destination);
+      destination = context.createMediaStreamDestination();
+      micSource = context.createMediaStreamSource(micStream);
+      micSource.connect(destination);
+      pcSource = context.createMediaStreamSource(new MediaStream([pcAudio]));
+      pcSource.connect(destination);
       stream = destination.stream;
     }
 
-    const mimeType = preferredRecordingMimeType();
-    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-    const chunks: Blob[] = [];
+    const preferredMimeType = preferredRecordingMimeType();
+    const recorder = new MediaRecorder(stream, preferredMimeType ? { mimeType: preferredMimeType } : undefined);
+    const mimeType = recorder.mimeType || preferredMimeType || "audio/webm";
+    const pendingWrites = new Set<Promise<void>>();
+    let sequence = 0;
     let resolveDone!: (blob: Blob | null) => void;
     const done = new Promise<Blob | null>((resolve) => { resolveDone = resolve; });
 
-    recorder.addEventListener("dataavailable", (event) => {
-      if (event.data.size) chunks.push(event.data);
-    });
+    const persistChunk = (blob: Blob) => {
+      if (!blob.size) return;
+      const currentSequence = sequence;
+      sequence += 1;
+      const write = appendMinutesRecordingChunk(recordingId, currentSequence, blob, mimeType)
+        .catch(() => {
+          setError("録音データの一部を端末へ保存できませんでした。空き容量を確認してください。");
+        })
+        .finally(() => pendingWrites.delete(write));
+      pendingWrites.add(write);
+    };
+
+    recorder.addEventListener("dataavailable", (event) => persistChunk(event.data));
     recorder.addEventListener("stop", () => {
-      const type = recorder.mimeType || mimeType || chunks[0]?.type || "audio/webm";
-      const blob = chunks.length ? new Blob(chunks, { type }) : null;
-      stream.getTracks().forEach((track) => track.stop());
-      if (context) void context.close();
-      resolveDone(blob && blob.size ? blob : null);
+      void (async () => {
+        await Promise.allSettled([...pendingWrites]);
+        stream.getTracks().forEach((track) => track.stop());
+        if (context) await context.close().catch(() => undefined);
+        const blob = await loadMinutesRecording(recordingId).catch(() => null);
+        resolveDone(blob && blob.size ? blob : null);
+      })();
     }, { once: true });
-    recorder.start(1000);
-    recordingRef.current = { recorder, chunks, stream, context, done };
+
+    recorder.start(RECORDING_CHUNK_MS);
+    recordingRef.current = {
+      recordingId,
+      recorder,
+      stream,
+      context,
+      destination,
+      micSource,
+      pcSource,
+      mimeType,
+      pendingWrites,
+      sequence,
+      done,
+    };
+    return mimeType;
+  };
+
+  const connectPcAudioToRecording = (pcAudio: MediaStreamTrack) => {
+    const recording = recordingRef.current;
+    if (!recording?.context || !recording.destination) {
+      throw new Error("PC音声を録音へ再接続できませんでした。");
+    }
+    try { recording.pcSource?.disconnect(); } catch { /* already disconnected */ }
+    const source = recording.context.createMediaStreamSource(new MediaStream([pcAudio]));
+    source.connect(recording.destination);
+    recording.pcSource = source;
   };
 
   const stopAudioRecording = async () => {
@@ -154,7 +210,15 @@ export default function MinutesPage() {
     session.lines.push(`[${time}] ${SOURCE_LABEL[source]}：${text.trim()}`);
     setLiveLines([...session.lines]);
     setInterim((old) => ({ ...old, [source]: "" }));
-    persistRecord({ id: session.id, title: session.title, createdAt: session.createdAt, transcript: session.lines.join("\n"), summary: "" });
+    persistRecord({
+      id: session.id,
+      title: session.title,
+      createdAt: session.createdAt,
+      transcript: session.lines.join("\n"),
+      summary: "",
+      hasRecording: Boolean(recordingRef.current),
+      recordingMimeType: recordingRef.current?.mimeType,
+    });
   }, [persistRecord]);
 
   const saveDoc = useCallback(async (record: SavedMinutes, override?: string) => {
@@ -294,7 +358,81 @@ export default function MinutesPage() {
     captureStreamsRef.current = [];
     setMicListening(false);
     setPcListening(false);
+    setPcShareLost(false);
+    setPcReconnecting(false);
     setInterim({ mic: "", pc: "" });
+  };
+
+  const markPcShareLost = (attempt: number) => {
+    if (attempt !== attemptRef.current || !sessionRef.current) return;
+    pcListenerRef.current?.stop();
+    pcListenerRef.current = null;
+    const recording = recordingRef.current;
+    try { recording?.pcSource?.disconnect(); } catch { /* already disconnected */ }
+    if (recording) recording.pcSource = undefined;
+    setPcListening(false);
+    setInterim((old) => ({ ...old, pc: "" }));
+    setPcShareLost(true);
+    setNotice("PC音声の共有が切れました。マイクの録音・文字起こしはそのまま継続しています。必要なら「PC音声を再共有」を押してください。");
+  };
+
+  const startPcListener = (pcAudio: MediaStreamTrack, attempt: number) => {
+    pcListenerRef.current?.stop();
+    const pcListener = new PcTrackListener(pcAudio, bcp47(settingsRef.current.partnerLang), {
+      onFinal: (text) => { if (attempt === attemptRef.current) appendLine("pc", text); },
+      onInterim: (text) => { if (attempt === attemptRef.current) setInterim((old) => ({ ...old, pc: text })); },
+      onError: (message) => { if (attempt === attemptRef.current) setError(message); },
+      onListeningChange: (value) => { if (attempt === attemptRef.current) setPcListening(value); },
+      onTrackEnded: () => markPcShareLost(attempt),
+    });
+    pcListenerRef.current = pcListener;
+    pcListener.start();
+  };
+
+  const watchDisplayShare = (display: MediaStream, attempt: number) => {
+    display.getVideoTracks().forEach((track) => track.addEventListener("ended", () => {
+      markPcShareLost(attempt);
+    }, { once: true }));
+  };
+
+  const reconnectPcAudio = async () => {
+    if (!running || captureMode !== "both" || pcReconnecting) return;
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      setError("このブラウザはPC音声の共有に対応していません。");
+      return;
+    }
+    const attempt = attemptRef.current;
+    setPcReconnecting(true);
+    setError("");
+    try {
+      const display = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: { suppressLocalAudioPlayback: false },
+        systemAudio: "include",
+        surfaceSwitching: "include",
+        selfBrowserSurface: "exclude",
+      } as DisplayMediaStreamOptions);
+      if (attempt !== attemptRef.current || !sessionRef.current) {
+        display.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      const pcAudio = display.getAudioTracks()[0];
+      if (!pcAudio) {
+        display.getTracks().forEach((track) => track.stop());
+        throw new Error("PC音声がありません。共有画面で「タブの音声を共有」をONにしてください。");
+      }
+      captureStreamsRef.current.push(display);
+      connectPcAudioToRecording(pcAudio);
+      startPcListener(pcAudio, attempt);
+      watchDisplayShare(display, attempt);
+      setPcShareLost(false);
+      setNotice("PC音声を再共有しました。マイク録音は途切れず継続しています。");
+    } catch (cause) {
+      setPcShareLost(true);
+      setError(cause instanceof Error ? cause.message : "PC音声を再共有できませんでした。");
+    } finally {
+      setPcReconnecting(false);
+    }
   };
 
   const start = async () => {
@@ -303,6 +441,7 @@ export default function MinutesPage() {
     setBusy(true);
     setError("");
     setNotice("");
+    setPcShareLost(false);
     const attempt = ++attemptRef.current;
     try {
       let pcAudio: MediaStreamTrack | undefined;
@@ -312,7 +451,6 @@ export default function MinutesPage() {
           throw new Error("このブラウザはPC音声の共有に対応していません。Chrome PCを使うか、マイクのみを選んでください。");
         }
         setNotice("会議タブを選んで『タブの音声を共有』をONにしてください。マイクは別途認識します。");
-        // Permission prompt must follow the user's direct confirmation click.
         display = await navigator.mediaDevices.getDisplayMedia({
           video: true,
           audio: { suppressLocalAudioPlayback: false },
@@ -334,35 +472,30 @@ export default function MinutesPage() {
         return;
       }
       captureStreamsRef.current.push(micStream);
-      startAudioRecording(micStream, pcAudio);
 
       const createdAt = Date.now();
-      sessionRef.current = { id: `${createdAt}-${Math.random().toString(36).slice(2, 9)}`, createdAt, title: sessionTitle(createdAt), lines: [] };
+      const session: Session = {
+        id: `${createdAt}-${Math.random().toString(36).slice(2, 9)}`,
+        createdAt,
+        title: sessionTitle(createdAt),
+        lines: [],
+      };
+      sessionRef.current = session;
+      await startAudioRecording(session.id, micStream, pcAudio);
+
       setLiveLines([]);
       setInterim({ mic: "", pc: "" });
-      if (pcAudio) {
-        const pcListener = new PcTrackListener(pcAudio, bcp47(settingsRef.current.partnerLang), {
-          onFinal: (text) => { if (attempt === attemptRef.current) appendLine("pc", text); },
-          onInterim: (text) => { if (attempt === attemptRef.current) setInterim((old) => ({ ...old, pc: text })); },
-          onError: (message) => { if (attempt === attemptRef.current) setError(message); },
-          onListeningChange: (value) => { if (attempt === attemptRef.current) setPcListening(value); },
-          onTrackEnded: () => {
-            if (attempt !== attemptRef.current) return;
-            void stopRef.current?.();
-            setError("PC音声の共有が終了したため、議事録を確定しました。");
-          },
-        });
-        pcListenerRef.current = pcListener;
-        pcListener.start();
-        display?.getVideoTracks().forEach((track) => track.addEventListener("ended", () => {
-          if (attempt !== attemptRef.current) return;
-          void stopRef.current?.();
-          setError("共有画面が終了したため、議事録を確定しました。");
-        }, { once: true }));
+      if (pcAudio && display) {
+        startPcListener(pcAudio, attempt);
+        watchDisplayShare(display, attempt);
       }
       listenerRef.current?.start(bcp47(settingsRef.current.myLang));
       setRunning(true);
-      setNotice(captureMode === "both" ? "自分のマイクとPC音声を別々に文字起こししています。" : "自分のマイクを文字起こししています。");
+      setNotice(
+        captureMode === "both"
+          ? "自分のマイクとPC音声を録音・文字起こししています。録音は約1分ごとにこの端末へ分割保存します。"
+          : "自分のマイクを録音・文字起こししています。録音は約1分ごとにこの端末へ分割保存します。",
+      );
     } catch (cause) {
       attemptRef.current += 1;
       await stopAudioRecording();
@@ -395,6 +528,7 @@ export default function MinutesPage() {
 
   const stop = async () => {
     attemptRef.current += 1;
+    const recordingMimeType = recordingRef.current?.mimeType;
     const audioPromise = stopAudioRecording();
     releaseCapture();
     setRunning(false);
@@ -408,15 +542,7 @@ export default function MinutesPage() {
       return;
     }
 
-    let hasRecording = false;
-    if (audioBlob) {
-      try {
-        await saveMinutesRecording(session.id, audioBlob);
-        hasRecording = true;
-      } catch {
-        setError("録音をこの端末に保存できませんでした。文字起こしは引き続き保存します。");
-      }
-    }
+    const hasRecording = Boolean(audioBlob?.size);
 
     if (!session.lines.length && !hasRecording) {
       setNotice("発言と録音データがありませんでした。マイクとPC音声の共有状態をご確認ください。");
@@ -430,7 +556,7 @@ export default function MinutesPage() {
       transcript: session.lines.join("\n"),
       summary: "",
       hasRecording,
-      recordingMimeType: audioBlob?.type,
+      recordingMimeType: audioBlob?.type || recordingMimeType,
     };
     persistRecord(record);
     setNotice(hasRecording ? "文字起こしと録音をこの端末に保存しました。" : "文字起こしをこの端末に保存しました。");
@@ -562,8 +688,12 @@ export default function MinutesPage() {
                   </select>
                 </label>}
               </div>
-              <p className={styles.note}>オンライン会議のタブを共有すると、そのタブの音声を「PCの音声」として認識・録音します。自分のマイクも同時に録音します。共有画面の「音声を共有」を必ずONにしてください。入力元を区別する機能であり、人物ごとの声を識別する機能ではありません。イヤホン推奨。</p>
-              {running && <div className={styles.row} role="status"><span className={`${styles.status} ${micListening ? styles.on : ""}`}>自分のマイク：{micListening ? "認識中" : "確認中・停止"}</span>{captureMode === "both" && <span className={`${styles.status} ${pcListening ? styles.on : ""}`}>PCの音声：{pcListening ? "認識中" : "確認中・停止"}</span>}</div>}
+              <p className={styles.note}>オンライン会議のタブを共有すると、そのタブの音声を「PCの音声」として認識・録音します。自分のマイクも同時に録音します。録音は約1分ごとにこの端末へ分割保存します。PC音声の共有が切れてもマイク録音は止まりません。必要なら途中でPC音声だけ再共有できます。共有画面の「音声を共有」を必ずONにしてください。イヤホン推奨。</p>
+              {running && <div className={styles.row} role="status">
+                <span className={`${styles.status} ${micListening ? styles.on : ""}`}>自分のマイク：{micListening ? "認識中" : "確認中・停止"}</span>
+                {captureMode === "both" && <span className={`${styles.status} ${pcShareLost ? styles.shareLost : pcListening ? styles.on : ""}`}>PCの音声：{pcShareLost ? "共有切れ" : pcListening ? "認識中" : "確認中・停止"}</span>}
+                {captureMode === "both" && pcShareLost && <button type="button" className={`${styles.secondary} ${styles.small}`} disabled={pcReconnecting} onClick={() => void reconnectPcAudio()}>{pcReconnecting ? "再共有中…" : "PC音声を再共有"}</button>}
+              </div>}
               <div className={styles.live} aria-live="polite">{liveLines.length ? liveLines.join("\n") : running ? "マイク・PC音声から発言を待っています…" : "「開始」を押すと文字起こしが始まります。"}</div>
               {interim.mic && <p className={styles.interim}>自分のマイク・聞き取り中：{interim.mic}</p>}
               {interim.pc && <p className={styles.interim}>PCの音声・聞き取り中：{interim.pc}</p>}

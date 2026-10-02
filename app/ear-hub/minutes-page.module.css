@@ -9,3 +9,6 @@
 .audioSettings .field,.audioSettings .field select{width:100%;min-width:0}
 @media(max-width:900px){.audioSettings{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.audioSettings{grid-template-columns:1fr}}
+
+.shareLost{background:#fff4df;color:#8a5a16}
+.shareLost:before{background:#d7922d}
