@@ -15,6 +15,11 @@ export const metadata: Metadata = {
     locale: "ja_JP",
     type: "website",
   },
+  twitter: {
+    card: "summary",
+    title: "hitobito",
+    description: "One Shot Games と Habit Planet。hitobitoがつくっているWebサービス。",
+  },
 };
 
 export default function Home() {
