@@ -1,10 +1,20 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import styles from "./portal.module.css";
 
 export const metadata: Metadata = {
   title: { absolute: "hitobito" },
-  description: "hitobito Tools、Games、LEVEL UP の入口。使う、遊ぶ、鍛える。",
+  description:
+    "hitobitoがつくっているWebサービス。1行書くだけでAIがレトロゲーム風のゲームをつくる One Shot Games と、習慣を記録すると惑星が育つ Habit Planet。",
   alternates: { canonical: "https://hitobito.jp/" },
+  openGraph: {
+    title: "hitobito",
+    description: "One Shot Games と Habit Planet。hitobitoがつくっているWebサービス。",
+    url: "https://hitobito.jp/",
+    siteName: "hitobito",
+    locale: "ja_JP",
+    type: "website",
+  },
 };
 
 export default function Home() {
@@ -14,70 +24,50 @@ export default function Home() {
         <div className={styles.brand}>
           <span>hitobito</span> .jp
         </div>
-        <div className={styles.note}>TOOLS / GAMES / LEVEL UP</div>
       </header>
 
       <section className={styles.hero}>
-        <p className={styles.eyebrow}>SMALL THINGS, NEW EXPERIENCES.</p>
+        <p className={styles.eyebrow}>WHAT WE MAKE</p>
         <h1>
-          使う。
+          つくって、遊ぶ。
           <br />
-          <em>遊ぶ。</em>
-          <br />
-          <span className={styles.levelText}>鍛える。</span>
+          <em>続けて、育てる。</em>
         </h1>
-        <p className={styles.lead}>
-          hitobitoで作っているものを、役割ごとに分けました。日々に使う小さな道具はToolsへ。触って遊ぶ小さな世界はGamesへ。思考の癖をゲームで鍛えるシリーズはLEVEL UPへ。
-        </p>
+        <p className={styles.lead}>hitobitoがつくっている、ふたつのWebサービスです。どちらもスマホからすぐに始められます。</p>
       </section>
 
-      <section className={styles.choiceGrid} aria-label="hitobitoのサービスを選ぶ">
-        <a className={`${styles.choice} ${styles.tools}`} href="https://tools.hitobito.jp/">
-          <div className={styles.choiceTop}>
-            <span>USE / LEARN / LIVE</span>
-            <span className={styles.arrow} aria-hidden="true">↗</span>
+      <section className={styles.products} aria-label="hitobitoのサービス">
+        <a className={`${styles.product} ${styles.osg}`} href="https://osg.hitobito.jp/">
+          <div className={styles.visual}>
+            <Image src="/home/osg.jpg" alt="AIがつくったゲームを遊んでいるスマホ画面" width={630} height={610} priority />
           </div>
-          <div className={styles.visual} aria-hidden="true">
-            <div className={styles.toolsOrb} />
-          </div>
-          <div className={styles.choiceCopy}>
-            <h2>Tools.</h2>
-            <p>Habit Egg、LIFE +1、瞬間作文など。仕事、暮らし、学びに使う小さな道具。</p>
-          </div>
-        </a>
-
-        <a className={`${styles.choice} ${styles.games}`} href="https://play.hitobito.jp/">
-          <div className={styles.choiceTop}>
-            <span>PLAY / EXPLORE / GROW</span>
-            <span className={styles.arrow} aria-hidden="true">↗</span>
-          </div>
-          <div className={styles.visual} aria-hidden="true">
-            <div className={styles.gamesOrb} />
-          </div>
-          <div className={styles.choiceCopy}>
-            <h2>Games.</h2>
-            <p>一滴、CYCLE、水抜き、ワーキングプラネットなど。スマホですぐ遊べる、小さくて変な世界。</p>
+          <div className={styles.copy}>
+            <p className={styles.kicker}>One Shot Games</p>
+            <h2>あなたも今日から、ゲームクリエイター。</h2>
+            <p>
+              「上司の小言をよけて定時で帰る」みたいに、遊びたいゲームを1行書くだけ。AIがその場で、レトロゲーム風のゲームをつくります。できたゲームはそのまま遊べて、URLで友だちにシェアできます。
+            </p>
+            <span className={styles.cta}>ゲームをつくる →</span>
           </div>
         </a>
 
-        <a className={`${styles.choice} ${styles.levelup}`} href="https://levelup.hitobito.jp/">
-          <div className={styles.choiceTop}>
-            <span>TRAIN / REPEAT / CHANGE</span>
-            <span className={styles.arrow} aria-hidden="true">↗</span>
+        <a className={`${styles.product} ${styles.planet}`} href="https://habit-planet.hitobito.jp/">
+          <div className={styles.visual}>
+            <Image src="/home/habit-planet.jpg" alt="緑と海の惑星" width={450} height={630} priority />
           </div>
-          <div className={styles.visual} aria-hidden="true">
-            <div className={styles.levelupOrb} />
-          </div>
-          <div className={styles.choiceCopy}>
-            <h2>Level Up.</h2>
-            <p>着手、分解、集中、断る力、完璧主義からの脱却。遊びながら、考え方の癖を反射になるまで鍛えるゲーム集。</p>
+          <div className={styles.copy}>
+            <p className={styles.kicker}>Habit Planet</p>
+            <h2>今日の小さな行動が、あなただけの惑星になる。</h2>
+            <p>
+              読書・運動・勉強など、続けたいことをタイマーで記録すると、あなたの惑星が育つ習慣アプリ。完成した惑星は星図に集まります。登録なし・無料ですぐに使えます。
+            </p>
+            <span className={styles.cta}>惑星を育てる →</span>
           </div>
         </a>
       </section>
 
       <footer className={styles.bottom}>
-        <span>hitobito.jp</span>
-        <span>tools.hitobito.jp / play.hitobito.jp / levelup.hitobito.jp</span>
+        <span>© hitobito</span>
       </footer>
     </main>
   );
