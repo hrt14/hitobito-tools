@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // hitobito.jp と各サブドメイン(tools / levelup / life1 / drop / 2100 / dc / habit-planet)を
+  // 1つの Worker で配信する。ホスト名ごとの振り分けは middleware.ts。
+  "name": "hitobito-tools",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  // global_fetch_strictly_public: Habit Planet / contact の *.workers.dev へ
+  // middleware から rewrite するために必要(同一アカウントの Worker への fetch を許可する)。
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "hitobito-tools"
+    }
+  ],
+  "observability": { "enabled": true },
+  // 本番ドメインはここでは割り当てない。切り替えは Cloudflare ダッシュボードで
+  // 確認しながら行う(docs/cloudflare-migration.md)。
+  "workers_dev": true,
+  // ダッシュボードで設定した平文の変数(EARHUB_MODEL など)をデプロイで消さない。
+  "keep_vars": true
+}

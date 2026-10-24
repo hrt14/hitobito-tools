@@ -19,7 +19,7 @@ const FUTURE_IMAGE_REWRITES: Record<string, string> = {
   "/2100/monday-zero/monday-zero-problem.jpg": "/2100/monday-zero/problem.svg",
 };
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();
   const { pathname } = request.nextUrl;
 

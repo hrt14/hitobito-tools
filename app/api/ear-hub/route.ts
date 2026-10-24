@@ -47,6 +47,9 @@ let budgetDay = "";
 let budgetUsed = 0;
 
 function clientKey(request: NextRequest) {
+  // Cloudflare では接続元IPが cf-connecting-ip に入る。Vercel では x-forwarded-for。
+  const connecting = request.headers.get("cf-connecting-ip");
+  if (connecting) return connecting;
   const forwarded = request.headers.get("x-forwarded-for") ?? "";
   return forwarded.split(",")[0]?.trim() || "unknown";
 }

@@ -11,5 +11,5 @@ export default defineConfig([
     files: ["app/ear-hub/MinutesPage.tsx"],
     rules: { "react-hooks/set-state-in-effect": "off" },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([".next/**", ".open-next/**", ".wrangler/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);
