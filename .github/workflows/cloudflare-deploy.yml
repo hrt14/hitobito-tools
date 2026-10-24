@@ -79,9 +79,15 @@ jobs:
       - name: Verify workers.dev pages
         env:
           URL: ${{ steps.deploy.outputs.url }}
+        # 公開直後は workers.dev への反映に数十秒かかり 404 が返るので、待ちながら確認する。
         run: |
           for path in / /tools /levelup /life1 /drop /2100 /ear-hub/translate; do
-            code="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20 "$URL$path")"
+            for attempt in $(seq 1 12); do
+              code="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20 "$URL$path")"
+              [ "$code" = "200" ] && break
+              echo "$path $code ($attempt/12)"
+              sleep 10
+            done
             echo "$path $code"
             [ "$code" = "200" ] || exit 1
           done
