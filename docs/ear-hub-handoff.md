@@ -297,7 +297,7 @@ Claude Code のサンドボックスからは Vercel の全ホスト(`api.vercel
 - **`next-env.d.ts` は自動生成物。** `npm run dev` を実行すると参照先が `.next/dev/types/...` に書き換わる。コミットしないこと。正はビルド版(`.next/types/...`)
 - **リポジトリには既存の lint エラーが24件ある**(`app/maa-iika` など)。`npm run lint` は元から失敗する。新規・変更ファイルだけを `npx eslint <path>` で確認すること
 - **`app/tools/page.tsx` のポータルには未掲載。** `/voice-recorder` も同様に未掲載なので、それに倣っている。公開する判断をしたら追加する
-- **`proxy.ts`(ミドルウェア)はホスト名でルーティングを分けている。** `*.vercel.app` はどの条件にも一致せず素通しになるので、Preview URL で `/ear-hub` はそのまま表示される
+- **`middleware.ts`(ミドルウェア)はホスト名でルーティングを分けている。** `*.vercel.app` はどの条件にも一致せず素通しになるので、Preview URL で `/ear-hub` はそのまま表示される
 
 ---
 
