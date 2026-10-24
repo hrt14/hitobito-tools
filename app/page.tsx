@@ -5,7 +5,7 @@ import styles from "./portal.module.css";
 export const metadata: Metadata = {
   title: { absolute: "hitobito — 小さなアイデアから、新しい体験へ" },
   description:
-    "ゲームを作る、アプリを使う、毎日を少し便利にする。One Shot Games、One Shot Apps、価格.hitobito、Habit Planet、みんアプ、Think Noteを紹介するhitobitoのポータル。",
+    "ゲームを作る、アプリを使う、毎日を少し便利にする。One Shot Games、One Shot Apps、近所の価格、Habit Planet、みんアプ、Think Noteを紹介するhitobitoのポータル。",
   alternates: { canonical: "https://hitobito.jp/" },
 };
 
@@ -47,11 +47,11 @@ const apps: PortalApp[] = [
     preview: "apps",
   },
   {
-    name: "価格.hitobito",
+    name: "近所の価格",
     host: "kakaku.hitobito.jp",
     href: "https://kakaku.hitobito.jp/",
     label: "SNAP / COMPARE / SAVE",
-    description: "棚や値札を撮ると、容量単価の安い順に並べ、場所と日時つきで記録する。",
+    description: "値札を撮ると近所のスーパーの最安価格がわかるアプリを開発中。現在は店内の容量単価比較と価格記録に対応。",
     category: "買い物をかしこく",
     tone: "sand",
     preview: "prices",
@@ -158,7 +158,7 @@ function AppPreview({ kind }: { kind: Preview }) {
   if (kind === "prices") {
     return (
       <div className={`${styles.previewFrame} ${styles.previewPrices}`}>
-        <div className={styles.previewBar}><span className={styles.previewDots}>● ● ●</span><span>PRICE COMPARISON</span></div>
+        <div className={styles.previewBar}><span className={styles.previewDots}>● ● ●</span><span>近所の価格</span></div>
         <div className={styles.priceMock}>
           <div className={styles.priceCamera}><span>⌗</span><small>値札を撮って比較</small></div>
           <div className={styles.priceChart}>
