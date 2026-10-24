@@ -1,0 +1,65 @@
+name: Cloudflare switch domains
+
+# hitobito.jp の各ホストを Vercel から Cloudflare Workers へ切り替える(本番に影響する)。
+# 先に mode=check で何が変わるかを確認してから mode=switch を実行する。
+# 戻すときは mode=rollback(hosts で対象を絞れる)。
+#
+# CLOUDFLARE_API_TOKEN には Workers の編集権限に加えて
+# Zone:Read と DNS:Edit(hitobito.jp)が必要。
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "check (変更なし) / switch / rollback"
+        required: true
+        type: choice
+        options: [check, switch, rollback]
+        default: check
+      hosts:
+        description: "対象を絞る場合はカンマ区切り(空なら全部)"
+        required: false
+        default: ""
+      confirm:
+        description: "switch / rollback のときは yes と入力"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hitobito-tools-cloudflare-domains
+  cancel-in-progress: false
+
+jobs:
+  domains:
+    if: github.ref == 'refs/heads/main' && (inputs.mode == 'check' || inputs.confirm == 'yes')
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      MODE: ${{ inputs.mode }}
+      HOSTS: ${{ inputs.hosts }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Run
+        run: node scripts/cloudflare-switch-domains.mjs
+
+      - name: Check pages
+        if: inputs.mode == 'switch'
+        run: |
+          sleep 30
+          for url in https://hitobito.jp/ https://hitobito.jp/contact https://tools.hitobito.jp/ \
+            https://life1.hitobito.jp/ https://drop.hitobito.jp/ https://2100.hitobito.jp/ \
+            https://dc.hitobito.jp/translate https://habit-planet.hitobito.jp/; do
+            headers="$(curl --silent --head --max-time 20 "$url" || true)"
+            code="$(printf '%s' "$headers" | head -1 | awk '{print $2}')"
+            server="$(printf '%s' "$headers" | grep -i '^server:' | tr -d '\r' | awk '{print $2}')"
+            echo "$url ${code:-none} ${server:-?}"
+            echo "- $url: ${code:-none} (server: ${server:-?})" >> "$GITHUB_STEP_SUMMARY"
+          done
