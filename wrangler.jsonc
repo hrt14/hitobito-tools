@@ -21,5 +21,7 @@
   "observability": { "enabled": true },
   // 本番ドメインはここでは割り当てない。切り替えは Cloudflare ダッシュボードで
   // 確認しながら行う(docs/cloudflare-migration.md)。
-  "workers_dev": true
+  "workers_dev": true,
+  // ダッシュボードで設定した平文の変数(EARHUB_MODEL など)をデプロイで消さない。
+  "keep_vars": true
 }
