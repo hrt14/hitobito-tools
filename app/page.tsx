@@ -228,10 +228,6 @@ export default function Home() {
           <p className={styles.eyebrow}><span className={styles.liveDot} /> HITOBITO DIGITAL PLAYGROUND</p>
           <h1 id="hero-title">小さなアイデアを、<br /><em>大きな楽しさに。</em></h1>
           <p className={styles.lead}>つくる。あそぶ。役立てる。<br />暮らしの中の「こんなのあったらいいな」を、触って使えるアプリにしています。</p>
-          <div className={styles.heroActions}>
-            <a className={styles.primary} href="#apps">アプリを見つける <span>↗</span></a>
-            <span className={styles.heroHint}>SCROLL TO EXPLORE ↓</span>
-          </div>
         </div>
         <div className={styles.heroVisual} aria-hidden="true">
           <div className={styles.heroVisualGrid} />
