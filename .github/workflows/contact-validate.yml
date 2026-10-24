@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'standalone/contact/**'
-      - 'proxy.ts'
+      - 'middleware.ts'
       - '.github/workflows/contact-validate.yml'
   workflow_dispatch:
 
@@ -25,7 +25,7 @@ jobs:
       - name: Install portal dependencies
         run: npm ci --ignore-scripts
       - name: Lint contact changes
-        run: npx eslint proxy.ts standalone/contact/worker/index.mjs
+        run: npx eslint middleware.ts standalone/contact/worker/index.mjs
       - name: Repository lint (pre-existing issues reported, non-blocking for contact)
         continue-on-error: true
         run: npm run lint
