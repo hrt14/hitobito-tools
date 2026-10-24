@@ -231,6 +231,141 @@
   opacity: 0.76;
 }
 
+.appGrid {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 22px 0 76px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.appCard {
+  --card-bg: #dff174;
+  --card-fg: #1f241b;
+  --card-shadow: rgb(73 88 34 / 13%);
+  --orb-a: #f7f7c4;
+  --orb-b: #b8d853;
+  --arrow-bg: rgb(255 255 255 / 65%);
+  position: relative;
+  min-height: 340px;
+  padding: 24px;
+  border-radius: 30px;
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--card-bg);
+  color: var(--card-fg);
+  box-shadow: 0 22px 58px var(--card-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.appCard:hover,
+.appCard:focus-visible {
+  transform: translateY(-5px);
+}
+
+.appCard:focus-visible {
+  outline: 3px solid #ff9d61;
+  outline-offset: 5px;
+}
+
+.appCard .arrow {
+  background: var(--arrow-bg);
+  color: inherit;
+}
+
+.lime {
+  --card-bg: #dff174;
+  --card-fg: #1f241b;
+}
+
+.night {
+  --card-bg: #080a0d;
+  --card-fg: #f7f8f4;
+  --card-shadow: rgb(0 0 0 / 18%);
+  --orb-a: #d8ff5b;
+  --orb-b: #27320f;
+  --arrow-bg: rgb(255 255 255 / 10%);
+}
+
+.coral {
+  --card-bg: #ff7657;
+  --card-fg: #25110c;
+  --card-shadow: rgb(152 54 31 / 18%);
+  --orb-a: #ffe3d9;
+  --orb-b: #7b2a1a;
+  --arrow-bg: rgb(255 244 239 / 70%);
+}
+
+.sky {
+  --card-bg: #0f2a4a;
+  --card-fg: #eef5ff;
+  --card-shadow: rgb(15 42 74 / 22%);
+  --orb-a: #7cc4ff;
+  --orb-b: #1d4f86;
+  --arrow-bg: rgb(255 255 255 / 12%);
+}
+
+.sand {
+  --card-bg: #ffe08a;
+  --card-fg: #2a2210;
+  --card-shadow: rgb(140 105 20 / 16%);
+  --orb-a: #fff6d6;
+  --orb-b: #e3b53c;
+}
+
+.violet {
+  --card-bg: #e9e2ff;
+  --card-fg: #1f1838;
+  --card-shadow: rgb(70 50 140 / 14%);
+  --orb-a: #ffffff;
+  --orb-b: #a996f2;
+}
+
+.appVisual {
+  position: relative;
+  flex: 1;
+  min-height: 112px;
+}
+
+.appOrb {
+  position: absolute;
+  width: 92px;
+  height: 92px;
+  right: 34px;
+  top: 6px;
+  border-radius: 50%;
+  background: var(--orb-a);
+  box-shadow: -30px 30px 0 var(--orb-b);
+}
+
+.appCard h2 {
+  margin: 0 0 10px;
+  font-size: clamp(32px, 3.4vw, 44px);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.appCard p {
+  max-width: 470px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.8;
+  opacity: 0.76;
+}
+
+.appHost {
+  display: block;
+  margin-top: 14px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+
 .diagnosisSection {
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto 76px;
@@ -317,7 +452,8 @@
 }
 
 @media (max-width: 980px) {
-  .choiceGrid {
+  .choiceGrid,
+  .appGrid {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -348,8 +484,15 @@
     font-size: clamp(58px, 19vw, 88px);
   }
 
-  .choiceGrid {
+  .choiceGrid,
+  .appGrid {
     grid-template-columns: 1fr;
+  }
+
+  .appCard {
+    min-height: 300px;
+    padding: 22px;
+    border-radius: 26px;
   }
 
   .choice,
@@ -392,7 +535,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .choice {
+  .choice,
+  .appCard {
     transition: none;
   }
 }
