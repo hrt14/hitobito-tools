@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import styles from "./portal.module.css";
 
 export const metadata: Metadata = {
@@ -215,7 +216,7 @@ export default function Home() {
   return (
     <main className={styles.page}>
       <header className={styles.top}>
-        <a href="/" className={styles.brand} aria-label="hitobito トップへ"><span className={styles.brandMark}>✳</span>hitobito<span className={styles.brandDot}>.jp</span></a>
+        <Link href="/" className={styles.brand} aria-label="hitobito トップへ"><span className={styles.brandMark}>✳</span>hitobito<span className={styles.brandDot}>.jp</span></Link>
         <nav className={styles.nav} aria-label="メインナビゲーション">
           <a href="#apps">APPS <span>↗</span></a>
           <a href="https://hitobito.jp/contact">CONTACT <span>↗</span></a>
