@@ -27,17 +27,27 @@ const ADDRESS_TYPES = new Set(["A", "AAAA", "CNAME"]);
 export function isVercelRecord(record) {
   const content = String(record.content ?? "").toLowerCase().replace(/\.$/, "");
   if (record.type === "CNAME") return /(^|\.)vercel-dns(-\d+)?\.com$/.test(content) || content.endsWith(".vercel.app");
-  if (record.type === "A") return content.startsWith("76.76.21.") || content.startsWith("216.198.79.");
+  if (record.type === "A") {
+    return ["76.76.21.", "216.198.79.", "64.29.17."].some((prefix) => content.startsWith(prefix));
+  }
   return false;
 }
 
 // ホストの今の状態から、何をするかを決める。
-export function planHost(target, records, attached) {
+// 個別のレコードがないホストは `*.hitobito.jp` で解決されている。ワイルドカードが Vercel を
+// 指していれば、Custom Domain を付けるとそのホストだけ個別のレコードで上書きされる
+// (ワイルドカード自体は消さない)。
+export function planHost(target, records, attached, wildcard = []) {
   const address = records.filter((record) => ADDRESS_TYPES.has(record.type));
   if (attached) {
     return { action: "skip", reason: `already attached to Worker ${attached.service}`, records: address };
   }
   if (address.length === 0) {
+    const wildcardAddress = wildcard.filter((record) => ADDRESS_TYPES.has(record.type));
+    if (wildcardAddress.length > 0 && wildcardAddress.every(isVercelRecord)) {
+      const desc = wildcardAddress.map((record) => `${record.type} ${record.content}`).join(", ");
+      return { action: "switch", reason: `Vercel via *.${ZONE_NAME} (${desc}) -> Worker ${target.service}`, records: [] };
+    }
     return { action: "skip", reason: "no A/AAAA/CNAME record (not served by Vercel)", records: address };
   }
   const other = address.filter((record) => !isVercelRecord(record));
@@ -84,6 +94,7 @@ async function main() {
   if (!zones?.length) throw new Error(`zone ${ZONE_NAME} not found (token needs Zone:Read)`);
   const zoneId = zones[0].id;
   const domains = await cf("GET", `/accounts/${account}/workers/domains?zone_id=${zoneId}`);
+  const wildcard = await cf("GET", `/zones/${zoneId}/dns_records?name=*.${ZONE_NAME}&per_page=100`);
 
   const lines = [`## Cloudflare domains: ${mode}`, "", "| host | result | detail |", "| --- | --- | --- |"];
   let failed = false;
@@ -99,13 +110,18 @@ async function main() {
           continue;
         }
         await cf("DELETE", `/accounts/${account}/workers/domains/${attached.id}`);
+        const wildcardAddress = wildcard.filter((record) => ADDRESS_TYPES.has(record.type));
+        if (target.host !== ZONE_NAME && wildcardAddress.length > 0 && wildcardAddress.every(isVercelRecord)) {
+          lines.push(`| ${target.host} | rolled back | served by *.${ZONE_NAME} again |`);
+          continue;
+        }
         const record = vercelRecordFor(target.host);
         await cf("POST", `/zones/${zoneId}/dns_records`, { ...record, proxied: false, ttl: 1 });
         lines.push(`| ${target.host} | rolled back | ${record.type} ${record.content} (DNS only) |`);
         continue;
       }
 
-      const plan = planHost(target, records, attached);
+      const plan = planHost(target, records, attached, wildcard);
       const before = plan.records.map((record) => `${record.type} ${record.content}`).join(", ") || "-";
       if (plan.action === "skip" || mode === "check") {
         const result = plan.action === "skip" ? "skip" : "will switch";
