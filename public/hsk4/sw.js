@@ -1,6 +1,6 @@
 // HSK4 中国語トレーナー：オフライン用 Service Worker
-const CACHE = "hsk4-v1";
-const FILES = ["/hsk4/", "/hsk4/index.html", "/hsk4/manifest.webmanifest", "/hsk4/icon-180.png", "/hsk4/icon-512.png"];
+const CACHE = "hsk4-v2";
+const FILES = ["/hsk4/", "/hsk4/index.html", "/hsk4/manifest.webmanifest", "/hsk4/icon-180.png", "/hsk4/icon-512.png", "/hsk4/data-grammar.js", "/hsk4/data-sentences.js", "/hsk4/data-vocab.js"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
 });
