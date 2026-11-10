@@ -21,8 +21,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"H
 h1{font-size:18px;margin:4px 0 2px}
 h2{font-size:19px;margin:0 0 10px}
 .small{font-size:13px;color:var(--sub)}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0}
-.tabs button{padding:10px 4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font-size:14px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}
+.tabs button{padding:10px 2px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font-size:13px}
+.seg{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0 10px}.seg button{padding:7px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;font-size:13px}.seg button.on{background:var(--ink);color:var(--bg)}
+.autobox{text-align:center;padding:10px 0}.autobox .jp{font-size:20px}.autobox .zh{font-size:28px}
 .tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;min-height:220px}
 .jp{font-size:18px;line-height:1.6}
@@ -63,9 +65,10 @@ textarea{width:100%;height:220px;font-size:13px;border-radius:8px;border:1px sol
 </head>
 <body>
 <div class="wrap">
-<h1>中国語トレーナー <span class="small">HSK4・v2</span></h1>
+<h1>中国語トレーナー <span class="small">HSK4・v3</span></h1>
 <div class="small" id="stat"></div>
 <div class="tabs" id="tabs">
+<button data-m="auto">▶オート</button>
 <button data-m="comp" class="on">即座作文</button>
 <button data-m="listen">聞き取り</button>
 <button data-m="gram">文法</button>
@@ -93,11 +96,66 @@ let rate=0.8,mode="comp";
 function save(){store.set("zh_weak",weak);store.set("zh_done",done);store.set("zh_hist",hist);store.set("zh_tests",tests);stat()}
 function stat(){const n=Object.values(weak).filter(x=>x>0).length;document.getElementById("stat").textContent=`練習した数：${done}　苦手：${n}　単語：${V.length}語　文法：${L.length}課`}
 function mark(key,ok){done++;weak[key]=Math.max(0,(weak[key]||0)+(ok?-1:2));const h=hist[key]||[0,0];h[ok?0:1]++;hist[key]=h;save()}
-let zhVoice=null;
-function loadVoice(){try{const v=speechSynthesis.getVoices();zhVoice=v.find(x=>/zh[-_]CN/i.test(x.lang))||v.find(x=>/^zh/i.test(x.lang))||null}catch(e){}}
+let zhVoice=null,jaVoice=null;
+function loadVoice(){try{const v=speechSynthesis.getVoices();zhVoice=v.find(x=>/zh[-_]CN/i.test(x.lang))||v.find(x=>/^zh/i.test(x.lang))||null;jaVoice=v.find(x=>/^ja/i.test(x.lang))||null}catch(e){}}
 if("speechSynthesis" in window){loadVoice();speechSynthesis.onvoiceschanged=loadVoice}
 function say(t){if(!("speechSynthesis" in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/——/g,"，"));u.lang="zh-CN";if(zhVoice)u.voice=zhVoice;u.rate=rate;speechSynthesis.speak(u)}
 function stop(){try{speechSynthesis.cancel()}catch(e){}}
+// ---------- オート再生 ----------
+const AUTO=Object.assign({src:"sent",flow:"jz",reps:2,gap:3,order:"rnd",py:true},store.get("zh_auto",{}));
+let autoRun={on:false,tok:0,list:[],i:0,lock:null};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function ttsP(text,lang,r){return new Promise(res=>{if(!("speechSynthesis" in window))return res();const u=new SpeechSynthesisUtterance(text.replace(/——/g,"，"));u.lang=lang;const v=lang==="zh-CN"?zhVoice:jaVoice;if(v)u.voice=v;u.rate=r;let d=false;const fin=()=>{if(!d){d=true;clearTimeout(t);res()}};u.onend=fin;u.onerror=fin;const t=setTimeout(fin,2500+text.length*450/r);speechSynthesis.speak(u)})}
+function autoItems(){
+  let a;
+  if(AUTO.src==="sent")a=S.map(x=>({jp:x[0],zh:x[1],py:x[2]}));
+  else if(AUTO.src==="ex")a=L.flatMap(l=>l.ex.map(e=>({jp:e[2],zh:e[0],py:e[1],t:l.t})));
+  else if(AUTO.src==="vocab")a=V.map(v=>({jp:v[2],zh:v[0],py:v[1]}));
+  else a=[...S.filter(x=>(weak["s:"+x[1]]||0)>0||(weak["l:"+x[1]]||0)>0).map(x=>({jp:x[0],zh:x[1],py:x[2]})),...V.filter(v=>(weak["v:"+v[0]]||0)>0).map(v=>({jp:v[2],zh:v[0],py:v[1]}))];
+  return AUTO.order==="rnd"?shuffle(a):a;
+}
+const AOPT={src:[["sent","作文の文"],["ex","文法の例文"],["vocab","単語"],["weak","苦手だけ"]],flow:[["jz","日→中（即座作文）"],["z","中だけ（聞き流し）"],["zj","中→日"]],reps:[[1,"1回"],[2,"2回"],[3,"3回"]],gap:[[2,"2秒"],[3,"3秒"],[5,"5秒"]],order:[["rnd","ランダム"],["seq","順番"]],py:[[true,"表示"],[false,"隠す"]]};
+const ALBL={src:"素材",flow:"流れ",reps:"中国語の回数",gap:"間（言う時間）",order:"順番",py:"ピンイン"};
+function autoMenu(){
+  autoStop();
+  C.innerHTML=`<div class="autobox" id="ab"><div class="small">▶を押すと、手を使わずに流れ続けます</div></div>
+  <div class="row" style="margin-top:4px"><button class="btn sm" id="prev">⏮</button><button class="btn main" id="tog">▶ 再生</button><button class="btn sm" id="nxt">⏭</button></div>
+  <div id="cnt" class="small" style="text-align:center;margin-top:6px"></div>
+  <div style="margin-top:14px">${Object.keys(AOPT).map(k=>`<div class="small">${ALBL[k]}</div><div class="seg">${AOPT[k].map(([v,l])=>`<button data-k="${k}" data-v="${v}" class="${String(AUTO[k])===String(v)?"on":""}">${l}</button>`).join("")}</div>`).join("")}</div>
+  <div class="note">画面をつけたままにしてください。ロックやアプリの切り替えで止まります（再開は▶）。イヤホン推奨。</div>`;
+  C.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{const k=b.dataset.k;let v=b.dataset.v;if(k==="reps"||k==="gap")v=+v;if(k==="py")v=v==="true";AUTO[k]=v;store.set("zh_auto",AUTO);const was=autoRun.on;autoStop();autoMenu();if(was)autoStart()});
+  $("tog").onclick=()=>autoRun.on?autoStop(true):autoStart();
+  $("nxt").onclick=()=>{autoRun.i++;if(autoRun.on)autoStart(true);else autoShow(autoRun.list[autoRun.i%autoRun.list.length],false)};
+  $("prev").onclick=()=>{autoRun.i=Math.max(0,autoRun.i-1);if(autoRun.on)autoStart(true);else autoShow(autoRun.list[autoRun.i%autoRun.list.length],false)};
+  autoRun.list=autoItems();autoRun.i=0;
+  if(!autoRun.list.length){$("ab").innerHTML=`<div class="small">苦手はまだありません。別の素材を選んでください。</div>`;$("tog").disabled=true}
+}
+function autoShow(it,hideZh){
+  if(!it)return;const ab=$("ab");if(!ab)return;
+  ab.innerHTML=`${it.t?`<div class="small">${esc(it.t)}</div>`:""}<div class="jp">${esc(it.jp)}</div><div id="azh" class="${hideZh?"hide":""}"><div class="zh">${esc(it.zh)}</div>${AUTO.py?`<div class="py">${esc(it.py)}</div>`:""}</div>`;
+  const c=$("cnt");if(c)c.textContent=`${(autoRun.i%autoRun.list.length)+1} / ${autoRun.list.length}`;
+}
+async function wakeOn(){try{if("wakeLock" in navigator&&!autoRun.lock){autoRun.lock=await navigator.wakeLock.request("screen");autoRun.lock.addEventListener("release",()=>{autoRun.lock=null})}}catch(e){}}
+function wakeOff(){try{autoRun.lock&&autoRun.lock.release()}catch(e){}autoRun.lock=null}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&autoRun.on)wakeOn()});
+function autoStart(restart){
+  if(!autoRun.list.length)return;
+  autoRun.on=true;const tok=++autoRun.tok;stop();wakeOn();
+  const t=$("tog");if(t)t.textContent="⏸ 一時停止";
+  (async()=>{
+    while(autoRun.on&&tok===autoRun.tok){
+      const it=autoRun.list[autoRun.i%autoRun.list.length];
+      const alive=()=>autoRun.on&&tok===autoRun.tok;
+      const zh=async n=>{for(let k=0;k<n&&alive();k++){await ttsP(it.zh,"zh-CN",rate);if(k<n-1&&alive())await wait(700)}};
+      if(AUTO.flow==="jz"){autoShow(it,true);await ttsP(it.jp,"ja-JP",1.05);if(!alive())break;await wait(AUTO.gap*1000);if(!alive())break;const z=$("azh");if(z)z.classList.remove("hide");await zh(AUTO.reps)}
+      else if(AUTO.flow==="z"){autoShow(it,false);await zh(AUTO.reps)}
+      else{autoShow(it,false);await ttsP(it.zh,"zh-CN",rate);if(!alive())break;await wait(500);await ttsP(it.jp,"ja-JP",1.05);if(!alive())break;await wait(500);await zh(Math.max(1,AUTO.reps-1))}
+      if(!alive())break;await wait(AUTO.flow==="z"?AUTO.gap*500:1200);if(!alive())break;
+      autoRun.i++;if(autoRun.i>0&&autoRun.i%autoRun.list.length===0&&AUTO.order==="rnd")autoRun.list=shuffle(autoRun.list);
+    }
+  })();
+}
+function autoStop(pauseOnly){autoRun.on=false;autoRun.tok++;stop();wakeOff();const t=$("tog");if(t)t.textContent="▶ 再生"}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
 function pick(pool,keyf){const w=pool.map(x=>1+3*(weak[keyf(x)]||0));const t=w.reduce((a,b)=>a+b,0);let r=Math.random()*t;for(let i=0;i<pool.length;i++){r-=w[i];if(r<=0)return pool[i]}return pool[pool.length-1]}
 const $=id=>document.getElementById(id);
@@ -287,21 +345,23 @@ function weakReview(){
 }
 
 // ---------- 画面切り替え ----------
-const desc={comp:"日本語を見て3秒以内に中国語で言う",listen:"音声だけで意味を選ぶ",gram:"解説を読んで問題を解く",vocab:"検索・カード・4択",test:"答えは最後にまとめて表示",weak:"苦手の復習と結果のコピー"};
+const desc={auto:"聞き流し・ハンズフリー練習",comp:"日本語を見て3秒以内に中国語で言う",listen:"音声だけで意味を選ぶ",gram:"解説を読んで問題を解く",vocab:"検索・カード・4択",test:"答えは最後にまとめて表示",weak:"苦手の復習と結果のコピー"};
 function next(){
   stop();
-  if(mode==="comp")comp(pick(S,x=>"s:"+x[1]));
+  if(mode==="auto")autoMenu();
+  else if(mode==="comp")comp(pick(S,x=>"s:"+x[1]));
   else if(mode==="listen")renderMC(listenQ(pick(S,x=>"l:"+x[1])),{onDone:next});
   else if(mode==="gram")gramMenu();
   else if(mode==="vocab")vocabMenu();
   else if(mode==="test")testMenu();
   else weakMenu();
 }
-document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));b.classList.add("on");mode=b.dataset.m;$("mode-desc").textContent=desc[mode];closeSheet();next()});
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));b.classList.add("on");if(mode==="auto")autoStop();mode=b.dataset.m;$("mode-desc").textContent=desc[mode];closeSheet();next()});
 document.querySelectorAll(".speed button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".speed button").forEach(x=>x.classList.remove("on"));b.classList.add("on");rate=+b.dataset.r});
 $("mode-desc").textContent=desc[mode];stat();next();
 const off=$("off");
-if("serviceWorker" in navigator){navigator.serviceWorker.register("/hsk4/sw.js",{scope:"/hsk4/"}).then(r=>{try{r.update()}catch(e){}return navigator.serviceWorker.ready}).then(()=>{off.textContent="✓ オフラインで使えます（v2）"}).catch(()=>{off.textContent="オフライン保存に失敗しました（通信がある所で再読み込みしてください）"})}else{off.textContent="このブラウザはオフライン保存に未対応です"}
+if("serviceWorker" in navigator&&navigator.serviceWorker.controller){let rl=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(rl||autoRun.on)return;rl=true;location.reload()})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("/hsk4/sw.js",{scope:"/hsk4/"}).then(r=>{try{r.update()}catch(e){}return navigator.serviceWorker.ready}).then(()=>{off.textContent="✓ オフラインで使えます（v3）"}).catch(()=>{off.textContent="オフライン保存に失敗しました（通信がある所で再読み込みしてください）"})}else{off.textContent="このブラウザはオフライン保存に未対応です"}
 </script>
 </body>
 </html>
