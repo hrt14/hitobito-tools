@@ -1,0 +1,14 @@
+{
+  "name": "HSK4 中国語トレーナー",
+  "short_name": "中国語",
+  "start_url": "/hsk4/",
+  "scope": "/hsk4/",
+  "display": "standalone",
+  "background_color": "#f6f4ef",
+  "theme_color": "#c8372d",
+  "lang": "ja",
+  "icons": [
+    { "src": "/hsk4/icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/hsk4/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
