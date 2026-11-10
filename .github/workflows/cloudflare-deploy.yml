@@ -1,8 +1,9 @@
 name: Cloudflare deploy
 
 # hitobito-tools を Cloudflare Workers (OpenNext) へ公開する。
-# 手動起動のみ。Worker の *.workers.dev に公開されるだけで、
-# hitobito.jp などの本番ドメインの割り当て・DNS はこのワークフローでは変更しない。
+# main へのマージ(push)で自動実行。手動実行(confirm に deploy)も可能。
+# hitobito.jp などで Custom Domain を割り当て済みのホストは、このデプロイで本番に反映される。
+# 本番ドメインの割り当て・DNS 自体はこのワークフローでは変更しない。
 #
 # 必要な Actions secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 # ビルド時に埋め込む値は Actions variables に置く(未設定なら空のまま):
@@ -11,6 +12,12 @@ name: Cloudflare deploy
 # 実行時の秘密値 (ANTHROPIC_API_KEY, EARHUB_ACCESS_CODE など) は
 # Cloudflare ダッシュボードの Worker > Settings > Variables and Secrets に置く。
 on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "extension/**"
   workflow_dispatch:
     inputs:
       confirm:
@@ -27,7 +34,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event.inputs.confirm == 'deploy'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event.inputs.confirm == 'deploy')
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -81,7 +88,7 @@ jobs:
           URL: ${{ steps.deploy.outputs.url }}
         # 公開直後は workers.dev への反映に数十秒かかり 404 が返るので、待ちながら確認する。
         run: |
-          for path in / /tools /levelup /life1 /drop /2100 /ear-hub/translate; do
+          for path in / /hsk4/ /tools /levelup /life1 /drop /2100 /ear-hub/translate; do
             for attempt in $(seq 1 12); do
               code="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20 "$URL$path")"
               [ "$code" = "200" ] && break
