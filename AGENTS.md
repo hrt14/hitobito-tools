@@ -17,6 +17,8 @@ This repository is maintained with coding agents. Do not treat a task as complet
 
 A migration from Vercel to Cloudflare Workers (OpenNext) is in progress; see `docs/cloudflare-migration.md`. Until each host is switched there, the Vercel rules below still apply to production.
 
+**Cloudflare:** hitobito.jp is served by the Cloudflare Worker `hitobito-tools`. `.github/workflows/cloudflare-deploy.yml` runs automatically on every push to `main` (docs/Markdown-only changes are skipped), so **merging to `main` deploys to production** for every host already switched to Cloudflare. Treat a merge to `main` as a production deploy: run lint/build first, and verify the production URL after the workflow finishes. Manual re-runs are still possible (Run workflow, confirm `deploy`).
+
 When the user asks you to deploy, **do not try to reach Vercel yourself.** Take the work as far as it can go without Vercel access, then hand off.
 
 Why: agent sandboxes for this project are on the "trusted network access" policy, which rejects `CONNECT` to every Vercel host — `api.vercel.com`, `vercel.com`, `mcp.vercel.com`, `telemetry.vercel.com`, `codex-deploy-skills.vercel.sh` (all 403). This is an egress policy, not a credential problem, so a token, the Vercel CLI, or adding the Vercel MCP will not help. Do not retry or route around it. (Verified 2026-09-02 across two independent sessions.)
