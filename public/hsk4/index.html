@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HSK4 中国語トレーナー</title>
+<link rel="manifest" href="/hsk4/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/hsk4/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="中国語">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#c8372d">
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d1d1f;--sub:#6b6b70;--line:#e4e0d8;--accent:#c8372d;--ok:#2e7d4f;--ng:#c8372d;--soft:#fbeeec}
+@media (prefers-color-scheme:dark){:root{--bg:#161616;--card:#222;--ink:#f2f2f2;--sub:#a0a0a5;--line:#333;--soft:#3a2523}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Sans","PingFang SC",sans-serif;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.wrap{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:18px;margin:4px 0 2px}
+.small{font-size:13px;color:var(--sub)}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:14px 0}
+.tabs button{padding:10px 4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font-size:13px}
+.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;min-height:220px}
+.jp{font-size:18px;line-height:1.6}
+.zh{font-size:26px;line-height:1.5;margin-top:14px;font-family:"PingFang SC","Hiragino Sans GB",sans-serif}
+.py{font-size:16px;color:var(--sub);margin-top:4px}
+.note{font-size:14px;background:var(--soft);border-radius:8px;padding:10px;margin-top:12px;line-height:1.6}
+.row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{flex:1;padding:14px 8px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:16px;min-width:90px}
+.btn.main{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn.ng{background:var(--ng);color:#fff;border-color:var(--ng)}
+.opt{display:block;width:100%;text-align:left;margin-top:8px;padding:13px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:16px}
+.opt.right{border-color:var(--ok);background:rgba(46,125,79,.12)}
+.opt.wrong{border-color:var(--ng);background:rgba(200,55,45,.12)}
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;color:var(--sub)}
+.speed button{padding:4px 8px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;font-size:12px;margin-left:4px}
+.speed button.on{background:var(--ink);color:var(--bg)}
+.hide{display:none}
+.big{font-size:40px;text-align:center;margin:20px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>中国語トレーナー</h1>
+<div class="small" id="stat"></div>
+<div class="tabs">
+<button data-m="comp" class="on">即座作文</button>
+<button data-m="listen">聞き取り</button>
+<button data-m="gram">文法</button>
+<button data-m="weak">苦手復習</button>
+</div>
+<div class="bar"><span id="mode-desc"></span><span class="speed">速度<button data-r="0.6">遅</button><button data-r="0.8" class="on">中</button><button data-r="1.0">速</button></span></div>
+<div class="card" id="card"></div>
+<div class="small" style="margin-top:12px;line-height:1.6"><span id="off">オフライン準備中…</span><br>音声はiPhone内蔵の中国語音声を使います。音が出ない場合は「設定→アクセシビリティ→読み上げコンテンツ→声→中国語」で声をダウンロードしてください。<br>ホーム画面に追加：Safariの共有ボタン→「ホーム画面に追加」。</div>
+</div>
+<script>
+const S=[
+["毎日電車で出勤する。","我每天坐电车去上班。","wǒ měitiān zuò diànchē qù shàngbān.","火车は長距離列車。通勤は电车/地铁"],
+["深圳で1年働いたことがある。","我在深圳工作过一年。","wǒ zài Shēnzhèn gōngzuò guo yì nián.","经验の「过」"],
+["中国語を20年学んでいる。","我学中文学了二十年了。","wǒ xué Zhōngwén xué le èrshí nián le.","動詞＋了＋期間＋了＝今も続いている"],
+["もっと早く中国語を始めればよかった。","要是我早点开始学中文就好了。","yàoshi wǒ zǎo diǎn kāishǐ xué Zhōngwén jiù hǎo le.","要是…就好了＝〜だったらよかったのに"],
+["急がないと遅れる。","我得快点，不然要迟到了。","wǒ děi kuài diǎn, bùrán yào chídào le.","得=děi。迟chíは息を強く"],
+["仕事は好きだけど、出勤は好きじゃない。","我喜欢工作，但是不喜欢上班。","wǒ xǐhuan gōngzuò, dànshì bù xǐhuan shàngbān.","工作＝仕事全般、上班＝出勤"],
+["どう勉強すれば上手くなる？","怎么学才能学好？","zěnme xué cái néng xué hǎo?","怎么…才能…"],
+["使えば使うほど上手くなる。","越用越好。","yuè yòng yuè hǎo.","越…越…"],
+["中国語をたくさん思い出した。","我想起来了很多中文。","wǒ xiǎng qǐlai le hěn duō Zhōngwén.","想起来＝思い出す"],
+["明日日本に帰る。","我明天就要回日本了。","wǒ míngtiān jiù yào huí Rìběn le.","就要…了＝もうすぐ〜する"],
+["牛肉粉を1つください。","老板，来一碗牛肉粉。","lǎobǎn, lái yì wǎn niúròu fěn.","来一碗〜＝注文の決まり文句"],
+["辛すぎないで。","不要太辣。","bú yào tài là.",""],
+["もう一度言ってください。","请再说一遍。","qǐng zài shuō yí biàn.",""],
+["もう少しゆっくり話してください。","请说慢一点。","qǐng shuō màn yìdiǎn.",""],
+["聞き取れなかった。","我没听懂。","wǒ méi tīng dǒng.","不能明白は×。没听懂/没看懂"],
+["何時に仕事が終わる？","你几点下班？","nǐ jǐ diǎn xiàbān?",""],
+["湖南料理を食べたことある？","你吃过湖南菜吗？","nǐ chī guo Húnán cài ma?",""],
+["窓が開いていて、ちょっと寒い。","窗户开着，有点儿冷。","chuānghu kāi zhe, yǒudiǎnr lěng.","着＝状態の持続"],
+["時間がもっとあればよかった。","要是有更多时间就好了。","yàoshi yǒu gèng duō shíjiān jiù hǎo le.",""],
+["もし明日雨なら、行かない。","要是明天下雨，我就不去了。","yàoshi míngtiān xià yǔ, wǒ jiù bú qù le.",""],
+["雨だけど、出かけたい。","虽然下雨，但是我想出去。","suīrán xià yǔ, dànshì wǒ xiǎng chūqu.",""],
+["私の仕事はECです。","我是做电商的。","wǒ shì zuò diànshāng de.","做〜的＝〜の仕事をしている"],
+["毎日だいたい8時間働く。","我每天工作八个小时左右。","wǒ měitiān gōngzuò bā ge xiǎoshí zuǒyòu.",""],
+["この商品はよく売れている。","这个产品卖得很好。","zhège chǎnpǐn mài de hěn hǎo.",""],
+["どうすれば売上を伸ばせる？","怎么做才能提高销量？","zěnme zuò cái néng tígāo xiāoliàng?",""],
+["今度一緒にごはん食べよう。","改天一起吃饭吧。","gǎitiān yìqǐ chīfàn ba.","社交辞令のことも多い"],
+["今朝7時に起きた。","我今天早上七点起床。","wǒ jīntiān zǎoshang qī diǎn qǐchuáng.",""],
+["まず歯を磨いて、それから顔を洗う。","我先刷牙，然后洗脸。","wǒ xiān shuāyá, ránhòu xǐliǎn.","先…然后…"],
+["ここに住んで5年になる。","我在这儿住了五年了。","wǒ zài zhèr zhù le wǔ nián le.",""],
+["もう30分も待ってるよ！","我等了你半个小时了！","wǒ děng le nǐ bàn ge xiǎoshí le!",""],
+["彼は音楽を聞きながら仕事をする。","他一边听着音乐，一边工作。","tā yìbiān tīng zhe yīnyuè, yìbiān gōngzuò.",""],
+["湖南に行ったことがない。","我没去过湖南。","wǒ méi qù guo Húnán.","没＋動詞＋过"],
+["週末は何をするのが好き？","你周末喜欢做什么？","nǐ zhōumò xǐhuan zuò shénme?",""],
+["どんなスポーツが好き？週に何回運動する？","你喜欢什么运动？一个星期运动几次？","nǐ xǐhuan shénme yùndòng? yí ge xīngqī yùndòng jǐ cì?","質問2つ：2つ目を落とさない"],
+["仕事は何？毎日何時間くらい働く？","你做什么工作？每天大概工作几个小时？","nǐ zuò shénme gōngzuò? měitiān dàgài gōngzuò jǐ ge xiǎoshí?","質問2つ"],
+["1か月休みがあったら、どこに行きたい？なぜ？","如果你有一个月的假期，你想去哪儿？为什么？","rúguǒ nǐ yǒu yí ge yuè de jiàqī, nǐ xiǎng qù nǎr? wèishénme?","如果＝もし"],
+["ちょっと考えさせて。","让我想一想。","ràng wǒ xiǎng yi xiǎng.",""],
+["大丈夫、ゆっくり話して。","没关系，慢慢说。","méi guānxi, mànmàn shuō.",""],
+["空港までどのくらいかかる？","到机场要多长时间？","dào jīchǎng yào duō cháng shíjiān?",""],
+["中国語は何年勉強した？どうやって勉強した？","你学了几年中文？是怎么学的？","nǐ xué le jǐ nián Zhōngwén? shì zěnme xué de?","質問2つ"],
+["奥さんはどこの出身？","你太太是哪里人？","nǐ tàitai shì nǎlǐ rén?",""],
+["彼女は湖南の出身で、辛いものが大好き。","她是湖南人，特别喜欢吃辣的。","tā shì Húnán rén, tèbié xǐhuan chī là de.",""]
+];
+const G=[
+["我在深圳工作（　）一年。",["过","着","在"],0,"経験は「过」。「了」でも可（事実を述べるだけ）"],
+["你吃（　）湖南菜吗？（食べたことある？）",["过","着","了"],0,"経験＝过"],
+["窗户开（　），有点儿冷。",["着","过","了"],0,"状態の持続＝着"],
+["我今天早上喝（　）一杯咖啡。",["了","着","过"],0,"完了＝了"],
+["我学中文学（　）二十年了。",["了","着","过"],0,"動詞＋了＋期間＋了"],
+["我没去（　）湖南。",["过","了","着"],0,"没＋動詞＋过＝したことがない"],
+["这本书我看（　）三遍了。",["了","着","在"],0,"回数と一緒に「着」は使えない"],
+["他一边听（　）音乐，一边工作。",["着","过","了"],0,""],
+["（　）我早点起床就好了。",["要是","虽然","因为"],0,"要是…就好了"],
+["虽然下雨，（　）我想出去。",["但是","所以","就"],0,"虽然…但是…"],
+["要是明天下雨，我（　）不去了。",["就","才","也"],0,"要是/如果…就…"],
+["怎么学（　）能学好？",["才","就","也"],0,"怎么…才能…"],
+["我（　）快点，不然要迟到了。",["得","的","地"],0,"得 děi＝〜しなければ"],
+["他跑得（　）快。",["很","的","地"],0,"様態補語：動詞＋得＋很＋形容詞"],
+["这件事（　）我来说，非常重要。",["对","给","向"],0,"对…来说＝〜にとって"],
+["把门关（　）。",["上","着","过"],0,"把構文は結果補語が必要"],
+["我（　）你半个小时了！",["等了","等着","等过"],0,"等了＋期間＋了"],
+["我很快（　）能说好中文了。",["就","才","都"],0,"很快就…＝すぐに〜"],
+["这个产品卖（　）很好。",["得","的","地"],0,"動詞＋得＋評価"],
+["他是湖南人，（　）很喜欢吃辣的。",["所以","但是","虽然"],0,"因果＝所以"]
+];
+let rate=0.8,mode="comp",cur=null,queue=[];
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let weak=store.get("zh_weak",{}),done=store.get("zh_done",0);
+function save(){store.set("zh_weak",weak);store.set("zh_done",done);stat()}
+function stat(){const n=Object.keys(weak).filter(k=>weak[k]>0).length;document.getElementById("stat").textContent=`練習した数：${done}　苦手：${n}`}
+let zhVoice=null;
+function loadVoice(){const v=speechSynthesis.getVoices();zhVoice=v.find(x=>/zh[-_]CN/i.test(x.lang))||v.find(x=>/^zh/i.test(x.lang))||null}
+if("speechSynthesis" in window){loadVoice();speechSynthesis.onvoiceschanged=loadVoice}
+function say(t){if(!("speechSynthesis" in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="zh-CN";if(zhVoice)u.voice=zhVoice;u.rate=rate;speechSynthesis.speak(u)}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function mark(key,ok){done++;weak[key]=Math.max(0,(weak[key]||0)+(ok?-1:2));save()}
+function pick(pool,keyf){
+  // weighted: weak items appear more often
+  const w=pool.map(x=>1+3*(weak[keyf(x)]||0));const t=w.reduce((a,b)=>a+b,0);let r=Math.random()*t;
+  for(let i=0;i<pool.length;i++){r-=w[i];if(r<=0)return pool[i]}return pool[pool.length-1]}
+const C=document.getElementById("card");
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const desc={comp:"日本語を見て3秒以内に中国語で言う",listen:"音声だけで意味を選ぶ",gram:"（　）に入るものを選ぶ",weak:"間違えたものだけ出題"};
+function comp(item){
+  cur=item;const [jp,zh,py,nt]=item;
+  C.innerHTML=`<div class="jp">${esc(jp)}</div><div id="ans" class="hide"><div class="zh">${esc(zh)}</div><div class="py">${esc(py)}</div>${nt?`<div class="note">${esc(nt)}</div>`:""}</div>
+  <div class="row" id="r1"><button class="btn main" id="show">答えを見る</button></div>
+  <div class="row hide" id="r2"><button class="btn" id="play">🔊 もう一度</button></div>
+  <div class="row hide" id="r3"><button class="btn ng" id="ng">✕ 言えなかった</button><button class="btn ok" id="ok">○ 言えた</button></div>`;
+  show.onclick=()=>{ans.classList.remove("hide");r1.classList.add("hide");r2.classList.remove("hide");r3.classList.remove("hide");say(zh)};
+  play.onclick=()=>say(zh);
+  ok.onclick=()=>{mark("s:"+zh,true);next()};ng.onclick=()=>{mark("s:"+zh,false);next()};
+}
+function listen(item){
+  cur=item;const [jp,zh,py]=item;
+  const opts=shuffle([item,...shuffle(S.filter(x=>x!==item)).slice(0,3)]);
+  C.innerHTML=`<div class="big"><button class="btn main" id="play" style="flex:none;width:100%;font-size:22px">🔊 聞く</button></div>
+  <div id="opts">${opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o[0])}</button>`).join("")}</div>
+  <div id="ans" class="hide"><div class="zh">${esc(zh)}</div><div class="py">${esc(py)}</div><div class="row"><button class="btn" id="again">🔊 もう一度</button><button class="btn main" id="nx">次へ</button></div></div>`;
+  play.onclick=()=>say(zh);setTimeout(()=>say(zh),300);
+  let answered=false;
+  opts.forEach((o,i)=>{const b=C.querySelector(`[data-i="${i}"]`);b.onclick=()=>{if(answered)return;answered=true;const good=o===item;
+    b.classList.add(good?"right":"wrong");if(!good)C.querySelector(`[data-i="${opts.indexOf(item)}"]`).classList.add("right");
+    mark("l:"+zh,good);ans.classList.remove("hide");again.onclick=()=>say(zh);nx.onclick=next}});
+}
+function gram(item){
+  cur=item;const [q,choices,ai,nt]=item;const order=shuffle(choices.map((c,i)=>i));
+  C.innerHTML=`<div class="zh" style="margin-top:0">${esc(q)}</div><div>${order.map(i=>`<button class="opt" data-i="${i}">${esc(choices[i])}</button>`).join("")}</div>
+  <div id="ans" class="hide">${nt?`<div class="note">${esc(nt)}</div>`:""}<div class="row"><button class="btn" id="play">🔊 正解の文</button><button class="btn main" id="nx">次へ</button></div></div>`;
+  const full=q.replace(/（　）/,choices[ai]).replace(/（[^）]*）$/,"");
+  let answered=false;
+  C.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(answered)return;answered=true;const i=+b.dataset.i,good=i===ai;
+    b.classList.add(good?"right":"wrong");if(!good)C.querySelector(`[data-i="${ai}"]`).classList.add("right");
+    mark("g:"+q,good);ans.classList.remove("hide");play.onclick=()=>say(full);nx.onclick=next;say(full)});
+}
+function next(){
+  speechSynthesis&&speechSynthesis.cancel&&speechSynthesis.cancel();
+  if(mode==="comp")comp(pick(S,x=>"s:"+x[1]));
+  else if(mode==="listen")listen(pick(S,x=>"l:"+x[1]));
+  else if(mode==="gram")gram(pick(G,x=>"g:"+x[0]));
+  else{
+    const ws=[...S.filter(x=>(weak["s:"+x[1]]||0)>0).map(x=>["comp",x]),...S.filter(x=>(weak["l:"+x[1]]||0)>0).map(x=>["listen",x]),...G.filter(x=>(weak["g:"+x[0]]||0)>0).map(x=>["gram",x])];
+    if(!ws.length){C.innerHTML=`<div class="big">🎉</div><div style="text-align:center">苦手はゼロです。<br>他のモードで練習しましょう。</div>`;return}
+    const [m,x]=ws[Math.random()*ws.length|0];({comp,listen,gram})[m](x);
+  }
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("on"));b.classList.add("on");mode=b.dataset.m;document.getElementById("mode-desc").textContent=desc[mode];next()});
+document.querySelectorAll(".speed button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".speed button").forEach(x=>x.classList.remove("on"));b.classList.add("on");rate=+b.dataset.r});
+document.getElementById("mode-desc").textContent=desc[mode];stat();next();
+
+const off=document.getElementById("off");
+if("serviceWorker" in navigator){navigator.serviceWorker.register("/hsk4/sw.js",{scope:"/hsk4/"}).then(()=>navigator.serviceWorker.ready).then(()=>{off.textContent="✓ オフラインで使えます"}).catch(()=>{off.textContent="オフライン保存に失敗しました（通信がある所で再読み込みしてください）"})}else{off.textContent="このブラウザはオフライン保存に未対応です"}
+</script>
+</body>
+</html>
